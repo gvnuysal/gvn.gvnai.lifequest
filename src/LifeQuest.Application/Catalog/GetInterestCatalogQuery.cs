@@ -1,0 +1,23 @@
+using Gvn.GvnFramework.Application.Abstractions;
+using Gvn.GvnFramework.Core.Results;
+using LifeQuest.Application.Abstractions;
+using LifeQuest.Domain.Common;
+
+namespace LifeQuest.Application.Catalog;
+
+public sealed record InterestDto(string Code, string Name, LifeCategory Category);
+
+public sealed record GetInterestCatalogQuery : IQuery<IReadOnlyList<InterestDto>>;
+
+internal sealed class GetInterestCatalogQueryHandler(IQuestCatalog catalog)
+    : IQueryHandler<GetInterestCatalogQuery, IReadOnlyList<InterestDto>>
+{
+    public async Task<Result<IReadOnlyList<InterestDto>>> Handle(GetInterestCatalogQuery query, CancellationToken cancellationToken)
+    {
+        var interests = await catalog.GetInterestsAsync(cancellationToken);
+        return Result<IReadOnlyList<InterestDto>>.Ok(interests
+            .OrderBy(i => i.Category).ThenBy(i => i.Name, StringComparer.Create(new("tr-TR"), false))
+            .Select(i => new InterestDto(i.Code, i.Name, i.Category))
+            .ToList());
+    }
+}

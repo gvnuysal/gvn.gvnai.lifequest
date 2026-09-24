@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>lifequest-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gvn.GvnFramework.AspNetCore" />
+    <PackageReference Include="Gvn.GvnFramework.Logging" />
+    <PackageReference Include="Gvn.GvnFramework.Swagger" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LifeQuest.Infrastructure\LifeQuest.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LifeQuest.Api.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

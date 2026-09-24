@@ -1,0 +1,110 @@
+<div class="page">
+  @if (profile(); as p) {
+    <header class="me">
+      <span class="avatar" aria-hidden="true">{{ initial() }}</span>
+      <div>
+        <h1>{{ p.displayName }}</h1>
+        <p class="muted">{{ p.email }}</p>
+      </div>
+    </header>
+
+    <section class="surface card stack">
+      <h2 class="section-title">Keşif tercihleri</h2>
+
+      <div class="field">
+        <span class="field__label">Keşif modu</span>
+        <lq-segmented ariaLabel="Keşif modu" [options]="radiusOptions" [(value)]="radius" />
+        <span class="field__hint">{{ radiusDescription() }}</span>
+      </div>
+
+      <div class="field">
+        <span class="field__label">Bütçe</span>
+        <lq-segmented ariaLabel="Bütçe" [options]="costOptions" [(value)]="budget" />
+      </div>
+
+      <div class="field">
+        <span class="field__label">Haftalık zaman</span>
+        <lq-segmented ariaLabel="Haftalık zaman" [options]="timeOptions" [(value)]="weeklyMinutes" />
+      </div>
+
+      <div class="field">
+        <span class="field__label">Hedef alanların</span>
+        <div class="chips">
+          @for (category of categories; track category) {
+            <button lq-chip [selected]="goals().includes(category)" (click)="toggleGoal(category)">
+              {{ categoryMeta[category].label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="city">Şehir <span class="muted">(isteğe bağlı)</span></label>
+        <input id="city" class="input" [ngModel]="city()" (ngModelChange)="city.set($event)" maxlength="80" placeholder="Ör. İzmir" />
+      </div>
+
+      <button lq-button [block]="true" [disabled]="!dirty() || savingPreferences()" [loading]="savingPreferences()" (click)="savePreferences()">
+        Kaydet
+      </button>
+    </section>
+
+    <section class="surface card stack">
+      <div class="section-title">
+        <h2>İlgi alanların</h2>
+        <button lq-button variant="soft" size="sm" (click)="openInterests()">Düzenle</button>
+      </div>
+      <p class="muted small">Geri bildirimlerinden öğrendiklerimiz "öğrenildi" olarak işaretlenir.</p>
+      <ul class="interests">
+        @for (interest of p.interests; track interest.code) {
+          <li>
+            <lq-category-badge [category]="interest.category" [iconOnly]="true" [compact]="true" />
+            <span class="name">{{ interest.name }}</span>
+            @if (interest.source === 'Learned') {
+              <span class="learned"><lq-icon name="sparkles" [size]="12" /> öğrenildi</span>
+            }
+            <span class="meter" [attr.aria-label]="'İlgi düzeyi yüzde ' + (interest.weight * 100).toFixed(0)">
+              <span [style.width.%]="interest.weight * 100"></span>
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="surface card stack">
+      <h2 class="section-title">Görünüm</h2>
+      <lq-segmented ariaLabel="Tema" [options]="themeOptions" [value]="theme.preference()" (valueChange)="theme.preference.set($event)" />
+    </section>
+
+    <section class="surface card stack">
+      <h2 class="section-title">Hesap</h2>
+      <button lq-button variant="secondary" [block]="true" (click)="logout()"><lq-icon name="logout" [size]="18" /> Çıkış yap</button>
+      <button lq-button variant="danger" [block]="true" (click)="deletePassword.set(''); deleteOpen.set(true)">
+        <lq-icon name="trash" [size]="18" /> Hesabımı sil
+      </button>
+    </section>
+
+    <lq-sheet title="İlgi alanlarını düzenle" [(open)]="interestsOpen">
+      <div class="stack">
+        <lq-interest-picker [interests]="catalog()" [(selection)]="interestDraft" />
+        <button lq-button [block]="true" [loading]="savingInterests()" [disabled]="savingInterests()" (click)="saveInterests()">Kaydet</button>
+      </div>
+    </lq-sheet>
+
+    <lq-sheet title="Hesabını sil" [(open)]="deleteOpen">
+      <form class="stack" (ngSubmit)="deleteAccount()">
+        <p>Hesabın, quest geçmişin, XP'lerin ve tüm tercihlerin <strong>kalıcı olarak</strong> silinecek. Bu işlem geri alınamaz.</p>
+        <div class="field">
+          <label for="delete-password">Onaylamak için şifreni gir</label>
+          <input id="delete-password" name="password" class="input" type="password" autocomplete="current-password"
+            [ngModel]="deletePassword()" (ngModelChange)="deletePassword.set($event)" />
+        </div>
+        <button lq-button variant="danger" type="submit" [block]="true" [loading]="deleting()" [disabled]="!deletePassword() || deleting()">
+          Kalıcı olarak sil
+        </button>
+      </form>
+    </lq-sheet>
+  } @else {
+    <lq-skeleton [height]="80" />
+    <lq-skeleton [height]="360" />
+  }
+</div>

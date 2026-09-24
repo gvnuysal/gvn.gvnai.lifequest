@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Gvn.GvnFramework.Core" />
+    <PackageReference Include="Gvn.GvnFramework.Domain" />
+    <PackageReference Include="MediatR.Contracts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LifeQuest.Domain.Tests" />
+  </ItemGroup>
+
+</Project>

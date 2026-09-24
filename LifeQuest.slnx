@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LifeQuest.Api/LifeQuest.Api.csproj" />
+    <Project Path="src/LifeQuest.Application/LifeQuest.Application.csproj" />
+    <Project Path="src/LifeQuest.Domain/LifeQuest.Domain.csproj" />
+    <Project Path="src/LifeQuest.Infrastructure/LifeQuest.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LifeQuest.Api.IntegrationTests/LifeQuest.Api.IntegrationTests.csproj" />
+    <Project Path="tests/LifeQuest.Domain.Tests/LifeQuest.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

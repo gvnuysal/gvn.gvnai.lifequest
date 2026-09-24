@@ -1,0 +1,28 @@
+# Yerel geliştirme altyapısı: docker compose up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: lifequest-postgres
+    environment:
+      POSTGRES_DB: lifequest
+      POSTGRES_USER: lifequest
+      POSTGRES_PASSWORD: lifequest
+    ports:
+      - "5433:5432"
+    volumes:
+      - lifequest-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifequest -d lifequest"]
+      interval: 5s
+      retries: 10
+
+  # Opsiyonel: Cache:UseRedis=true ile kullanılır → docker compose --profile redis up -d
+  redis:
+    image: redis:7-alpine
+    container_name: lifequest-redis
+    profiles: ["redis"]
+    ports:
+      - "6380:6379"
+
+volumes:
+  lifequest-pg:

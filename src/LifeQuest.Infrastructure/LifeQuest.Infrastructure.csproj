@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Gvn.GvnFramework.EntityFramewokCore" />
+    <PackageReference Include="Gvn.GvnFramework.Caching" />
+    <PackageReference Include="Gvn.GvnFramework.BackgroundJobs" />
+    <PackageReference Include="Gvn.GvnFramework.Modularity" />
+    <PackageReference Include="Gvn.GvnFramework.DepedencyInjection" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LifeQuest.Application\LifeQuest.Application.csproj" />
+  </ItemGroup>
+
+</Project>

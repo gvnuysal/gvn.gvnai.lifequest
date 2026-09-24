@@ -1,0 +1,125 @@
+<div class="page" [style.--c]="accent()">
+  <button type="button" class="back" (click)="back()"><lq-icon name="arrow-left" [size]="18" /> Geri</button>
+
+  @if (loading() && !detail()) {
+    <lq-skeleton [height]="220" />
+    <lq-skeleton [height]="120" />
+  } @else if (notFound()) {
+    <lq-empty-state icon="compass" title="Quest bulunamadı" message="Bu quest artık mevcut değil ya da sana ait değil.">
+      <a lq-button variant="secondary" size="sm" routerLink="/bugun">Bugüne dön</a>
+    </lq-empty-state>
+  } @else if (quest(); as q) {
+    <article class="hero">
+      <div class="hero__top">
+        <lq-category-icon [category]="q.category" [size]="56" />
+        <div class="badges">
+          <lq-category-badge [category]="q.category" />
+          @if (q.secondaryCategory) {
+            <lq-category-badge [category]="q.secondaryCategory" [compact]="true" />
+          }
+          @if (q.isExploration) {
+            <span class="tag tag--explore"><lq-icon name="sparkles" [size]="12" [strokeWidth]="2.6" /> Keşif önerisi</span>
+          }
+        </div>
+      </div>
+      <h1>{{ q.title }}</h1>
+      <p class="description">{{ q.description }}</p>
+      <dl class="facts">
+        @for (fact of facts(); track fact.label) {
+          <div>
+            <dt><lq-icon [name]="fact.icon" [size]="16" /> {{ fact.label }}</dt>
+            <dd>{{ fact.value }}</dd>
+          </div>
+        }
+      </dl>
+    </article>
+
+    <section class="reward surface" aria-label="Ödül">
+      <div class="reward__main"><lq-icon name="zap" [size]="22" [strokeWidth]="2.4" /> +{{ q.reward.lifeXp }} <span>Life XP</span></div>
+      <div class="reward__split">
+        <span>+{{ q.reward.primaryCategoryXp }} {{ category()!.label }}</span>
+        @if (q.secondaryCategory && q.reward.secondaryCategoryXp) {
+          <span>+{{ q.reward.secondaryCategoryXp }} {{ secondaryLabel() }}</span>
+        }
+      </div>
+    </section>
+
+    <section class="why surface">
+      <button type="button" class="why__toggle" (click)="whyOpen.set(!whyOpen())" [attr.aria-expanded]="whyOpen()">
+        <span class="why__title"><lq-icon name="sparkles" [size]="18" /> Neden bunu önerdik?</span>
+        <lq-icon name="chevron-right" [size]="18" [class.rotated]="whyOpen()" />
+      </button>
+      <p class="why__text">{{ q.explanation }}</p>
+      @if (whyOpen() && detail(); as d) {
+        <ul class="bars" aria-label="Öneri skoru bileşenleri">
+          @for (component of scoreComponents; track component.key) {
+            <li [class.penalty]="component.penalty">
+              <span class="bars__label">{{ component.label }}</span>
+              <span class="bars__track"><span [style.width.%]="d.score[component.key] * 100"></span></span>
+              <span class="bars__value">{{ component.penalty && d.score[component.key] > 0 ? '−' : '' }}{{ (d.score[component.key] * 100).toFixed(0) }}</span>
+            </li>
+          }
+        </ul>
+        <p class="why__foot">Skorlar 0–100 arasıdır. Kırmızı çubuklar öneriyi aşağı çeken etkenlerdir.</p>
+      }
+    </section>
+
+    <section class="status-card" [attr.data-status]="q.status">
+      @switch (q.status) {
+        @case ('Offered') {
+          <p><lq-icon name="info" [size]="18" /> Kabul ettiğinde tamamlamak için sana zaman tanınır; kaçırmanın bir cezası yok.</p>
+        }
+        @case ('Accepted') {
+          <p><lq-icon name="hourglass" [size]="18" /> Devam ediyor · {{ remaining() }}</p>
+        }
+        @case ('Completed') {
+          <p><lq-icon name="check" [size]="18" /> {{ completedOn() }} tarihinde tamamladın.</p>
+          @if (q.rating) {
+            <p class="rated">Puanın: {{ q.rating }} / 5</p>
+          } @else if (!completion()) {
+            <div class="rate-later">
+              <span>Deneyim nasıldı?</span>
+              <lq-rating [(value)]="rating" />
+              <button lq-button variant="soft" size="sm" [disabled]="!rating() || busy()" (click)="rateLater()">Puanı kaydet</button>
+            </div>
+          }
+        }
+        @default {
+          <p><lq-icon name="info" [size]="18" /> {{ statusLabel() }}</p>
+        }
+      }
+    </section>
+
+    @if (q.status === 'Offered' || q.status === 'Accepted') {
+      <div class="actions">
+        <button lq-button variant="secondary" [disabled]="busy()" (click)="skipReason.set(null); skipOpen.set(true)">
+          {{ q.status === 'Offered' ? 'Geç' : 'Bırak' }}
+        </button>
+        @if (q.status === 'Offered') {
+          <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="accept()">
+            <lq-icon name="check" [size]="18" /> Kabul et
+          </button>
+        } @else {
+          <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="complete()">
+            <lq-icon name="trophy" [size]="18" /> Tamamladım
+          </button>
+        }
+      </div>
+    }
+
+    <lq-sheet title="Neden geçiyorsun?" [(open)]="skipOpen">
+      <div class="stack">
+        <p class="muted">Cevabın önerileri iyileştirir. "Pahalı" veya "zamanım yok" ilgi alanlarını etkilemez.</p>
+        @for (reason of skipReasons; track reason.value) {
+          <button lq-option [heading]="reason.label" [description]="reason.hint || null"
+            [selected]="skipReason() === reason.value" (click)="skipReason.set(reason.value)"></button>
+        }
+        <button lq-button [block]="true" [disabled]="!skipReason() || busy()" [loading]="busy()" (click)="confirmSkip()">Onayla</button>
+      </div>
+    </lq-sheet>
+
+    @if (completion(); as c) {
+      <lq-celebration [completion]="c" [achievements]="c.newAchievements" [busy]="busy()" (done)="onCelebrationDone($event)" />
+    }
+  }
+</div>

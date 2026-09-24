@@ -1,0 +1,13 @@
+bin/
+obj/
+.idea/
+.vs/
+*.user
+logs/
+TestResults/
+.DS_Store
+node_modules/
+dist/
+.angular/
+.claude/
+*.env

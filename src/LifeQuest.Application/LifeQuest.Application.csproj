@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Gvn.GvnFramework.Application" />
+    <PackageReference Include="Gvn.GvnFramework.Security" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LifeQuest.Domain\LifeQuest.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

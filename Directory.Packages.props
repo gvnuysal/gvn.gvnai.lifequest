@@ -1,0 +1,48 @@
+<Project>
+  <PropertyGroup>
+    <GvnFrameworkVersion>1.0.0-preview</GvnFrameworkVersion>
+    <!-- Aşağıdaki "Transitive pins" grubunun geçişli bağımlılıklara da uygulanması için. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup Label="Gvn.GvnFramework">
+    <PackageVersion Include="Gvn.GvnFramework.Core" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Domain" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Application" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.EntityFramewokCore" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.AspNetCore" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Security" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Logging" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Caching" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.BackgroundJobs" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Swagger" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.Modularity" Version="$(GvnFrameworkVersion)" />
+    <PackageVersion Include="Gvn.GvnFramework.DepedencyInjection" Version="$(GvnFrameworkVersion)" />
+  </ItemGroup>
+  <ItemGroup Label="Runtime">
+    <PackageVersion Include="MediatR.Contracts" Version="2.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageVersion Include="EFCore.NamingConventions" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.4" />
+  </ItemGroup>
+  <ItemGroup Label="Transitive pins">
+    <!--
+      Gvn.GvnFramework.BackgroundJobs → Hangfire.RecurringJobAdmin 1.0.5 eski Hangfire 1.7.18 metapaketini ve
+      güvenlik açığı bulunan Newtonsoft.Json 11 / System.Data.SqlClient 4.4 sürümlerini getiriyor.
+      Framework düzeltilene kadar güvenli sürümlere sabitlenir.
+    -->
+    <PackageVersion Include="Hangfire" Version="1.8.17" />
+    <PackageVersion Include="Hangfire.SqlServer" Version="1.8.17" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="System.Data.SqlClient" Version="4.9.0" />
+  </ItemGroup>
+  <ItemGroup Label="Test">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+  </ItemGroup>
+</Project>

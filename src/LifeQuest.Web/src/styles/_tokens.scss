@@ -1,0 +1,141 @@
+// LifeQuest tasarım token'ları — sıcak, oyunsu ama sakin.
+// Renkler CSS değişkenleridir; koyu tema hem sistem tercihine hem data-theme="dark" seçimine uyar.
+
+@mixin light {
+  --bg: #fff8f1;
+  --bg-glow: radial-gradient(1200px 500px at 10% -10%, #ffe7d6 0%, transparent 60%),
+    radial-gradient(900px 400px at 110% 0%, #fff0c9 0%, transparent 55%);
+  --surface: #ffffff;
+  --surface-2: #fdf1e6;
+  --surface-3: #f8e6d6;
+  --ink: #2b2238;
+  --ink-2: #574d69;
+  --ink-3: #7d7390;
+  --line: #efe0d2;
+  --overlay: rgb(43 34 56 / 45%);
+
+  --brand: #f26b4f;
+  --primary: #c24127;
+  --primary-hover: #a93620;
+  --primary-ink: #ffffff;
+  --primary-soft: #fde3da;
+  --primary-text: #b0391f;
+
+  --xp: #e8930c;
+  --xp-soft: #fff1d1;
+  --xp-ink: #8a5300;
+
+  --success: #1f8a5f;
+  --success-soft: #dcf5e9;
+  --danger: #c53030;
+  --danger-soft: #fde2e2;
+  --info-soft: #e7eefc;
+
+  --cat-explorer: #0f9b9b;
+  --cat-explorer-ink: #0b6b6b;
+  --cat-culture: #8b5cf6;
+  --cat-culture-ink: #6534d6;
+  --cat-learning: #3b82f6;
+  --cat-learning-ink: #1d58c4;
+  --cat-social: #ec4899;
+  --cat-social-ink: #b3165e;
+  --cat-fitness: #22a559;
+  --cat-fitness-ink: #157a3c;
+  --cat-creativity: #f97316;
+  --cat-creativity-ink: #b8430b;
+
+  --shadow-sm: 0 1px 2px rgb(43 34 56 / 6%), 0 1px 1px rgb(43 34 56 / 4%);
+  --shadow-md: 0 6px 18px -6px rgb(120 60 30 / 18%), 0 2px 6px rgb(43 34 56 / 6%);
+  --shadow-lg: 0 18px 40px -12px rgb(120 60 30 / 28%);
+  color-scheme: light;
+}
+
+@mixin dark {
+  --bg: #17131f;
+  --bg-glow: radial-gradient(1000px 500px at 0% -10%, #3a2233 0%, transparent 60%),
+    radial-gradient(900px 400px at 110% 0%, #2b2a1c 0%, transparent 55%);
+  --surface: #221c2d;
+  --surface-2: #2a2337;
+  --surface-3: #342b43;
+  --ink: #f7efe8;
+  --ink-2: #d2c7dc;
+  --ink-3: #a79db6;
+  --line: #3a3149;
+  --overlay: rgb(8 6 12 / 65%);
+
+  --brand: #ff7e62;
+  --primary: #ff8a70;
+  --primary-hover: #ffa28d;
+  --primary-ink: #2a1510;
+  --primary-soft: #45271f;
+  --primary-text: #ff9c85;
+
+  --xp: #ffc24d;
+  --xp-soft: #3d3016;
+  --xp-ink: #ffd27a;
+
+  --success: #4fd29a;
+  --success-soft: #16372a;
+  --danger: #ff7a7a;
+  --danger-soft: #3f1d22;
+  --info-soft: #1f2a42;
+
+  --cat-explorer: #2cc9c9;
+  --cat-explorer-ink: #6fe3e3;
+  --cat-culture: #a78bfa;
+  --cat-culture-ink: #c4b1ff;
+  --cat-learning: #60a5fa;
+  --cat-learning-ink: #9cc8ff;
+  --cat-social: #f472b6;
+  --cat-social-ink: #ff9fd0;
+  --cat-fitness: #4ade80;
+  --cat-fitness-ink: #8ef0b0;
+  --cat-creativity: #fb923c;
+  --cat-creativity-ink: #ffb77f;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 8px 20px -8px rgb(0 0 0 / 55%);
+  --shadow-lg: 0 20px 44px -14px rgb(0 0 0 / 65%);
+  color-scheme: dark;
+}
+
+:root {
+  @include light;
+
+  --font: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.125rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  --content-width: 560px;
+  --nav-height: 68px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include dark;
+}
