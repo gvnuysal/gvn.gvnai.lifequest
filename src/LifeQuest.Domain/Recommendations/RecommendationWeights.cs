@@ -30,6 +30,10 @@ public sealed record RecommendationWeights
     public double BaselineInterest { get; init; } = 0.1;
 
     public int RecentWindowDays { get; init; } = 7;
+
+    /// <summary>Kabul edilmeden süresi dolan öneri başına tekrar cezası ve bakılan pencere.</summary>
+    public double IgnoredOfferPenalty { get; init; } = 0.3;
+    public int IgnoredOfferWindowDays { get; init; } = 7;
     public int NotInterestedBlockDays { get; init; } = 14;
     public int LessLikeThisBlockDays { get; init; } = 30;
 
@@ -51,7 +55,21 @@ public sealed record RecommendationWeights
         _ => NoveltyExplore
     };
 
-    /// <summary>Contextual bandit'e geçmeden önce kontrollü keşif: Chill'de 0, diğerlerinde 1 keşif slotu.</summary>
+    /// <summary>Keşif slotunun açılma olasılığı (günlük, tohumlu). Chill'de hiç açılmaz.</summary>
+    public double ExplorationRateExplore { get; init; } = 0.5;
+
+    /// <summary>Keşif slotu önce Taste Graph komşularını dener. <c>false</c> yalnızca karşılaştırma içindir (ilk sürüm).</summary>
+    public bool GuidedExploration { get; init; } = true;
+    public double ExplorationRateSurpriseMe { get; init; } = 1.0;
+
+    /// <summary>Contextual bandit'e geçmeden önce kontrollü keşif: Chill'de 0, diğerlerinde en fazla 1 keşif slotu.</summary>
     public static int ExplorationSlotsFor(DiscoveryRadius radius, int count)
         => radius == DiscoveryRadius.Chill || count < 2 ? 0 : 1;
+
+    public double ExplorationRateFor(DiscoveryRadius radius) => radius switch
+    {
+        DiscoveryRadius.Chill => 0,
+        DiscoveryRadius.SurpriseMe => ExplorationRateSurpriseMe,
+        _ => ExplorationRateExplore
+    };
 }

@@ -6,6 +6,7 @@ using Gvn.GvnFramework.Security.Abstractions;
 using LifeQuest.Domain.Identity;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
+using Microsoft.Extensions.Options;
 
 namespace LifeQuest.Application.Identity;
 
@@ -40,6 +41,7 @@ internal sealed class RegisterCommandHandler(
     IPasswordHasher passwordHasher,
     AuthTokenIssuer tokenIssuer,
     IUnitOfWork unitOfWork,
+    IOptions<AdminOptions> adminOptions,
     TimeProvider clock) : ICommandHandler<RegisterCommand, AuthTokensDto>
 {
     public async Task<Result<AuthTokensDto>> Handle(RegisterCommand command, CancellationToken cancellationToken)
@@ -56,6 +58,8 @@ internal sealed class RegisterCommandHandler(
             return Result<AuthTokensDto>.Fail(registration.Errors);
 
         var account = registration.Data!;
+        if (adminOptions.Value.IsBootstrapAdmin(account.Email))
+            account.GrantRole(UserRoles.Admin);
         await accounts.AddAsync(account, cancellationToken);
         await profiles.AddAsync(UserProfile.CreateFor(account.Id), cancellationToken);
         await progress.AddAsync(PlayerProgress.CreateFor(account.Id), cancellationToken);

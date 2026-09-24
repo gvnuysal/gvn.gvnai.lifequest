@@ -19,6 +19,7 @@ public sealed record QuestDto(
     int MinMinutes,
     int MaxMinutes,
     CostBand Cost,
+    PhysicalEffort Effort,
     QuestRewardDto Reward,
     QuestStatus Status,
     QuestSource Source,
@@ -51,7 +52,7 @@ public static class QuestMappings
 {
     public static QuestDto ToDto(this UserQuest q) => new(
         q.Id, q.Title, q.Description, q.Type, q.Difficulty, q.Category, q.SecondaryCategory,
-        q.MinMinutes, q.MaxMinutes, q.Cost,
+        q.MinMinutes, q.MaxMinutes, q.Cost, q.Effort,
         new QuestRewardDto(q.Reward.LifeXp, q.Reward.PrimaryCategoryXp, q.Reward.SecondaryCategoryXp),
         q.Status, q.Source, q.OfferedAt, q.ExpiresAt, q.AcceptedAt, q.CompletedAt, q.SkipReason,
         q.Rating, q.Preference, q.IsExploration, q.Explanation);

@@ -10,7 +10,10 @@ import {
   PagedResult,
   PreferencesRequest,
   Profile,
+  ProductMetrics,
   Progress,
+  StarterCard,
+  WeeklySummary,
   Quest,
   QuestCompletion,
   QuestDetail,
@@ -134,5 +137,37 @@ export class ProgressApi {
 
   achievements() {
     return this.http.get<Achievement[]>(`${API}/achievements`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class OnboardingApi {
+  private readonly http = inject(HttpClient);
+
+  starterCards() {
+    return this.http.get<StarterCard[]>(`${API}/onboarding/starter-cards`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class SummariesApi {
+  private readonly http = inject(HttpClient);
+
+  /** Okunmamış özet yoksa API 204 döner → null. */
+  latest() {
+    return this.http.get<WeeklySummary | null>(`${API}/summaries/latest`);
+  }
+
+  markRead(id: string) {
+    return this.http.post<void>(`${API}/summaries/${id}/read`, null);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class AdminApi {
+  private readonly http = inject(HttpClient);
+
+  metrics(days: number) {
+    return this.http.get<ProductMetrics>(`${API}/admin/metrics`, { params: { days } });
   }
 }

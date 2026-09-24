@@ -1,5 +1,6 @@
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Identity;
+using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Profiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +16,8 @@ internal sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserPr
         builder.Property(x => x.City).HasMaxLength(80);
         builder.Property(x => x.TimeZoneId).HasMaxLength(64).IsRequired();
         builder.PrimitiveCollection(x => x.Goals);
+        builder.Property(x => x.MaxPhysicalEffort).HasDefaultValue(PhysicalEffort.Vigorous).HasSentinel((PhysicalEffort)(-1));
+        builder.Property(x => x.NotificationPreference).HasDefaultValue(NotificationPreference.WeeklySummary).HasSentinel((NotificationPreference)(-1));
         builder.HasIndex(x => x.UserId).IsUnique();
         builder.HasOne<UserAccount>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
 

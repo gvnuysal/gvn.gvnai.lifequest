@@ -18,4 +18,9 @@
     <ProjectReference Include="..\LifeQuest.Application\LifeQuest.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="LifeQuest.Catalog.Tests" />
+    <InternalsVisibleTo Include="LifeQuest.Simulation" />
+  </ItemGroup>
+
 </Project>

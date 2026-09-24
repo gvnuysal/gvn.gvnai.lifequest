@@ -26,3 +26,7 @@ export const onboardingPendingGuard: CanActivateFn = async () => {
   const profile = await inject(ProfileStore).ensureLoaded();
   return profile?.onboardingCompleted ? router.createUrlTree(['/bugun']) : true;
 };
+
+/** Yönetim ekranı. Asıl yetki kontrolü API'de ([Authorize(Roles = "admin")]). */
+export const adminGuard: CanActivateFn = () =>
+  inject(AuthStore).isAdmin() ? true : inject(Router).createUrlTree(['/bugun']);

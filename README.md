@@ -9,13 +9,13 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.0.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-57%20passing-22A559?style=flat-square)](#testler)
-[![Web tests](https://img.shields.io/badge/web%20tests-17%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-199%20passing-22A559?style=flat-square)](#testler)
+[![Web tests](https://img.shields.io/badge/web%20tests-19%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 
 **Ekranda daha uzun kalmanı değil, gerçek hayatta daha çok şey yaşamanı hedefleyen bir oyun.**
 
-[Ekranlar](#ekranlar) · [Nasıl çalışır?](#nasil-calisir) · [Mimari](#mimari) · [Hızlı başlangıç](#hizli-baslangic) · [API](#api) · [Analiz değerlendirmesi](docs/analiz-degerlendirmesi.md)
+[Ekranlar](#ekranlar) · [Nasıl çalışır?](#nasil-calisir) · [Mimari](#mimari) · [Hızlı başlangıç](#hizli-baslangic) · [API](#api) · [Analiz değerlendirmesi](docs/analiz-degerlendirmesi.md) · [Simülasyon raporu](docs/simulasyon-raporu.md)
 
 </div>
 
@@ -32,6 +32,9 @@ LifeQuest; zamanına, bütçene, ilgi alanlarına ve ne kadar keşif istediğine
 | 🌱 **Sağlıklı oyunlaştırma** | Streak yok, kayıp korkusu yok. Süresi dolan görevin cezası da yok. |
 | 🕸️ **Taste Graph** | *Kahve → Kafe Kültürü → Mimari → Fotoğrafçılık* gibi komşu ilgi alanlarına geçiş. |
 | 🔒 **Önce mahremiyet** | Konum takibi yok, fotoğraf doğrulaması yok. Tek tıkla tüm veriler silinir (KVKK/GDPR). |
+| 🛡️ **Güvenli katalog** | 100 editoryal template; her biri güvenlik kontrol listesinden CI'da geçer. Gece açık hava görevi yok; efor sınırına saygı. |
+| 🃏 **Hızlı ısınma** | Onboarding'deki "Sana göre mi?" kartları ilk günden isabetli öneri sağlar. |
+| 📬 **Suçlamayan haftalık özet** | Bildirim yalnızca seçersen; varsayılan, uygulama içi haftalık özet. |
 
 ---
 
@@ -82,7 +85,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-    A[Katalog<br/>güvenli template'ler] --> E{Uygunluk filtresi<br/>cooldown · bütçe · süre<br/>şehir · ilgimi çekmedi}
+    A[Katalog<br/>güvenli template'ler] --> E{Uygunluk filtresi<br/>cooldown · bütçe · süre · şehir<br/>efor · gece açık hava · ilgimi çekmedi}
     P[Profil<br/>ilgiler · hedefler<br/>Discovery Radius] --> S
     H[Geçmiş<br/>tamamlanan · geçilen<br/>puanlar] --> S
     G[Taste Graph] --> S
@@ -98,7 +101,8 @@ flowchart LR
 - Discovery Radius, İlgi ve Yenilik ağırlığını değiştirir.
 - Diversity her seçimden sonra yeniden hesaplanır. Bu, *"kahve seviyor → hep kahve"* döngüsünü kırar.
 - İlk slot mümkünse kısa bir görevdir, böylece ilk 5 dakikada uygulanabilir bir öneri olur.
-- Keşif modlarında bir slot kontrollü keşfe ayrılır. Seçim kullanıcı + gün ile tohumlanır, yani tekrarlanabilir ve test edilebilir.
+- Keşif modlarında bir slot kontrollü keşfe ayrılır (Dengeli %50, Şaşırt Beni her gün). Önce Taste Graph'ta sevdiğin bir ilgiye komşu quest'ler denenir. Seçim kullanıcı + gün ile tohumlanır, yani tekrarlanabilir ve test edilebilir.
+- Son 7 günde gösterilip seçilmeyen öneriler her gösterimde biraz daha geriye düşer.
 - "İlgimi çekmedi" ilgi ağırlığını düşürür. "Pahalı / zamanım yok / uzak" ise ilgiyi değil, benzer maliyet ve süredeki önerilerin skorunu etkiler.
 
 ### Ekonomi (deterministik, LLM üretmez)
@@ -112,6 +116,20 @@ flowchart LR
 | Kategori XP | Birincil = Life × 2/3 · ikincil = Life × 2/9 (Haftalık/Orta → 180 + 120 + 40) |
 | Seviye | `base × (L−1) × L / 2` (Life 100, kategori 60) |
 | Çift XP koruması | Append-only `xp_transactions` defteri, `(source_type, source_id)` benzersiz |
+
+### Offline simülasyon
+
+Motor saf olduğu için gerçek domain koduyla 8 persona × 20 tohum × 30 gün simüle edilir (`tools/LifeQuest.Simulation`). Analiz sonrası yapılan motor değişiklikleri, isabet ve north-star'ı koruyarak gizli ilgi keşfini **%48 → %60**'a çıkardı, tekrar eden öneriyi **%45 → %34**'e indirdi. Ayrıntılar: [simülasyon raporu](docs/simulasyon-raporu.md).
+
+<img src="docs/images/sim-ablation.svg" alt="Simülasyon: bileşen ablasyonu" width="100%" />
+
+```bash
+dotnet run --project tools/LifeQuest.Simulation -- --docs docs
+```
+
+### AI Quest Master altyapısı
+
+Anlatım `IQuestNarrator` portu arkasında. Prompt yalnızca PII'siz yapısal alanlardan kurulur. Çıktı `NarrationGuard`'dan geçer: uzunluk, URL, para/XP, uydurma sayı, riskli ifade ve kişisel veri talebi kontrol edilir. 2 sn zaman aşımında veya ihlalde template metnine dönülür. Kategori, süre, maliyet ve XP her zaman template'ten gelir. Varsayılan implementasyon deterministik `TemplateQuestNarrator`.
 
 ---
 
@@ -156,12 +174,17 @@ src/
 └── LifeQuest.Web             Angular PWA istemcisi
 tests/
 ├── LifeQuest.Domain.Tests            Öneri motoru, ekonomi ve aggregate testleri
+├── LifeQuest.Application.Tests       Narration guard/fallback, metrikler, haftalık özet
+├── LifeQuest.Catalog.Tests           Editoryal güvenlik kuralları (CI kapısı)
 └── LifeQuest.Api.IntegrationTests    Testcontainers PostgreSQL ile uçtan uca testler
+tools/
+└── LifeQuest.Simulation              Offline öneri simülasyonu ve rapor üretimi
 docs/
-└── analiz-degerlendirmesi.md         Ürün analizi değerlendirmesi ve framework bulguları
+├── analiz-degerlendirmesi.md         Ürün analizi değerlendirmesi ve framework bulguları
+└── simulasyon-raporu.md              Persona simülasyonu, ablasyon ve öneriler
 ```
 
-Modüller (framework `IModule`, `LoadModules` ile yüklenir): **Persistence · Identity · Profile · Catalog · Quest · Progression**
+Modüller (framework `IModule`, `LoadModules` ile yüklenir): **Persistence · Identity · Profile · Catalog · Quest · Progression · Notification · Admin**
 
 </details>
 
@@ -247,9 +270,11 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 | Paket | Kapsam |
 |---|---|
-| `LifeQuest.Domain.Tests` (46) | Öneri motoru (analizdeki "kahve" senaryosu dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar |
-| `LifeQuest.Api.IntegrationTests` (11) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme |
-| `LifeQuest.Web` (17, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh), hata ayrıştırma, formatlayıcılar |
+| `LifeQuest.Domain.Tests` (60) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni |
+| `LifeQuest.Application.Tests` (19) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si |
+| `LifeQuest.Catalog.Tests` (104) | 100 seed template'in her biri ve katalog dengesi (CI kapısı) |
+| `LifeQuest.Api.IntegrationTests` (16) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, admin metrik yetkisi, haftalık özet |
+| `LifeQuest.Web` (19, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh), hata ayrıştırma, formatlayıcılar, JWT rol okuma |
 
 ---
 
@@ -282,6 +307,9 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 | `GET /api/v1/quests/active` · `history` · `{id}` | Aktif görevler, sayfalı geçmiş, skor dökümlü detay |
 | `POST /api/v1/quests/{id}/accept` · `complete` · `skip` · `feedback` | Yaşam döngüsü ve geri bildirim |
 | `GET /api/v1/progress` · `GET /api/v1/achievements` | XP, seviyeler, başarımlar |
+| `GET /api/v1/onboarding/starter-cards` | Cold start kartları (onboarding'de `starterReactions` ile yanıtlanır) |
+| `GET /api/v1/summaries/latest` · `POST …/{id}/read` | Okunmamış haftalık özet (yoksa 204) |
+| `GET /api/v1/admin/metrics?days=7` | North-star, funnel, skip sebepleri, keşif kabulü (yalnızca `admin` rolü) |
 
 Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğrulama · 401 · 404 · 409 çakışma/geçersiz geçiş · 429.
 
@@ -295,7 +323,9 @@ Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğ
 | `Database:MigrateOnStartup` | Yalnızca geliştirme için. Üretimde migration ayrı bir adımdır. |
 | `Cache:UseRedis` | `docker compose --profile redis up -d` ile Redis |
 | `BackgroundJobs:Enabled`, `Hangfire:*` | Hangfire (şu an InMemory) |
-| `Quests:*`, `Recommendation:*` | Günlük öneri sayısı, aktif görev sınırı, skor ağırlıkları |
+| `Quests:*`, `Recommendation:*` | Günlük öneri sayısı, aktif görev sınırı, skor ağırlıkları, keşif oranları, tekrar penceresi |
+| `Narration:TimeoutMilliseconds` | Anlatım zaman aşımı (varsayılan 2000) |
+| `Admin:BootstrapEmails` | Açılışta admin rolü verilecek hesaplar (geliştirmede `admin@lifequest.local`) |
 
 Migration eklemek için:
 
@@ -310,9 +340,11 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 ## 🗺️ Yol haritası
 
 - [x] **Faz 1 · Core:** modular monolith, kimlik, onboarding, katalog, XP, başarımlar, öneri motoru, web istemcisi
-- [ ] Katalogun 100 güvenli template'e çıkarılması
+- [x] Analiz riskleri: 100 template'lik güvenli katalog, efor/erişilebilirlik, cold start kartları, north-star paneli, haftalık özet, AI anlatım altyapısı, offline simülasyon
+- [ ] Katalog derinliği (ilgi başına 3-4 template) · simülasyon önerilerinin A/B testi
 - [ ] Refresh token'ın httpOnly çereze taşınması · Hangfire için kalıcı PostgreSQL storage
-- [ ] **Faz 2 · Intelligence:** AI Quest Master (guardrail'li), gelişmiş Taste Graph, offline öneri değerlendirmesi
+- [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
+- [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma
 - [ ] **Faz 3 · Real World:** mekân/etkinlik kaynakları, hava durumu bağlamı
 - [ ] **Faz 4 · Social:** Quest Party, ortak görevler, kontrollü paylaşım
 

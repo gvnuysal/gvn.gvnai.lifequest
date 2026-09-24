@@ -24,6 +24,8 @@ export class AuthStore {
   readonly accessToken = computed(() => this.tokens()?.accessToken ?? null);
   readonly isAuthenticated = computed(() => this.tokens() !== null);
   readonly userId = computed(() => this.tokens()?.userId ?? null);
+  readonly role = computed(() => roleFromToken(this.tokens()?.accessToken));
+  readonly isAdmin = computed(() => this.role() === 'admin');
 
   /** Uygulama açılışında: kayıtlı refresh token varsa oturumu sessizce yeniler. */
   async restore(): Promise<void> {
@@ -112,5 +114,22 @@ export class AuthStore {
     } catch {
       return null;
     }
+  }
+}
+
+const ROLE_CLAIMS = ['role', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+/** Yalnızca arayüz kararları içindir (menü gösterimi); yetki kontrolü her zaman API'dedir. */
+export function roleFromToken(token: string | undefined): string | null {
+  if (!token) return null;
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+    const json = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+    const claim = ROLE_CLAIMS.map((key) => json[key]).find((value) => value !== undefined);
+    return Array.isArray(claim) ? String(claim[0]) : claim ? String(claim) : null;
+  } catch {
+    return null;
   }
 }

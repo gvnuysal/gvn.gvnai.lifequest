@@ -43,6 +43,17 @@ public sealed class UserAccount : AggregateRoot
         return Result<UserAccount>.Ok(account);
     }
 
+    /// <returns>Rol değiştiyse <c>true</c>.</returns>
+    public bool GrantRole(string role)
+    {
+        Guard.True(role is UserRoles.User or UserRoles.Admin, "Bilinmeyen rol.");
+        if (Role == role)
+            return false;
+
+        Role = role;
+        return true;
+    }
+
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     public bool IsLockedOut(DateTime nowUtc) => LockoutEndsAt > nowUtc;

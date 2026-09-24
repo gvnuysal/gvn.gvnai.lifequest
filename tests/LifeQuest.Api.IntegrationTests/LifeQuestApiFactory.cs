@@ -13,6 +13,8 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
+    public const string AdminEmail = "admin@lifequest.test";
+
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
@@ -34,6 +36,7 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("BackgroundJobs:Enabled", "false");
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
+        builder.UseSetting("Admin:BootstrapEmails:0", AdminEmail);
     }
 
     public async Task<HttpClient> CreateUserClientAsync(string? email = null)
@@ -54,9 +57,9 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         return client;
     }
 
-    public static async Task CompleteOnboardingAsync(HttpClient client, string radius = "Explore")
+    public static async Task CompleteOnboardingAsync(HttpClient client, string radius = "Explore", object? extra = null)
     {
-        var response = await client.PutAsJsonAsync("/api/v1/profile/onboarding", new
+        var response = await client.PutAsJsonAsync("/api/v1/profile/onboarding", extra ?? new
         {
             goals = new[] { "Culture", "Creativity" },
             interests = new[] { new { code = "coffee", weight = 0.9 }, new { code = "cinema", weight = 0.8 }, new { code = "art", weight = 0.4 } },

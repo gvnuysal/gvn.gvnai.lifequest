@@ -4,6 +4,7 @@ using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Application.Diagnostics;
+using LifeQuest.Application.Narration;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
@@ -29,6 +30,7 @@ public sealed class QuestOfferService(
     IOptions<QuestOptions> questOptions,
     IOptions<RecommendationWeights> weights,
     LifeQuestMetrics metrics,
+    QuestNarrationService narration,
     TimeProvider clock,
     ILogger<QuestOfferService> logger)
 {
@@ -125,7 +127,7 @@ public sealed class QuestOfferService(
 
         var recommendationProfile = new RecommendationProfile(
             profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
-            profile.Goals.ToHashSet(), profile.InterestWeights(), profile.City is not null);
+            profile.Goals.ToHashSet(), profile.InterestWeights(), profile.City is not null, profile.MaxPhysicalEffort);
 
         var result = new QuestRecommendationEngine(weights.Value)
             .Recommend(candidates, recommendationProfile, history, graph, context);
@@ -142,7 +144,11 @@ public sealed class QuestOfferService(
             var reward = RewardCalculator.Calculate(
                 candidate.Type, candidate.Difficulty, candidate.SecondaryCategory is not null, novelty);
 
-            var quest = UserQuest.Offer(userId, item, reward, source, offerDate, slotOffset + i, context.UtcNow, expiresAtUtc);
+            var topics = candidate.InterestIds.Select(graph.NameOf).ToList();
+            var text = await narration.NarrateAsync(candidate, topics, cancellationToken);
+
+            var quest = UserQuest.Offer(
+                userId, item, reward, source, offerDate, slotOffset + i, context.UtcNow, expiresAtUtc, text);
             await quests.AddAsync(quest, cancellationToken);
             offers.Add(quest);
         }

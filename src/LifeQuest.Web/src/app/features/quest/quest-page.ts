@@ -10,6 +10,7 @@ import {
   CATEGORIES,
   COST_LABELS,
   DIFFICULTY_LABELS,
+  EFFORT_LABELS,
   QUEST_TYPE_LABELS,
   SCORE_COMPONENTS,
   SKIP_REASONS,
@@ -67,6 +68,7 @@ export class QuestPage {
       { icon: 'coins' as const, label: 'Maliyet', value: COST_LABELS[q.cost].label },
       { icon: 'target' as const, label: 'Zorluk', value: DIFFICULTY_LABELS[q.difficulty] },
       { icon: 'flag' as const, label: 'Tür', value: QUEST_TYPE_LABELS[q.type] },
+      { icon: 'activity' as const, label: 'Efor', value: EFFORT_LABELS[q.effort].label },
     ];
   });
   protected readonly statusLabel = computed(() => (this.quest() ? STATUS_LABELS[this.quest()!.status] : ''));

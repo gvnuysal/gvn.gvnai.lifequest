@@ -28,6 +28,18 @@
       </div>
 
       <div class="field">
+        <span class="field__label">Hareket tercihi</span>
+        <lq-segmented ariaLabel="Hareket tercihi" [options]="effortOptions" [(value)]="maxEffort" />
+        <span class="field__hint">Bu seviyenin üzerindeki hareket gerektiren quest'ler önerilmez.</span>
+      </div>
+
+      <div class="field">
+        <span class="field__label">Bildirimler</span>
+        <lq-segmented ariaLabel="Bildirimler" [options]="notificationOptions" [(value)]="notifications" />
+        <span class="field__hint">Seni geri çağıran bildirim yok; yalnızca haftalık, uygulama içi bir özet.</span>
+      </div>
+
+      <div class="field">
         <span class="field__label">Hedef alanların</span>
         <div class="chips">
           @for (category of categories; track category) {
@@ -77,6 +89,9 @@
 
     <section class="surface card stack">
       <h2 class="section-title">Hesap</h2>
+      @if (isAdmin()) {
+        <a lq-button variant="soft" [block]="true" routerLink="/yonetim"><lq-icon name="trophy" [size]="18" /> Ürün metrikleri</a>
+      }
       <button lq-button variant="secondary" [block]="true" (click)="logout()"><lq-icon name="logout" [size]="18" /> Çıkış yap</button>
       <button lq-button variant="danger" [block]="true" (click)="deletePassword.set(''); deleteOpen.set(true)">
         <lq-icon name="trash" [size]="18" /> Hesabımı sil

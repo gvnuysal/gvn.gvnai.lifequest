@@ -5,6 +5,8 @@ using Gvn.GvnFramework.Application.DependencyInjection;
 using LifeQuest.Application.Behaviors;
 using LifeQuest.Application.Diagnostics;
 using LifeQuest.Application.Identity;
+using LifeQuest.Application.Narration;
+using LifeQuest.Application.Notifications;
 using LifeQuest.Application.Profiles;
 using LifeQuest.Application.Quests;
 using LifeQuest.Domain.Recommendations;
@@ -27,6 +29,7 @@ public static class DependencyInjection
 
         services.Configure<QuestOptions>(configuration.GetSection(QuestOptions.SectionName));
         services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));
+        services.Configure<AdminOptions>(configuration.GetSection(AdminOptions.SectionName));
         services.Configure<RecommendationWeights>(configuration.GetSection(RecommendationWeights.SectionName));
 
         services.TryAddSingleton(TimeProvider.System);
@@ -34,6 +37,12 @@ public static class DependencyInjection
         services.AddScoped<AuthTokenIssuer>();
         services.AddScoped<ProfileService>();
         services.AddScoped<QuestOfferService>();
+        services.AddScoped<WeeklySummaryService>();
+        services.AddScoped<QuestNarrationService>();
+
+        // AI Quest Master portu: gerçek bir LLM adaptörü Infrastructure'da kaydedilirse onu kullanır.
+        services.TryAddSingleton<IQuestNarrator, TemplateQuestNarrator>();
+        services.Configure<NarrationOptions>(configuration.GetSection(NarrationOptions.SectionName));
 
         return services;
     }

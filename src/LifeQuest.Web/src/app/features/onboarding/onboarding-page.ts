@@ -3,15 +3,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { CatalogApi, ProfileApi } from '../../core/api/api-clients';
-import { CostBand, DiscoveryRadius, LifeCategory } from '../../core/api/models';
+import { CatalogApi, OnboardingApi, ProfileApi } from '../../core/api/api-clients';
+import { CostBand, DiscoveryRadius, LifeCategory, PhysicalEffort, StarterCard, StarterReactionType } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
-import { browserTimeZone } from '../../core/labels/format';
+import { browserTimeZone, formatDuration } from '../../core/labels/format';
 import {
   CATEGORIES,
   CATEGORY_DESCRIPTIONS,
   CATEGORY_ORDER,
   COST_LABELS,
+  EFFORT_LIMIT_OPTIONS,
   COST_ORDER,
   RADIUS_LABELS,
   WEEKLY_TIME_OPTIONS,
@@ -19,15 +20,17 @@ import {
 import { ProfileStore } from '../../core/state/profile.store';
 import { ToastService } from '../../core/state/toast.service';
 import { Button } from '../../ui/button';
+import { CategoryIcon } from '../../ui/category-badge';
+import { Icon } from '../../ui/icon';
 import { InterestPicker } from '../../ui/interest-picker';
 import { OptionCard } from '../../ui/option-card';
 import { Skeleton } from '../../ui/states';
 
-const STEPS = ['Hedefler', 'İlgi alanları', 'Zaman ve bütçe', 'Keşif modu'] as const;
+const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütçe', 'Keşif modu'] as const;
 
 @Component({
   selector: 'lq-onboarding-page',
-  imports: [FormsModule, Button, InterestPicker, OptionCard, Skeleton],
+  imports: [FormsModule, Button, CategoryIcon, Icon, InterestPicker, OptionCard, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page page--bare">
@@ -70,6 +73,43 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Zaman ve bütçe', 'Keşif modu']
         }
         @case (2) {
           <section class="stack">
+            <h1>Bunlardan hangisi sana göre?</h1>
+            <p class="muted">Birkaç örnek quest'e tepki ver; ilk günden daha isabetli öneriler alırsın. İstersen bu adımı atlayabilirsin.</p>
+            @if (starterCards(); as cards) {
+              @if (currentCard(); as card) {
+                <article class="starter" [style.--c]="'var(--cat-' + categoryMeta[card.category].token + ')'">
+                  <div class="starter__top">
+                    <lq-category-icon [category]="card.category" [size]="52" />
+                    <span class="starter__count">{{ cardIndex() + 1 }} / {{ cards.length }}</span>
+                  </div>
+                  <p class="eyebrow">{{ categoryMeta[card.category].label }} · {{ duration(card) }} · {{ costLabels[card.cost].label }}</p>
+                  <h2>{{ card.title }}</h2>
+                  <p class="muted">{{ card.description }}</p>
+                  <div class="starter__actions">
+                    <button lq-button variant="secondary" (click)="react(card.code, 'Dislike')">
+                      <lq-icon name="thumbs-down" [size]="18" /> Bana göre değil
+                    </button>
+                    <button lq-button (click)="react(card.code, 'Like')">
+                      <lq-icon name="thumbs-up" [size]="18" /> Bana göre
+                    </button>
+                  </div>
+                  <button type="button" class="starter__skip" (click)="react(card.code, null)">Bu kartı geç</button>
+                </article>
+              } @else {
+                <div class="starter starter--done">
+                  <lq-icon name="sparkles" [size]="32" />
+                  <h2>Teşekkürler!</h2>
+                  <p class="muted">{{ likedCount() }} kartı beğendin. İlk önerilerin buna göre şekillenecek.</p>
+                  <button lq-button variant="ghost" size="sm" (click)="restartCards()">Baştan başla</button>
+                </div>
+              }
+            } @else {
+              <lq-skeleton [height]="260" />
+            }
+          </section>
+        }
+        @case (3) {
+          <section class="stack">
             <h1>Haftada ne kadar vaktin var?</h1>
             <div class="grid">
               @for (option of timeOptions; track option.minutes) {
@@ -84,9 +124,17 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Zaman ve bütçe', 'Keşif modu']
                   [selected]="budget() === cost" (click)="budget.set(cost)"></button>
               }
             </div>
+            <h2 class="sub">Hareket tercihin?</h2>
+            <p class="muted small">Bir hareket kısıtın varsa ya da yoğun sporu sevmiyorsan öneriler buna göre filtrelenir.</p>
+            <div class="stack">
+              @for (option of effortOptions; track option.value) {
+                <button lq-option [heading]="option.label" [description]="option.hint"
+                  [selected]="maxEffort() === option.value" (click)="maxEffort.set(option.value)"></button>
+              }
+            </div>
           </section>
         }
-        @case (3) {
+        @case (4) {
           <section class="stack">
             <h1>Ne kadar keşif istersin?</h1>
             <p class="muted">Yeniliğin dozunu sen belirlersin; istediğin zaman değiştirebilirsin.</p>
@@ -120,6 +168,19 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Zaman ve bütçe', 'Keşif modu']
     .dots span.on { background: var(--brand); }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .sub { font-size: var(--fs-lg); margin-top: var(--space-3); }
+    .small { font-size: var(--fs-sm); }
+    .starter {
+      display: flex; flex-direction: column; gap: 10px; padding: var(--space-5); border-radius: var(--radius-xl);
+      background: linear-gradient(160deg, color-mix(in srgb, var(--c, var(--brand)) 16%, var(--surface)), var(--surface) 70%);
+      border: 1px solid var(--line); box-shadow: var(--shadow-md); animation: pop-in 0.25s var(--ease);
+    }
+    .starter__top { display: flex; align-items: center; justify-content: space-between; }
+    .starter__count { font-weight: 800; color: var(--ink-3); font-size: var(--fs-sm); }
+    .starter__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .starter__actions button { padding: 0 12px; white-space: nowrap; font-size: var(--fs-sm); }
+    .starter__skip { align-self: center; min-height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--ink-3); font-weight: 700; cursor: pointer; }
+    .starter--done { align-items: center; text-align: center; color: var(--primary-text); }
+    @keyframes pop-in { from { transform: translateY(8px) scale(0.98); opacity: 0; } }
     .actions {
       position: sticky;
       bottom: 0;
@@ -147,6 +208,8 @@ export class OnboardingPage {
   protected readonly radiusLabels = RADIUS_LABELS;
 
   protected readonly interests = toSignal(inject(CatalogApi).interests().pipe(catchError(() => of([]))));
+  protected readonly starterCards = toSignal(inject(OnboardingApi).starterCards().pipe(catchError(() => of([] as StarterCard[]))));
+  protected readonly effortOptions = EFFORT_LIMIT_OPTIONS;
   protected readonly name = this.profiles.firstName;
 
   protected readonly step = signal(0);
@@ -157,6 +220,11 @@ export class OnboardingPage {
   protected readonly budget = signal<CostBand>('Low');
   protected readonly discoveryRadius = signal<DiscoveryRadius>('Explore');
   protected readonly city = signal('');
+  protected readonly maxEffort = signal<PhysicalEffort>('Vigorous');
+  protected readonly reactions = signal<Record<string, StarterReactionType>>({});
+  protected readonly cardIndex = signal(0);
+  protected readonly currentCard = computed(() => this.starterCards()?.[this.cardIndex()] ?? null);
+  protected readonly likedCount = computed(() => Object.values(this.reactions()).filter((r) => r === 'Like').length);
 
   protected readonly canContinue = computed(() => {
     switch (this.step()) {
@@ -175,6 +243,25 @@ export class OnboardingPage {
 
   protected toggleGoal(category: LifeCategory): void {
     this.goals.update((goals) => (goals.includes(category) ? goals.filter((g) => g !== category) : [...goals, category]));
+  }
+
+  protected react(code: string, reaction: StarterReactionType | null): void {
+    this.reactions.update((current) => {
+      const next = { ...current };
+      if (reaction) next[code] = reaction;
+      else delete next[code];
+      return next;
+    });
+    this.cardIndex.update((i) => i + 1);
+  }
+
+  protected restartCards(): void {
+    this.reactions.set({});
+    this.cardIndex.set(0);
+  }
+
+  protected duration(card: StarterCard): string {
+    return formatDuration(card.minMinutes, card.maxMinutes);
   }
 
   protected back(): void {
@@ -203,6 +290,8 @@ export class OnboardingPage {
         discoveryRadius: this.discoveryRadius(),
         city: city.length > 0 ? city : null,
         timeZoneId: browserTimeZone(),
+        maxPhysicalEffort: this.maxEffort(),
+        starterReactions: Object.entries(this.reactions()).map(([templateCode, reaction]) => ({ templateCode, reaction })),
       })
       .subscribe({
         next: (profile) => {

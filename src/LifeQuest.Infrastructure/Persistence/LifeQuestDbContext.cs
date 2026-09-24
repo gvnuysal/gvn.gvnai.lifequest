@@ -4,6 +4,7 @@ using Gvn.GvnFramework.EntityFramewokCore.Context;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Identity;
+using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using LifeQuest.Domain.Quests;
@@ -28,6 +29,7 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
     public DbSet<UserQuest> UserQuests => Set<UserQuest>();
     public DbSet<PlayerProgress> PlayerProgress => Set<PlayerProgress>();
     public DbSet<XpTransaction> XpTransactions => Set<XpTransaction>();
+    public DbSet<WeeklySummary> WeeklySummaries => Set<WeeklySummary>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +69,9 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
         StoreAsString<SkipReason>(configurationBuilder);
         StoreAsString<FeedbackPreference>(configurationBuilder);
         StoreAsString<XpSourceType>(configurationBuilder);
+        StoreAsString<PhysicalEffort>(configurationBuilder);
+        StoreAsString<NotificationPreference>(configurationBuilder);
+        StoreAsString<NarrationSource>(configurationBuilder);
     }
 
     private static void StoreAsString<TEnum>(ModelConfigurationBuilder builder) where TEnum : struct, Enum

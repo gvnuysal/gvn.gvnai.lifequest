@@ -1,13 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked, WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, Observable, of } from 'rxjs';
 import { CatalogApi, ProfileApi } from '../../core/api/api-clients';
-import { CostBand, DiscoveryRadius, LifeCategory, Profile } from '../../core/api/models';
+import { CostBand, DiscoveryRadius, LifeCategory, NotificationPreference, PhysicalEffort, Profile } from '../../core/api/models';
 import { AuthStore } from '../../core/auth/auth.store';
 import { firstErrorMessage } from '../../core/http/api-error';
-import { CATEGORIES, CATEGORY_ORDER, COST_LABELS, COST_ORDER, RADIUS_LABELS, WEEKLY_TIME_OPTIONS } from '../../core/labels/labels';
+import {
+  CATEGORIES,
+  CATEGORY_ORDER,
+  COST_LABELS,
+  COST_ORDER,
+  EFFORT_LIMIT_OPTIONS,
+  NOTIFICATION_LABELS,
+  RADIUS_LABELS,
+  WEEKLY_TIME_OPTIONS,
+} from '../../core/labels/labels';
 import { ProfileStore } from '../../core/state/profile.store';
 import { ThemePreference, ThemeService } from '../../core/state/theme.service';
 import { ToastService } from '../../core/state/toast.service';
@@ -22,7 +31,7 @@ import { Skeleton } from '../../ui/states';
 
 @Component({
   selector: 'lq-profile-page',
-  imports: [FormsModule, Button, CategoryBadge, Chip, Icon, InterestPicker, Segmented, Sheet, Skeleton],
+  imports: [FormsModule, RouterLink, Button, CategoryBadge, Chip, Icon, InterestPicker, Segmented, Sheet, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
@@ -47,6 +56,12 @@ export class ProfilePage {
   }));
   protected readonly costOptions: SegmentOption<CostBand>[] = COST_ORDER.map((c) => ({ value: c, label: COST_LABELS[c].label }));
   protected readonly timeOptions: SegmentOption<number>[] = WEEKLY_TIME_OPTIONS.map((o) => ({ value: o.minutes, label: o.short }));
+  protected readonly effortOptions: SegmentOption<PhysicalEffort>[] = EFFORT_LIMIT_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+  protected readonly notificationOptions: SegmentOption<NotificationPreference>[] = (['WeeklySummary', 'Off'] as const).map((v) => ({
+    value: v,
+    label: NOTIFICATION_LABELS[v],
+  }));
+  protected readonly isAdmin = this.auth.isAdmin;
   protected readonly themeOptions: SegmentOption<ThemePreference>[] = [
     { value: 'system', label: 'Sistem' },
     { value: 'light', label: 'Açık' },
@@ -59,6 +74,8 @@ export class ProfilePage {
   protected readonly weeklyMinutes = signal(300);
   protected readonly goals = signal<LifeCategory[]>([]);
   protected readonly city = signal('');
+  protected readonly maxEffort = signal<PhysicalEffort>('Vigorous');
+  protected readonly notifications = signal<NotificationPreference>('WeeklySummary');
   protected readonly savingPreferences = signal(false);
 
   protected readonly interestsOpen = signal(false);
@@ -79,6 +96,8 @@ export class ProfilePage {
       p.budget !== this.budget() ||
       p.weeklyAvailableMinutes !== this.weeklyMinutes() ||
       (p.city ?? '') !== this.city().trim() ||
+      p.maxPhysicalEffort !== this.maxEffort() ||
+      p.notificationPreference !== this.notifications() ||
       [...p.goals].sort().join() !== [...this.goals()].sort().join()
     );
   });
@@ -109,6 +128,8 @@ export class ProfilePage {
         goals: this.goals(),
         city: city || null,
         clearCity: !city,
+        maxPhysicalEffort: this.maxEffort(),
+        notificationPreference: this.notifications(),
       }),
       this.savingPreferences,
       'Tercihlerin kaydedildi. Yarınki öneriler buna göre şekillenecek.',
@@ -177,5 +198,7 @@ export class ProfilePage {
     this.weeklyMinutes.set(this.snapWeeklyMinutes(profile.weeklyAvailableMinutes));
     this.goals.set([...profile.goals]);
     this.city.set(profile.city ?? '');
+    this.maxEffort.set(profile.maxPhysicalEffort === 'None' ? 'Light' : profile.maxPhysicalEffort);
+    this.notifications.set(profile.notificationPreference);
   }
 }

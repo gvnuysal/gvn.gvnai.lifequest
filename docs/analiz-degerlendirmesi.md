@@ -64,15 +64,24 @@ Analizde eksik kalan veya "yapılabilir" diye bırakılan noktaların bir kısm�
 
 ## 3. Analizde açık kalan riskler ve öneriler
 
-1. **Katalog ürünün kendisidir.** Engine ne kadar iyi olursa olsun 39 template ile çeşitlilik hızla tükenir; cooldown'lar devreye girince öneri havuzu daralır. Analizdeki "ilk 100 güvenli template" hedefi MVP'nin kritik yoludur. Önerilenler: editoryal üretim süreci, template başına güvenlik checklist'i ve şehir bağımsız / şehir gerektiren dengesi.
-2. **Tamamlama beyana dayalıdır.** XP şişirilebilir. XP ve seviye **özel** kalmalı; herkese açık liderlik tablosu, doğrulama mekanizması olmadan açılmamalı. Aksi halde "sağlıklı oyunlaştırma" ilkesi zarar görür.
-3. **Cold start.** İlk gün yalnızca onboarding ilgileri var. Kısa bir "bunlardan hangisi sana göre?" kart seçimi, ilk haftanın isabetini ciddi biçimde artırır.
-4. **North-star tanımı.** "Haftalık anlamlı tamamlanmış deneyim" ölçülebilir hale getirilmeli. Öneri: tamamlanmış ve (puan ≥ 4 **veya** puansız) quest sayısı / aktif kullanıcı. Funnel metrikleri `LifeQuest` meter'ında toplanıyor.
-5. **Güvenlik etiketi tek boyutlu değil.** Gece yapılan açık hava görevleri, hava koşulu ve fiziksel efor ayrı risk boyutlarıdır. Faz 3'teki hava entegrasyonundan önce, açık hava görevleri için gün dilimi kısıtı (mevcut `DayParts`) katı tutulmalı.
-6. **Erişilebilirlik ve kapsayıcılık.** Analizde yok. Template'lere erişilebilirlik etiketi (hareket kısıtı, ücretsiz alternatif) eklenmesi hem etik hem büyüme açısından değerli.
-7. **AI Quest Master guardrail'leri.** Kullanıcının serbest metni prompt'a girmemeli (prompt injection). LLM çıktısı yalnızca başlık/anlatım üretmeli; kategori, süre, maliyet ve XP her zaman template'ten gelmeli. Engine bu ayrıma hazır: snapshot alanları template'ten, açıklama ayrı alandan geliyor.
-8. **OpenIddict zamanlaması.** MVP'de framework JWT ve rotasyonlu refresh token yeterli. Harici istemci, SSO veya üçüncü taraf entegrasyonu gündeme geldiğinde OpenIddict'e geçilmeli.
-9. **Bildirimler.** Kullanıcının seçtiği sıklık ilkesi doğru ama henüz uygulanmadı. Bildirim modülü eklenirken varsayılan "kapalı / haftalık özet" olmalı.
+Durum etiketleri: ✅ uygulandı · 🧭 karar (politika) · 🗺️ yol haritası. Öneri motoru üzerindeki etkiler [offline simülasyon raporunda](simulasyon-raporu.md) ölçüldü.
+
+| # | Risk / öneri | Durum | Nasıl ele alındı |
+|---|---|---|---|
+| 1 | **Katalog ürünün kendisidir.** 39 template ile çeşitlilik hızla tükenir. | ✅ | Katalog **100 template**e çıktı (6 kategori × 16–17). `CatalogSafetyRules` editoryal kontrol listesi, `LifeQuest.Catalog.Tests` içinde CI kapısı olarak çalışıyor: her template ve katalog dengesi (kategori başına ≥ 12, ≥ 2 Daily, ücretsiz ≥ %35, şehirden bağımsız ≥ %45). Seeder upsert yapıyor ve template `Version`'ını artırıyor; kurala uymayan template `NeedsReview` olarak işaretleniyor ve önerilmiyor. Simülasyon, katalog derinliğinin hâlâ zamanla düşen isabetin ana sebebi olduğunu gösteriyor; ilgi başına 3-4 template hedefi yol haritasında. |
+| 2 | **Tamamlama beyana dayalıdır**, XP şişirilebilir. | 🧭 | Politika: XP ve seviye **özel** kalır. Herkese açık liderlik tablosu, sosyal karşılaştırma ya da XP karşılığı ödül doğrulama mekanizması olmadan açılmaz. Kodda bu yüzeylerin hiçbiri yok. Narration guard da LLM çıktısında XP/para ifadesini reddediyor. |
+| 3 | **Cold start.** | ✅ | Onboarding'de "Sana göre mi?" adımı: kategori başına 2, toplam 12 başlangıç kartı (`GET /onboarding/starter-cards`). 👍 ilgileri +0,15 artırıyor (yoksa Learned olarak ekliyor), 👎 −0,10 düşürüyor. Simülasyon: tek ilgi beyan eden kullanıcıda isabet %67 → %72. Zengin beyanda etki gürültü içinde, bu yüzden adım atlanabilir. |
+| 4 | **North-star tanımı.** | ✅ | `GET /admin/metrics` (yalnızca admin rolü): anlamlı deneyim (tamamlanmış ve puansız ya da puan ≥ 4) / aktif kullanıcı / hafta, offered → accepted → completed hunisi, skip sebepleri, yeni kategori ve keşif kabul oranı. Web'de `/yonetim` ekranı var. Admin hesapları `Admin:BootstrapEmails` ayarından atanıyor. |
+| 5 | **Güvenlik tek boyutlu değil.** | ✅ | Motorda iki yeni sert filtre: `outdoor_at_night` (açık hava + gece + hemen yapılacak bağlam) ve `effort_limit`. Template kuralları: açık havada Night gün dilimi yok, risk ≤ 0,3, Vigorous efor için risk etiketi zorunlu. Hava durumu entegrasyonu 🗺️ Faz 3'te. |
+| 6 | **Erişilebilirlik ve kapsayıcılık.** | ✅ | `PhysicalEffort` (None…Vigorous) tüm template'lerde tanımlı ve quest detayında gösteriliyor. Kullanıcı onboarding'de veya profilde efor sınırı seçiyor. Simülasyonda hareket kısıtı olan personada kapasiteyi aşan öneri %3'ten %0'a indi. |
+| 7 | **AI Quest Master guardrail'leri.** | ✅ altyapı / 🗺️ LLM | `IQuestNarrator` portu. `NarrationPromptBuilder` yalnızca yapısal ve PII'siz alanları kullanıyor; kullanıcı adı, e-posta, şehir ve serbest metin prompt'a girmiyor. `NarrationGuard` uzunluk, URL, para/XP, uydurma sayı, riskli ifade ve kişisel veri talebi kontrolü yapıyor. 2 sn zaman aşımı veya ihlalde template metnine dönülüyor ve `lifequest.narration.fallback` metriği artıyor. Kategori, süre, maliyet ve XP her zaman template'ten geliyor. Gerçek LLM adaptörü Faz 2'de. |
+| 8 | **OpenIddict zamanlaması.** | 🧭 | Karar: MVP'de framework JWT ve rotasyonlu refresh token yeterli. Geçiş tetikleyicileri: harici/üçüncü taraf istemci, kurumsal SSO ya da mobil uygulamada PKCE ihtiyacı. |
+| 9 | **Bildirimler.** | ✅ uygulama içi / 🗺️ push | `NotificationPreference` (Kapalı / Haftalık özet, varsayılan haftalık özet). `WeeklySummaryJob` her Pazartesi kullanıcının yerel haftasına göre idempotent özet üretiyor ve metin suçlayıcı olmayan bir tonda yazılıyor. Bugün ekranında kart olarak gösteriliyor. Karar: push kanalı ve günlük hatırlatma, kullanıcının açıkça seçmesi şartıyla sonraki fazda. |
+
+**Simülasyonla bulunup düzeltilen sorunlar** (8 persona × 20 tohum × 30 gün, gerçek domain kodu):
+- İlk sürümün keşif slotu rastgeleydi. Artık Taste Graph komşularını önceliklendiriyor ve Dengeli modda %50 olasılıkla açılıyor. Gizli ilgi keşfi %48 → %60.
+- Görmezden gelinen öneriler tekrar ediyordu. 7 günlük pencere ve gösterim başına ceza ile tekrar %45 → %34.
+- İsabet (%73 → %74) ve north-star (6,25 → 6,32) korundu.
 
 ---
 
@@ -104,8 +113,8 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 
 ## 5. Sonraki adımlar (öncelik sırasıyla)
 
-1. Katalogu 100 template'e çıkarmak ve editoryal güvenlik checklist'ini oluşturmak.
+1. Katalog derinliği: ilgi başına 3-4 template, özellikle kısa, ücretsiz ve şehirden bağımsız görevler (simülasyon öneri 1).
 2. Framework 1–5 düzeltmeleri ve Hangfire için kalıcı PostgreSQL storage.
-3. Cold-start kart seçimi ve bildirim tercihleri (Notification modülü).
-4. Offline öneri değerlendirmesi: saklanan skor dökümleriyle diversity/relevance raporu.
-5. İstemci (Angular veya MAUI), ardından Faz 2 (AI Quest Master, gelişmiş Taste Graph).
+3. Motor ayarları için A/B: "sevdiğini tekrarla" muafiyeti, Şaşırt Beni yeniliği 0,28, Sakin modda %10 güdümlü keşif.
+4. Gerçek LLM adaptörü (`IQuestNarrator`) ve guard ihlal oranının izlenmesi.
+5. Push kanalı ve kullanıcı seçimli günlük hatırlatma; hava durumu entegrasyonu.

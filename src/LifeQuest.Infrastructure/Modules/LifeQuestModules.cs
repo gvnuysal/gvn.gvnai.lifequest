@@ -5,6 +5,8 @@ using Gvn.GvnFramework.EntityFramewokCore.UnitOfWork;
 using Gvn.GvnFramework.Modularity.Abstractions;
 using Hangfire;
 using LifeQuest.Application.Abstractions;
+using LifeQuest.Application.Admin;
+using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Identity;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
@@ -86,6 +88,39 @@ public sealed class ProgressionModule : IModule
 
     public void ConfigureServices(IServiceCollection services)
         => services.AddScoped<IPlayerProgressRepository, PlayerProgressRepository>();
+
+    public void Configure(IApplicationBuilder app) { }
+}
+
+public sealed class NotificationModule : IModule
+{
+    public string Name => "Notification";
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<IWeeklySummaryRepository, WeeklySummaryRepository>();
+        services.AddScoped<WeeklySummaryJob>();
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        if (app.ApplicationServices.GetService<JobStorage>() is null)
+            return;
+
+        using var scope = app.ApplicationServices.CreateScope();
+#pragma warning disable CS4014 // Hangfire dönen Task'ı kendisi bekler.
+        scope.ServiceProvider.GetRequiredService<IBackgroundJobService>().AddOrUpdateRecurring<WeeklySummaryJob>(
+            WeeklySummaryJob.JobId, job => job.ExecuteAsync(CancellationToken.None), WeeklySummaryJob.Cron);
+#pragma warning restore CS4014
+    }
+}
+
+public sealed class AdminModule : IModule
+{
+    public string Name => "Admin";
+
+    public void ConfigureServices(IServiceCollection services)
+        => services.AddScoped<IProductMetricsReader, ProductMetricsReader>();
 
     public void Configure(IApplicationBuilder app) { }
 }

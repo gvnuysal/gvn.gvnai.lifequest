@@ -1,6 +1,8 @@
 using Gvn.GvnFramework.Core.Results;
 using LifeQuest.Application.Abstractions;
+using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Identity;
 using LifeQuest.Domain.Profiles;
 
@@ -17,6 +19,8 @@ public sealed record ProfileDto(
     IReadOnlyList<LifeCategory> Goals,
     string? City,
     string TimeZoneId,
+    PhysicalEffort MaxPhysicalEffort,
+    NotificationPreference NotificationPreference,
     IReadOnlyList<ProfileInterestDto> Interests);
 
 public sealed record ProfileInterestDto(string Code, string Name, LifeCategory Category, double Weight, InterestSource Source);
@@ -48,7 +52,8 @@ public sealed class ProfileService(IUserAccountRepository accounts, IQuestCatalo
         return Result<ProfileDto>.Ok(new ProfileDto(
             account.Id, account.DisplayName, account.Email, profile.OnboardingCompleted,
             profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
-            profile.Goals.ToList(), profile.City, profile.TimeZoneId, interestDtos));
+            profile.Goals.ToList(), profile.City, profile.TimeZoneId,
+            profile.MaxPhysicalEffort, profile.NotificationPreference, interestDtos));
     }
 
     /// <summary>İlgi alanı kodlarını katalog id'lerine çevirir; bilinmeyen kod varsa hata döner.</summary>

@@ -11,6 +11,9 @@ export type QuestSource = 'Daily' | 'OnDemand';
 export type SkipReason = 'NotInterested' | 'TooExpensive' | 'NoTime' | 'TooFar' | 'NotToday' | 'Other';
 export type FeedbackPreference = 'MoreLikeThis' | 'LessLikeThis';
 export type InterestSource = 'Explicit' | 'Learned';
+export type PhysicalEffort = 'None' | 'Light' | 'Moderate' | 'Vigorous';
+export type NotificationPreference = 'Off' | 'WeeklySummary';
+export type StarterReactionType = 'Like' | 'Dislike';
 export type ErrorType = 'Failure' | 'Validation' | 'NotFound' | 'Conflict' | 'Unauthorized';
 
 export interface ApiError {
@@ -63,6 +66,8 @@ export interface Profile {
   goals: LifeCategory[];
   city: string | null;
   timeZoneId: string;
+  maxPhysicalEffort: PhysicalEffort;
+  notificationPreference: NotificationPreference;
   interests: ProfileInterest[];
 }
 
@@ -79,6 +84,23 @@ export interface OnboardingRequest {
   discoveryRadius: DiscoveryRadius;
   city: string | null;
   timeZoneId: string | null;
+  maxPhysicalEffort: PhysicalEffort;
+  starterReactions: StarterReaction[];
+}
+
+export interface StarterReaction {
+  templateCode: string;
+  reaction: StarterReactionType;
+}
+
+export interface StarterCard {
+  code: string;
+  title: string;
+  description: string;
+  category: LifeCategory;
+  cost: CostBand;
+  minMinutes: number;
+  maxMinutes: number;
 }
 
 export interface PreferencesRequest {
@@ -89,6 +111,8 @@ export interface PreferencesRequest {
   city?: string | null;
   clearCity?: boolean | null;
   timeZoneId?: string | null;
+  maxPhysicalEffort?: PhysicalEffort | null;
+  notificationPreference?: NotificationPreference | null;
 }
 
 // ── Quest ────────────────────────────────────────────────────────────────────
@@ -109,6 +133,7 @@ export interface Quest {
   minMinutes: number;
   maxMinutes: number;
   cost: CostBand;
+  effort: PhysicalEffort;
   reward: QuestReward;
   status: QuestStatus;
   source: QuestSource;
@@ -212,4 +237,37 @@ export interface Progress {
   totalCompleted: number;
   categories: CategoryProgress[];
   recentXp: XpEntry[];
+}
+
+// ── Bildirim & yönetim ──────────────────────────────────────────────────────
+export interface WeeklySummary {
+  id: string;
+  weekStart: string;
+  title: string;
+  message: string;
+  completedCount: number;
+  xpEarned: number;
+  newCategories: LifeCategory[];
+  topCategory: LifeCategory | null;
+  createdAt: string;
+}
+
+export interface Share<T> {
+  key: T;
+  count: number;
+  share: number;
+}
+
+export interface ProductMetrics {
+  from: string;
+  to: string;
+  activeUsers: number;
+  meaningfulCompletions: number;
+  northStar: number;
+  funnel: { offered: number; accepted: number; completed: number; acceptanceRate: number; completionRate: number };
+  newCategoryDiscoveryRate: number;
+  explorationAcceptanceRate: number;
+  averageRating: number | null;
+  skipReasons: Share<SkipReason>[];
+  completionsByCategory: Share<LifeCategory>[];
 }

@@ -7,6 +7,11 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LifeQuest.Api.IntegrationTests/LifeQuest.Api.IntegrationTests.csproj" />
+    <Project Path="tests/LifeQuest.Application.Tests/LifeQuest.Application.Tests.csproj" />
+    <Project Path="tests/LifeQuest.Catalog.Tests/LifeQuest.Catalog.Tests.csproj" />
     <Project Path="tests/LifeQuest.Domain.Tests/LifeQuest.Domain.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/LifeQuest.Simulation/LifeQuest.Simulation.csproj" />
   </Folder>
 </Solution>

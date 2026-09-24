@@ -38,3 +38,12 @@ public enum FeedbackPreference
     MoreLikeThis = 1,
     LessLikeThis = 2
 }
+
+public enum NarrationSource
+{
+    Template = 1,
+    Ai = 2
+}
+
+/// <summary>Quest'in kullanıcıya gösterilecek metni. Kategori, süre, maliyet ve XP bu nesnede yoktur; hep template'ten gelir.</summary>
+public sealed record QuestText(string Title, string Description, NarrationSource Source);

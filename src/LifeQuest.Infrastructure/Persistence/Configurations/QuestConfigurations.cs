@@ -38,6 +38,9 @@ internal sealed class UserQuestConfiguration : IEntityTypeConfiguration<UserQues
             .HasFilter("source = 'Daily'")
             .HasDatabaseName("ux_user_quests_daily_slot");
 
+        builder.Property(x => x.Effort).HasDefaultValue(Domain.Catalog.PhysicalEffort.Light).HasSentinel((Domain.Catalog.PhysicalEffort)(-1));
+        builder.Property(x => x.NarrationSource).HasDefaultValue(NarrationSource.Template).HasSentinel((NarrationSource)0);
+
         builder.HasRowVersion();
     }
 }

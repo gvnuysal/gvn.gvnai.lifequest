@@ -82,6 +82,15 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         if (context.AvailableMinutes is { } available && c.MinMinutes > available)
             return "too_long";
 
+        // Erişilebilirlik: kullanıcının belirttiği efor sınırı aşılmaz.
+        if (c.Effort > profile.MaxEffort)
+            return "effort_limit";
+
+        // Güvenlik: "şimdi yapılacak" bağlamda (günlük kısa görev veya "şu kadar vaktim var") gece açık hava önerilmez.
+        var isNight = DayParts.FromHour(context.LocalNow.Hour) == DayPart.Night;
+        if (isNight && c.IsOutdoor && (c.Type == QuestType.Daily || context.AvailableMinutes is not null))
+            return "outdoor_at_night";
+
         var rejected = history.Items.Any(i => i.TemplateId == c.TemplateId && (
             (i.SkipReason == SkipReason.NotInterested &&
              i.LastActivityAt > context.UtcNow.AddDays(-weights.NotInterestedBlockDays)) ||
@@ -190,9 +199,12 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
             ? 0
             : recent.Count(i => i.Category == c.Category) / (double)Math.Max(3, recent.Count);
 
-        var sameTemplateRecently = history.Since(context.UtcNow.AddDays(-3)).Where(i => i.TemplateId == c.TemplateId).ToList();
+        // "Gösterildi ama seçilmedi" örtük bir olumsuz sinyaldir: aynı template'i kısa aralıkla tekrar göstermek
+        // hem öneri alanını israf eder hem de "hep aynı şeyler" hissi yaratır.
+        var sameTemplateRecently = history.Since(context.UtcNow.AddDays(-weights.IgnoredOfferWindowDays))
+            .Where(i => i.TemplateId == c.TemplateId).ToList();
         if (sameTemplateRecently.Any(i => i.Status == QuestStatus.Skipped)) penalty += 0.5;
-        else if (sameTemplateRecently.Any(i => i.Status == QuestStatus.Expired)) penalty += 0.3;
+        penalty += Math.Min(0.6, weights.IgnoredOfferPenalty * sameTemplateRecently.Count(i => i.Status == QuestStatus.Expired));
 
         return Math.Clamp(penalty, 0, 1);
     }
@@ -253,6 +265,8 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         var selected = new List<Selection>();
         var random = new Random(context.Seed);
         var explorationSlots = RecommendationWeights.ExplorationSlotsFor(profile.Radius, context.Count);
+        if (random.NextDouble() >= weights.ExplorationRateFor(profile.Radius))
+            explorationSlots = 0;
 
         while (selected.Count < context.Count && remaining.Count > 0)
         {
@@ -288,14 +302,26 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         return selected;
     }
 
+    /// <summary>
+    /// Kontrollü keşif havuzu. Önce Taste Graph ile kullanıcının sevdiği bir ilgiye komşu olan adaylar
+    /// denenir (güdümlü keşif: "kahve seviyorsan mimariye bak"); böyle aday yoksa ilgi skoru düşük ama yeni
+    /// alanlara düşülür. Offline simülasyonda rastgele keşif, kabul oranı düşük olduğu için north-star'ı
+    /// düşürüp gizli ilgi keşfine çok az katkı veriyordu (docs/simulasyon-raporu.md).
+    /// </summary>
     private List<(ScoredCandidate Candidate, ScoreBreakdown Breakdown)> ExplorationPool(
         List<(ScoredCandidate Candidate, ScoreBreakdown Breakdown)> ranked)
-        => ranked
+    {
+        var eligible = ranked
             .Where(x => x.Candidate.Novelty >= weights.ExplorationMinNovelty &&
                         x.Candidate.Interest.Score <= weights.ExplorationMaxInterest &&
                         x.Candidate.Risk <= 0.2)
-            .Take(3)
             .ToList();
+
+        var adjacent = weights.GuidedExploration
+            ? eligible.Where(x => x.Candidate.Interest.ViaInterestId is not null).Take(3).ToList()
+            : [];
+        return adjacent.Count > 0 ? adjacent : eligible.Take(3).ToList();
+    }
 
     private static bool IsShort(QuestCandidate c) => c.Type == QuestType.Daily || c.MaxMinutes <= ShortQuestMaxMinutes;
 

@@ -23,7 +23,9 @@ public sealed record QuestCandidate(
     bool RequiresCity,
     double RiskScore,
     int CooldownDays,
-    IReadOnlyList<Guid> InterestIds);
+    IReadOnlyList<Guid> InterestIds,
+    bool IsOutdoor = false,
+    PhysicalEffort Effort = PhysicalEffort.Light);
 
 public sealed record RecommendationProfile(
     DiscoveryRadius Radius,
@@ -31,7 +33,8 @@ public sealed record RecommendationProfile(
     int WeeklyAvailableMinutes,
     IReadOnlySet<LifeCategory> Goals,
     IReadOnlyDictionary<Guid, double> InterestWeights,
-    bool HasCity);
+    bool HasCity,
+    PhysicalEffort MaxEffort = PhysicalEffort.Vigorous);
 
 /// <param name="LocalNow">Kullanıcının saat dilimindeki an (gün dilimi / hafta sonu için).</param>
 /// <param name="UtcNow">Cooldown ve pencere hesapları için.</param>

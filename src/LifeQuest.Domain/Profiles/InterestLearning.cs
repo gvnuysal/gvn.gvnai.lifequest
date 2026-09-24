@@ -13,6 +13,10 @@ public static class InterestLearning
     public const double MoreLikeThisDelta = 0.08;
     public const double LessLikeThisDelta = -0.10;
 
+    /// <summary>Onboarding cold start kartı: "bana göre" / "bana göre değil".</summary>
+    public const double StarterLikeDelta = 0.15;
+    public const double StarterDislikeDelta = -0.10;
+
     /// <summary>Kullanıcının hiç seçmediği bir ilgi alanında olumlu sinyal gelirse bu ağırlıkla öğrenilir.</summary>
     public const double NewLearnedInterestBase = 0.30;
 

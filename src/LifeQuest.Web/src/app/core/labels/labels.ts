@@ -2,6 +2,8 @@ import {
   CostBand,
   Difficulty,
   DiscoveryRadius,
+  NotificationPreference,
+  PhysicalEffort,
   LifeCategory,
   QuestStatus,
   QuestType,
@@ -107,3 +109,22 @@ export const WEEKLY_TIME_OPTIONS = [
   { minutes: 600, label: '6–10 saat', short: '6–10 sa', hint: 'Hafta sonları dahil' },
   { minutes: 900, label: '10+ saat', short: '10+ sa', hint: 'Bol vakit' },
 ];
+
+export const EFFORT_LABELS: Record<PhysicalEffort, { label: string; hint: string }> = {
+  None: { label: 'Yok', hint: 'Oturarak yapılabilir' },
+  Light: { label: 'Hafif', hint: 'Kısa yürüyüş, hafif hareket' },
+  Moderate: { label: 'Orta', hint: 'Uzun yürüyüş, ayakta etkinlik' },
+  Vigorous: { label: 'Yoğun', hint: 'Koşu, bisiklet, dans' },
+};
+
+/** Profilde seçilebilen efor üst sınırı (erişilebilirlik / hareket kısıtı). */
+export const EFFORT_LIMIT_OPTIONS: { value: PhysicalEffort; label: string; hint: string }[] = [
+  { value: 'Light', label: 'Hafif', hint: 'Yalnızca hafif hareket içeren öneriler' },
+  { value: 'Moderate', label: 'Orta', hint: 'Yoğun spor içermeyen öneriler' },
+  { value: 'Vigorous', label: 'Fark etmez', hint: 'Her türlü hareket olabilir' },
+];
+
+export const NOTIFICATION_LABELS: Record<NotificationPreference, string> = {
+  Off: 'Kapalı',
+  WeeklySummary: 'Haftalık özet',
+};

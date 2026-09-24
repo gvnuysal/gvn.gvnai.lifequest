@@ -25,6 +25,9 @@ public interface IUserQuestRepository : IRepository<UserQuest>
     /// <summary>Tüm zamanlarda tamamlanan template'ler ve son tamamlanma anı (cooldown + novelty).</summary>
     Task<IReadOnlyDictionary<Guid, DateTime>> GetCompletedTemplatesAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<UserQuest>> GetCompletedBetweenAsync(
+        Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<UserQuest>> GetExpirableAsync(DateTime nowUtc, int take, CancellationToken cancellationToken = default);
 
     /// <summary>Son <paramref name="sinceUtc"/> tarihinden beri quest kabul/tamamlamış, onboarding'i bitmiş kullanıcılar.</summary>

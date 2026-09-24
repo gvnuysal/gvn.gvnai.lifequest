@@ -34,3 +34,15 @@ public enum SafetyLevel
     /// <summary>Katalog seviyesinde engellenmiş.</summary>
     Blocked = 3
 }
+
+/// <summary>
+/// Fiziksel efor. Güvenliğin tek boyutlu olmadığını (risk, efor, açık hava, saat) ve erişilebilirliği
+/// modellemek için kullanılır: kullanıcı <c>MaxPhysicalEffort</c> ile üst sınır belirleyebilir.
+/// </summary>
+public enum PhysicalEffort
+{
+    None = 0,
+    Light = 1,
+    Moderate = 2,
+    Vigorous = 3
+}

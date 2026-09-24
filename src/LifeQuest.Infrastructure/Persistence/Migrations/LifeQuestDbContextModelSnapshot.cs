@@ -169,6 +169,14 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("difficulty");
 
+                    b.Property<string>("Effort")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Light")
+                        .HasColumnName("effort");
+
                     b.PrimitiveCollection<List<Guid>>("InterestIds")
                         .IsRequired()
                         .HasColumnType("uuid[]")
@@ -185,6 +193,10 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsOutdoor")
                         .HasColumnType("boolean")
                         .HasColumnName("is_outdoor");
+
+                    b.Property<bool>("IsStarter")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_starter");
 
                     b.Property<int>("MaxMinutes")
                         .HasColumnType("integer")
@@ -395,6 +407,68 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.ToTable("user_accounts", (string)null);
                 });
 
+            modelBuilder.Entity("LifeQuest.Domain.Notifications.WeeklySummary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("CompletedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("completed_count");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)")
+                        .HasColumnName("message");
+
+                    b.PrimitiveCollection<int[]>("NewCategories")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("new_categories");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("TopCategory")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("top_category");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date")
+                        .HasColumnName("week_start");
+
+                    b.Property<int>("XpEarned")
+                        .HasColumnType("integer")
+                        .HasColumnName("xp_earned");
+
+                    b.HasKey("Id")
+                        .HasName("pk_weekly_summaries");
+
+                    b.HasIndex("UserId", "WeekStart")
+                        .IsUnique()
+                        .HasDatabaseName("ix_weekly_summaries_user_id_week_start");
+
+                    b.ToTable("weekly_summaries", (string)null);
+                });
+
             modelBuilder.Entity("LifeQuest.Domain.Profiles.UserInterest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -471,6 +545,22 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("integer[]")
                         .HasColumnName("goals");
+
+                    b.Property<string>("MaxPhysicalEffort")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Vigorous")
+                        .HasColumnName("max_physical_effort");
+
+                    b.Property<string>("NotificationPreference")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("WeeklySummary")
+                        .HasColumnName("notification_preference");
 
                     b.Property<bool>("OnboardingCompleted")
                         .HasColumnType("boolean")
@@ -752,6 +842,14 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("difficulty");
 
+                    b.Property<string>("Effort")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Light")
+                        .HasColumnName("effort");
+
                     b.Property<DateTime?>("ExpiredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expired_at");
@@ -786,6 +884,14 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.Property<int>("MinMinutes")
                         .HasColumnType("integer")
                         .HasColumnName("min_minutes");
+
+                    b.Property<string>("NarrationSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Template")
+                        .HasColumnName("narration_source");
 
                     b.Property<DateOnly>("OfferDate")
                         .HasColumnType("date")
@@ -998,6 +1104,16 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_user_accounts_user_id");
+                });
+
+            modelBuilder.Entity("LifeQuest.Domain.Notifications.WeeklySummary", b =>
+                {
+                    b.HasOne("LifeQuest.Domain.Identity.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_weekly_summaries_user_accounts_user_id");
                 });
 
             modelBuilder.Entity("LifeQuest.Domain.Profiles.UserInterest", b =>

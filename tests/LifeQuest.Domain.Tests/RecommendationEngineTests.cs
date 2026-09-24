@@ -210,6 +210,33 @@ public sealed class RecommendationEngineTests
     }
 
     [Fact]
+    public void Exploration_slot_prefers_quests_adjacent_to_a_loved_interest()
+    {
+        var known = Enumerable.Range(0, 3).Select(i => Candidate($"known-{i}", LifeCategory.Explorer, [Coffee])).ToList();
+        // İkisi de yeni alan ve ilgi eşleşmesi zayıf; biri Taste Graph'ta kahveye komşu (kafe kültürü).
+        var adjacent = Candidate("cafe-culture-walk", LifeCategory.Culture, [CafeCulture], cost: CostBand.Medium);
+        var random = Candidate("random-new", LifeCategory.Creativity, [Photography], cost: CostBand.Medium);
+        var history = History([Completed(Candidate("past", LifeCategory.Explorer, [Coffee]), 30)]);
+
+        var explorationDays = 0;
+        for (var seed = 0; seed < 20; seed++)
+        {
+            var result = _engine.Recommend([.. known, adjacent, random],
+                Profile(new() { [Coffee] = 0.9 }, DiscoveryRadius.Explore), history, Graph, Context(seed: seed));
+
+            var exploration = result.Items.SingleOrDefault(i => i.IsExploration);
+            if (exploration is not null)
+            {
+                explorationDays++;
+                Assert.Equal("cafe-culture-walk", exploration.Candidate.Code);
+            }
+        }
+
+        // Dengeli modda keşif slotu her gün değil, tohumlu olasılıkla açılır.
+        Assert.InRange(explorationDays, 3, 17);
+    }
+
+    [Fact]
     public void Same_input_and_seed_produce_same_recommendations()
     {
         var candidates = Enumerable.Range(0, 10)

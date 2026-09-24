@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, onboardedGuard, onboardingPendingGuard } from './core/auth/guards';
+import { adminGuard, authGuard, guestGuard, onboardedGuard, onboardingPendingGuard } from './core/auth/guards';
 
 export const routes: Routes = [
   {
@@ -50,6 +50,12 @@ export const routes: Routes = [
         path: 'ilerleme',
         title: 'İlerleme · LifeQuest',
         loadComponent: () => import('./features/progress/progress-page').then((m) => m.ProgressPage),
+      },
+      {
+        path: 'yonetim',
+        canActivate: [adminGuard],
+        title: 'Ürün metrikleri · LifeQuest',
+        loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
       },
       {
         path: 'profil',

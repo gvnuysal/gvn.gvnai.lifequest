@@ -19,6 +19,7 @@ public sealed class LifeQuestMetrics
     private readonly Counter<long> _xpGranted;
     private readonly Counter<long> _emptyRecommendations;
     private readonly Histogram<double> _recommendationDuration;
+    private readonly Counter<long> _narrationFallback;
 
     public LifeQuestMetrics(IMeterFactory meterFactory)
     {
@@ -30,6 +31,7 @@ public sealed class LifeQuestMetrics
         _xpGranted = meter.CreateCounter<long>("lifequest.xp.granted");
         _emptyRecommendations = meter.CreateCounter<long>("lifequest.recommendations.empty");
         _recommendationDuration = meter.CreateHistogram<double>("lifequest.recommendations.duration", unit: "ms");
+        _narrationFallback = meter.CreateCounter<long>("lifequest.narration.fallback");
     }
 
     public void Offered(QuestSource source, int count)
@@ -47,6 +49,9 @@ public sealed class LifeQuestMetrics
 
     public void Skipped(SkipReason reason)
         => _skipped.Add(1, new KeyValuePair<string, object?>("reason", reason.ToString()));
+
+    public void NarrationFallback(string reason)
+        => _narrationFallback.Add(1, new KeyValuePair<string, object?>("reason", reason));
 
     public void RecommendationGenerated(double elapsedMs, bool empty)
     {

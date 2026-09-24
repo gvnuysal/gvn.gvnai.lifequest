@@ -40,6 +40,7 @@ internal sealed class QuestTemplateConfiguration : IEntityTypeConfiguration<Ques
         builder.Property(x => x.DeletedBy).HasMaxLength(100);
         builder.HasIndex(x => x.Code).IsUnique();
         builder.HasIndex(x => new { x.IsActive, x.Safety });
+        builder.Property(x => x.Effort).HasDefaultValue(PhysicalEffort.Light).HasSentinel((PhysicalEffort)(-1));
         builder.HasRowVersion();
     }
 }

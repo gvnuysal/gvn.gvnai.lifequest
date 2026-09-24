@@ -3,7 +3,9 @@ using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Application.Abstractions;
+using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Profiles;
 
 namespace LifeQuest.Application.Profiles;
@@ -16,7 +18,9 @@ public sealed record UpdatePreferencesCommand(
     IReadOnlyList<LifeCategory>? Goals,
     string? City,
     bool? ClearCity,
-    string? TimeZoneId) : ICommand<ProfileDto>;
+    string? TimeZoneId,
+    PhysicalEffort? MaxPhysicalEffort = null,
+    NotificationPreference? NotificationPreference = null) : ICommand<ProfileDto>;
 
 public sealed class UpdatePreferencesCommandValidator : AbstractValidator<UpdatePreferencesCommand>
 {
@@ -28,6 +32,8 @@ public sealed class UpdatePreferencesCommandValidator : AbstractValidator<Update
         RuleFor(x => x.Goals).ValidGoals();
         RuleFor(x => x.City).ValidCity();
         RuleFor(x => x.TimeZoneId).ValidTimeZone();
+        RuleFor(x => x.MaxPhysicalEffort).IsInEnum();
+        RuleFor(x => x.NotificationPreference).IsInEnum();
     }
 }
 
@@ -45,7 +51,8 @@ internal sealed class UpdatePreferencesCommandHandler(
 
         var result = profile.UpdatePreferences(new ProfilePreferences(
             command.DiscoveryRadius, command.Budget, command.WeeklyAvailableMinutes, command.Goals,
-            command.City, command.ClearCity ?? false, command.TimeZoneId));
+            command.City, command.ClearCity ?? false, command.TimeZoneId,
+            command.MaxPhysicalEffort, command.NotificationPreference));
 
         if (!result.Succeeded)
             return Result<ProfileDto>.Fail(result.Errors);

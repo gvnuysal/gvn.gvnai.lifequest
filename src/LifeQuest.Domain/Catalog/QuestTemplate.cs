@@ -34,6 +34,10 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     public int MinimumAge { get; private set; } = DefaultMinimumAge;
     public List<Guid> InterestIds { get; private set; } = [];
+    public PhysicalEffort Effort { get; private set; } = PhysicalEffort.Light;
+
+    /// <summary>Onboarding'deki "bunlardan hangisi sana göre?" kartlarında gösterilir (cold start).</summary>
+    public bool IsStarter { get; private set; }
     public int Version { get; private set; } = 1;
     public bool IsActive { get; private set; } = true;
 
@@ -43,38 +47,60 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     private QuestTemplate() { }
 
-    public static QuestTemplate Create(
-        string code, string title, string description,
-        QuestType type, Difficulty difficulty,
-        LifeCategory category, LifeCategory? secondaryCategory,
-        int minMinutes, int maxMinutes, CostBand cost, DayPart dayParts,
-        bool requiresCity, bool isOutdoor, int cooldownDays, double riskScore,
-        IEnumerable<Guid> interestIds, SafetyLevel safety = SafetyLevel.Safe)
+    public static QuestTemplate Create(QuestTemplateSpec spec, SafetyLevel safety = SafetyLevel.Safe)
     {
-        Guard.True(minMinutes > 0 && minMinutes <= maxMinutes, "Süre aralığı geçersiz.");
-        Guard.True(secondaryCategory != category, "İkincil kategori birincil kategoriyle aynı olamaz.");
-        Guard.True(dayParts != DayPart.None, "En az bir gün dilimi seçilmelidir.");
+        var template = new QuestTemplate { Code = Guard.NotNullOrWhiteSpace(spec.Code, nameof(spec.Code)), Safety = safety };
+        template.Apply(spec);
+        return template;
+    }
 
-        return new QuestTemplate
-        {
-            Code = Guard.NotNullOrWhiteSpace(code, nameof(code)),
-            Title = Guard.NotNullOrWhiteSpace(title, nameof(title)),
-            Description = Guard.NotNullOrWhiteSpace(description, nameof(description)),
-            Type = type,
-            Difficulty = difficulty,
-            Category = category,
-            SecondaryCategory = secondaryCategory,
-            MinMinutes = minMinutes,
-            MaxMinutes = maxMinutes,
-            Cost = cost,
-            DayParts = dayParts,
-            RequiresCity = requiresCity,
-            IsOutdoor = isOutdoor,
-            CooldownDays = Guard.InRange(cooldownDays, 0, 365, nameof(cooldownDays)),
-            RiskScore = Guard.InRange(riskScore, 0d, 1d, nameof(riskScore)),
-            InterestIds = Guard.NotEmpty(interestIds, nameof(interestIds)).Distinct().ToList(),
-            Safety = safety
-        };
+    /// <summary>
+    /// Editoryal tanımı uygular. Bir alan değiştiyse <see cref="Version"/> artar; kullanıcılara verilmiş quest'ler
+    /// snapshot olduğu için etkilenmez.
+    /// </summary>
+    /// <returns>Değişiklik olduysa <c>true</c>.</returns>
+    public bool ApplyEditorial(QuestTemplateSpec spec)
+    {
+        Guard.True(spec.Code == Code, "Template kodu değiştirilemez.");
+        var sameInterests = spec.InterestIds.Distinct().OrderBy(i => i).SequenceEqual(InterestIds.OrderBy(i => i));
+        if (sameInterests && ToSpec() with { InterestIds = spec.InterestIds } == spec)
+            return false;
+
+        Apply(spec);
+        Version++;
+        return true;
+    }
+
+    /// <summary>Editoryal güvenlik kontrolünden geçemeyen template önerilmez.</summary>
+    public void SetSafety(SafetyLevel safety) => Safety = safety;
+
+    public QuestTemplateSpec ToSpec() => new(
+        Code, Title, Description, Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
+        Cost, DayParts, RequiresCity, IsOutdoor, CooldownDays, RiskScore, InterestIds, Effort, IsStarter);
+
+    private void Apply(QuestTemplateSpec spec)
+    {
+        Guard.True(spec.MinMinutes > 0 && spec.MinMinutes <= spec.MaxMinutes, "Süre aralığı geçersiz.");
+        Guard.True(spec.SecondaryCategory != spec.Category, "İkincil kategori birincil kategoriyle aynı olamaz.");
+        Guard.True(spec.DayParts != DayPart.None, "En az bir gün dilimi seçilmelidir.");
+
+        Title = Guard.NotNullOrWhiteSpace(spec.Title, nameof(spec.Title));
+        Description = Guard.NotNullOrWhiteSpace(spec.Description, nameof(spec.Description));
+        Type = spec.Type;
+        Difficulty = spec.Difficulty;
+        Category = spec.Category;
+        SecondaryCategory = spec.SecondaryCategory;
+        MinMinutes = spec.MinMinutes;
+        MaxMinutes = spec.MaxMinutes;
+        Cost = spec.Cost;
+        DayParts = spec.DayParts;
+        RequiresCity = spec.RequiresCity;
+        IsOutdoor = spec.IsOutdoor;
+        CooldownDays = Guard.InRange(spec.CooldownDays, 0, 365, nameof(spec.CooldownDays));
+        RiskScore = Guard.InRange(spec.RiskScore, 0d, 1d, nameof(spec.RiskScore));
+        InterestIds = Guard.NotEmpty(spec.InterestIds, nameof(spec.InterestIds)).Distinct().ToList();
+        Effort = spec.Effort;
+        IsStarter = spec.IsStarter;
     }
 
     public bool IsOfferable => IsActive && !IsDeleted && Safety == SafetyLevel.Safe;

@@ -1,6 +1,8 @@
 using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Aggregates;
+using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Notifications;
 
 namespace LifeQuest.Domain.Profiles;
 
@@ -22,6 +24,12 @@ public sealed class UserProfile : AggregateRoot
     public string? City { get; private set; }
 
     public string TimeZoneId { get; private set; } = TimeZones.Default;
+
+    /// <summary>Erişilebilirlik / hareket kısıtı: bu seviyenin üzerindeki eforlu quest'ler önerilmez.</summary>
+    public PhysicalEffort MaxPhysicalEffort { get; private set; } = PhysicalEffort.Vigorous;
+
+    /// <summary>Varsayılan: haftalık uygulama içi özet. Kullanıcıyı geri çağıran agresif bildirim yok.</summary>
+    public NotificationPreference NotificationPreference { get; private set; } = NotificationPreference.WeeklySummary;
 
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
 
@@ -63,6 +71,8 @@ public sealed class UserProfile : AggregateRoot
         if (preferences.WeeklyAvailableMinutes is { } weekly) WeeklyAvailableMinutes = weekly;
         if (preferences.Goals is { } goals) Goals = goals.Distinct().ToList();
         if (preferences.TimeZoneId is { } timeZoneId) TimeZoneId = timeZoneId;
+        if (preferences.MaxPhysicalEffort is { } effort) MaxPhysicalEffort = effort;
+        if (preferences.Notifications is { } notifications) NotificationPreference = notifications;
         if (preferences.ClearCity) City = null;
         else if (!string.IsNullOrWhiteSpace(preferences.City)) City = preferences.City.Trim();
 
@@ -125,6 +135,8 @@ public sealed record ProfilePreferences(
     IReadOnlyCollection<LifeCategory>? Goals = null,
     string? City = null,
     bool ClearCity = false,
-    string? TimeZoneId = null);
+    string? TimeZoneId = null,
+    PhysicalEffort? MaxPhysicalEffort = null,
+    NotificationPreference? Notifications = null);
 
 public sealed record InterestSelection(Guid InterestId, double Weight);

@@ -30,6 +30,10 @@ public sealed class UserQuest : AggregateRoot
     public CostBand Cost { get; private set; }
     public List<Guid> InterestIds { get; private set; } = [];
     public QuestReward Reward { get; private set; } = default!;
+    public PhysicalEffort Effort { get; private set; }
+
+    /// <summary>Başlık/açıklama template'ten mi yoksa guardrail'den geçmiş AI anlatımından mı geldi.</summary>
+    public NarrationSource NarrationSource { get; private set; } = NarrationSource.Template;
 
     // ── Öneri snapshot'ı (açıklanabilirlik) ──────────────────────────────────
     public QuestSource Source { get; private set; }
@@ -65,7 +69,8 @@ public sealed class UserQuest : AggregateRoot
         DateOnly offerDate,
         int slot,
         DateTime nowUtc,
-        DateTime expiresAtUtc)
+        DateTime expiresAtUtc,
+        QuestText? narration = null)
     {
         var candidate = recommendation.Candidate;
 
@@ -75,8 +80,10 @@ public sealed class UserQuest : AggregateRoot
             TemplateId = candidate.TemplateId,
             TemplateCode = candidate.Code,
             TemplateVersion = candidate.Version,
-            Title = candidate.Title,
-            Description = candidate.Description,
+            Title = narration?.Title ?? candidate.Title,
+            Description = narration?.Description ?? candidate.Description,
+            NarrationSource = narration?.Source ?? NarrationSource.Template,
+            Effort = candidate.Effort,
             Type = candidate.Type,
             Difficulty = candidate.Difficulty,
             Category = candidate.Category,

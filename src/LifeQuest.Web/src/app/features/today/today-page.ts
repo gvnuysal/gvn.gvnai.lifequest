@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { ProgressApi, QuestsApi } from '../../core/api/api-clients';
-import { Progress, Quest, QuestList } from '../../core/api/models';
+import { ProgressApi, QuestsApi, SummariesApi } from '../../core/api/api-clients';
+import { Progress, Quest, QuestList, WeeklySummary } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, greeting } from '../../core/labels/format';
 import { ProfileStore } from '../../core/state/profile.store';
@@ -31,6 +31,19 @@ import { EmptyState, Skeleton } from '../../ui/states';
           </a>
         }
       </header>
+
+      @if (summary(); as s) {
+        <section class="summary" aria-labelledby="summary-title">
+          <div class="summary__head">
+            <span class="summary__icon"><lq-icon name="sparkles" [size]="20" /></span>
+            <h2 id="summary-title">{{ s.title }}</h2>
+            <button type="button" class="summary__close" (click)="dismissSummary(s.id)" aria-label="Özeti kapat">
+              <lq-icon name="x" [size]="16" />
+            </button>
+          </div>
+          <p>{{ s.message }}</p>
+        </section>
+      }
 
       @if (activeCount() > 0) {
         <a class="active-strip" routerLink="/aktif">
@@ -85,6 +98,15 @@ import { EmptyState, Skeleton } from '../../ui/states';
       background: var(--primary-soft); color: var(--primary-text); font-weight: 700; text-decoration: none !important;
     }
     .active-strip span { flex: 1; }
+    .summary {
+      display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--xp-soft), var(--surface)); border: 1px solid color-mix(in srgb, var(--xp) 30%, var(--line));
+    }
+    .summary__head { display: flex; align-items: center; gap: 10px; }
+    .summary__head h2 { flex: 1; font-size: var(--fs-md); }
+    .summary__icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: var(--surface); color: var(--xp-ink); }
+    .summary__close { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-3); cursor: pointer; }
+    .summary p { color: var(--ink-2); font-size: var(--fs-sm); }
     .cta {
       display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--radius-lg);
       background: linear-gradient(135deg, var(--ink) 0%, color-mix(in srgb, var(--ink) 80%, var(--brand)) 100%);
@@ -107,6 +129,8 @@ export class TodayPage {
   protected readonly today = signal<QuestList | null>(null);
   protected readonly active = signal<Quest[]>([]);
   protected readonly progress = signal<Progress | null>(null);
+  protected readonly summary = signal<WeeklySummary | null>(null);
+  private readonly summaries = inject(SummariesApi);
 
   protected readonly activeCount = computed(() => this.active().length);
   protected readonly dateLabel = computed(() =>
@@ -115,6 +139,13 @@ export class TodayPage {
 
   constructor() {
     this.load();
+    // Özet ikincil bilgidir: yüklenemezse sessizce gösterilmez.
+    this.summaries.latest().subscribe({ next: (s) => this.summary.set(s ?? null), error: () => undefined });
+  }
+
+  protected dismissSummary(id: string): void {
+    this.summary.set(null);
+    this.summaries.markRead(id).subscribe({ error: () => undefined });
   }
 
   protected load(): void {
