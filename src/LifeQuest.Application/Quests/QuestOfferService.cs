@@ -28,7 +28,7 @@ public sealed class QuestOfferService(
     IQuestCatalog catalog,
     IUnitOfWork unitOfWork,
     IOptions<QuestOptions> questOptions,
-    IOptions<RecommendationWeights> weights,
+    IRecommendationWeightsProvider weights,
     LifeQuestMetrics metrics,
     QuestNarrationService narration,
     TimeProvider clock,
@@ -129,7 +129,7 @@ public sealed class QuestOfferService(
             profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
             profile.Goals.ToHashSet(), profile.InterestWeights(), profile.City is not null, profile.MaxPhysicalEffort);
 
-        var result = new QuestRecommendationEngine(weights.Value)
+        var result = new QuestRecommendationEngine(await weights.GetAsync(cancellationToken))
             .Recommend(candidates, recommendationProfile, history, graph, context);
 
         var offers = new List<UserQuest>(result.Items.Count);

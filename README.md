@@ -9,8 +9,8 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.0.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-201%20passing-22A559?style=flat-square)](#testler)
-[![Web tests](https://img.shields.io/badge/web%20tests-19%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-242%20passing-22A559?style=flat-square)](#testler)
+[![Web tests](https://img.shields.io/badge/web%20tests-21%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 
 **Ekranda daha uzun kalmanı değil, gerçek hayatta daha çok şey yaşamanı hedefleyen bir oyun.**
@@ -35,6 +35,7 @@ LifeQuest; zamanına, bütçene, ilgi alanlarına ve ne kadar keşif istediğine
 | 🛡️ **Güvenli katalog** | 100 editoryal template; her biri güvenlik kontrol listesinden CI'da geçer. Gece açık hava görevi yok; efor sınırına saygı. |
 | 🃏 **Hızlı ısınma** | Onboarding'deki "Sana göre mi?" kartları ilk günden isabetli öneri sağlar. |
 | 📬 **Suçlamayan haftalık özet** | Bildirim yalnızca seçersen; varsayılan, uygulama içi haftalık özet. |
+| 🧑‍💼 **Denetlenebilir yönetim** | Kullanıcı askıya alma/silme, katalog inceleme kuyruğu ve canlı öneri ağırlıkları; her işlem gerekçesiyle denetim kaydında. |
 
 ---
 
@@ -270,11 +271,11 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 | Paket | Kapsam |
 |---|---|
-| `LifeQuest.Domain.Tests` (62) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni |
-| `LifeQuest.Application.Tests` (19) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si |
+| `LifeQuest.Domain.Tests` (74) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları |
+| `LifeQuest.Application.Tests` (34) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları |
 | `LifeQuest.Catalog.Tests` (104) | 100 seed template'in her biri ve katalog dengesi (CI kapısı) |
-| `LifeQuest.Api.IntegrationTests` (16) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, admin metrik yetkisi, haftalık özet |
-| `LifeQuest.Web` (19, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh), hata ayrıştırma, formatlayıcılar, JWT rol okuma |
+| `LifeQuest.Api.IntegrationTests` (30) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları |
+| `LifeQuest.Web` (21, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma |
 
 ---
 
@@ -287,6 +288,7 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 - **Oturum:** access token yalnızca bellekte tutulur. Refresh token açılışta oturumu sessizce geri yükler. 401 alındığında tek seferlik yenileme yapılır.
 - **PWA:** service worker yalnızca uygulama kabuğunu önbelleğe alır. API yanıtları mahremiyet nedeniyle önbelleğe alınmaz.
 - **Erişilebilirlik:** 44 px dokunma hedefleri, görünür odak, AA kontrast, `prefers-reduced-motion` desteği.
+- **Yönetim paneli (`/yonetim`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
 
 > ⚠️ Refresh token şu an `localStorage`'da tutuluyor. Üretim öncesinde httpOnly + SameSite çereze taşınması planlanıyor.
 
@@ -310,6 +312,12 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 | `GET /api/v1/onboarding/starter-cards` | Cold start kartları (onboarding'de `starterReactions` ile yanıtlanır) |
 | `GET /api/v1/summaries/latest` · `POST …/{id}/read` | Okunmamış haftalık özet (yoksa 204) |
 | `GET /api/v1/admin/metrics?days=7` | North-star, funnel, skip sebepleri, keşif kabulü (yalnızca `admin` rolü) |
+| `GET /api/v1/admin/users` · `GET …/{id}` | Kullanıcı arama (e-posta/ad), filtre (Admin/Askıda); yalnızca hesap bilgisi ve toplamlar |
+| `POST …/users/{id}/suspend` · `unsuspend` · `PUT …/role` · `DELETE …/users/{id}` | Askıya alma (1/7/30 gün/süresiz), rol verme/alma, gerekçe + e-posta onaylı kalıcı silme |
+| `GET/POST /api/v1/admin/templates` · `GET/PUT …/{id}` · `POST …/validate` | Template arama, oluşturma, sürüm kontrollü düzenleme, kaydetmeden kural kontrolü |
+| `POST …/templates/{id}/safety` · `activate` · `deactivate` · `GET /admin/catalog/health` | Onayla / incelemeye al / engelle, yayın durumu, katalog dengesi |
+| `GET/PUT /api/v1/admin/recommendation-weights` · `POST …/reset` | Öneri ağırlıkları: sınır kontrollü, anında geçerli, varsayılana dönüş |
+| `GET /api/v1/admin/audit?action=` | Denetim kaydı: kim, ne zaman, neyi, neden |
 
 Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğrulama · 401 · 404 · 409 çakışma/geçersiz geçiş · 429.
 
@@ -341,7 +349,8 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 
 - [x] **Faz 1 · Core:** modular monolith, kimlik, onboarding, katalog, XP, başarımlar, öneri motoru, web istemcisi
 - [x] Analiz riskleri: 100 template'lik güvenli katalog, efor/erişilebilirlik, cold start kartları, north-star paneli, haftalık özet, AI anlatım altyapısı, offline simülasyon
-- [ ] Katalog derinliği (ilgi başına 3-4 template) · simülasyon önerilerinin A/B testi
+- [x] Yönetim paneli: kullanıcılar, katalog inceleme kuyruğu, canlı öneri ağırlıkları, denetim kaydı
+- [ ] Katalog derinliği (ilgi başına 3-4 template) · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
 - [ ] Refresh token'ın httpOnly çereze taşınması · Hangfire için kalıcı PostgreSQL storage
 - [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
 - [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma

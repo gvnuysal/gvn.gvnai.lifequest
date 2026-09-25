@@ -1,6 +1,7 @@
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Entities;
 using Gvn.GvnFramework.EntityFramewokCore.Context;
+using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Identity;
@@ -8,6 +9,7 @@ using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.Recommendations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +32,8 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
     public DbSet<PlayerProgress> PlayerProgress => Set<PlayerProgress>();
     public DbSet<XpTransaction> XpTransactions => Set<XpTransaction>();
     public DbSet<WeeklySummary> WeeklySummaries => Set<WeeklySummary>();
+    public DbSet<AdminAuditEntry> AdminAuditEntries => Set<AdminAuditEntry>();
+    public DbSet<RecommendationSettings> RecommendationSettings => Set<RecommendationSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +76,9 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
         StoreAsString<PhysicalEffort>(configurationBuilder);
         StoreAsString<NotificationPreference>(configurationBuilder);
         StoreAsString<NarrationSource>(configurationBuilder);
+        StoreAsString<EditorialSource>(configurationBuilder);
+        StoreAsString<AdminAction>(configurationBuilder);
+        StoreAsString<AdminTargetType>(configurationBuilder);
     }
 
     private static void StoreAsString<TEnum>(ModelConfigurationBuilder builder) where TEnum : struct, Enum

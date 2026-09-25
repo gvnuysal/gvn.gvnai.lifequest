@@ -24,7 +24,7 @@ interface Bar {
   imports: [Segmented, EmptyState, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="page">
+    <div class="section">
       <header class="stack">
         <h1>Ürün metrikleri</h1>
         <p class="muted">Toplu ve anonim sayımlar. Ekran süresi değil, yaşanan gerçek deneyimler ölçülür.</p>
@@ -96,6 +96,7 @@ interface Bar {
     </div>
   `,
   styles: `
+    .section { display: flex; flex-direction: column; gap: var(--space-5); }
     .small { font-size: var(--fs-sm); }
     .range { font-size: var(--fs-sm); margin-top: -8px; }
     .hero { padding: var(--space-5); display: flex; flex-direction: column; gap: 2px; background: linear-gradient(140deg, var(--primary-soft), var(--surface) 70%); }

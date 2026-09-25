@@ -82,11 +82,12 @@ export class AuthStore {
     await this.router.navigate(['/giris']);
   }
 
-  /** Yenileme başarısız olduğunda interceptor tarafından çağrılır. */
-  sessionExpired(): void {
+  /** Yenileme başarısız olduğunda veya hesap askıya alındığında interceptor tarafından çağrılır. */
+  sessionExpired(reason: 'expired' | 'suspended' = 'expired'): void {
     if (!this.isAuthenticated() && !this.hasRefreshToken()) return;
     this.clear();
-    this.toast.show('Oturumun sona erdi. Lütfen tekrar giriş yap.');
+    if (reason === 'suspended') this.toast.error('Hesabın askıya alındı. Destek ekibiyle iletişime geçebilirsin.');
+    else this.toast.show('Oturumun sona erdi. Lütfen tekrar giriş yap.');
     void this.router.navigate(['/giris'], { queryParams: { returnUrl: this.router.url } });
   }
 

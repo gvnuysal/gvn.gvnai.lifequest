@@ -14,6 +14,7 @@ internal sealed class UserAccountConfiguration : IEntityTypeConfiguration<UserAc
         builder.Property(x => x.PasswordHash).HasMaxLength(200).IsRequired();
         builder.Property(x => x.DisplayName).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Role).HasMaxLength(32).IsRequired();
+        builder.Property(x => x.SuspensionReason).HasMaxLength(500);
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasRowVersion();
     }
@@ -29,6 +30,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.Property(x => x.RevokeReason).HasMaxLength(64);
         builder.HasIndex(x => x.TokenHash).IsUnique();
         builder.HasIndex(x => x.FamilyId);
+        builder.HasIndex(x => x.UserId);
         builder.HasOne<UserAccount>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

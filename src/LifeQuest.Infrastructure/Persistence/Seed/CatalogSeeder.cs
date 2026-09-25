@@ -97,6 +97,10 @@ internal sealed class CatalogSeeder(LifeQuestDbContext db, ILogger<CatalogSeeder
                 continue;
             }
 
+            // Admin'in düzenlediği veya güvenlik kararını verdiği template artık seed ile senkronlanmaz.
+            if (template.Source == EditorialSource.Admin)
+                continue;
+
             // Editoryal olarak engellenmiş (Blocked) bir template seed ile yeniden açılmaz.
             if (template.Safety != SafetyLevel.Blocked && template.Safety != safety)
                 template.SetSafety(safety);

@@ -54,8 +54,44 @@ export const routes: Routes = [
       {
         path: 'yonetim',
         canActivate: [adminGuard],
-        title: 'Ürün metrikleri · LifeQuest',
-        loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
+        loadComponent: () => import('./features/admin/admin-shell').then((m) => m.AdminShell),
+        children: [
+          {
+            path: '',
+            title: 'Ürün metrikleri · LifeQuest',
+            loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
+          },
+          {
+            path: 'kullanicilar',
+            title: 'Kullanıcılar · Yönetim',
+            loadComponent: () => import('./features/admin/admin-users-page').then((m) => m.AdminUsersPage),
+          },
+          {
+            path: 'katalog',
+            title: 'Katalog · Yönetim',
+            loadComponent: () => import('./features/admin/admin-catalog-page').then((m) => m.AdminCatalogPage),
+          },
+          {
+            path: 'katalog/yeni',
+            title: 'Yeni template · Yönetim',
+            loadComponent: () => import('./features/admin/admin-template-page').then((m) => m.AdminTemplatePage),
+          },
+          {
+            path: 'katalog/:id',
+            title: 'Template · Yönetim',
+            loadComponent: () => import('./features/admin/admin-template-page').then((m) => m.AdminTemplatePage),
+          },
+          {
+            path: 'oneri-ayarlari',
+            title: 'Öneri ayarları · Yönetim',
+            loadComponent: () => import('./features/admin/admin-weights-page').then((m) => m.AdminWeightsPage),
+          },
+          {
+            path: 'denetim',
+            title: 'Denetim kaydı · Yönetim',
+            loadComponent: () => import('./features/admin/admin-audit-page').then((m) => m.AdminAuditPage),
+          },
+        ],
       },
       {
         path: 'profil',

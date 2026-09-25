@@ -5,7 +5,7 @@ using LifeQuest.Domain.Common;
 
 namespace LifeQuest.Application.Catalog;
 
-public sealed record InterestDto(string Code, string Name, LifeCategory Category);
+public sealed record InterestDto(Guid Id, string Code, string Name, LifeCategory Category);
 
 public sealed record GetInterestCatalogQuery : IQuery<IReadOnlyList<InterestDto>>;
 
@@ -17,7 +17,7 @@ internal sealed class GetInterestCatalogQueryHandler(IQuestCatalog catalog)
         var interests = await catalog.GetInterestsAsync(cancellationToken);
         return Result<IReadOnlyList<InterestDto>>.Ok(interests
             .OrderBy(i => i.Category).ThenBy(i => i.Name, StringComparer.Create(new("tr-TR"), false))
-            .Select(i => new InterestDto(i.Code, i.Name, i.Category))
+            .Select(i => new InterestDto(i.Id, i.Code, i.Name, i.Category))
             .ToList());
     }
 }

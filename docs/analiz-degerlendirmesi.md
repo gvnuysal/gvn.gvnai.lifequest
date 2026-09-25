@@ -113,6 +113,8 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 
 ---
 
+**Yönetim (sonradan eklendi).** Admin artık kullanıcıları askıya alabiliyor/silebiliyor, rol verebiliyor; katalogda template oluşturup düzenleyebiliyor, inceleme kuyruğunu yönetebiliyor ve öneri ağırlıklarını panelden anında değiştirebiliyor. Her işlem gerekçesiyle `admin_audit_entries` tablosuna yazılır. Admin'in düzenlediği template seed senkronundan çıkar; seed verisi artık admin kararlarını ezmez.
+
 ## 5. Sonraki adımlar (öncelik sırasıyla)
 
 1. Katalog derinliği: ilgi başına 3-4 template, özellikle kısa, ücretsiz ve şehirden bağımsız görevler (simülasyon öneri 1).

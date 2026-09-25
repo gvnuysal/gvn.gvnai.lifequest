@@ -1,3 +1,7 @@
+using LifeQuest.Domain.Admin;
+using LifeQuest.Domain.Catalog;
+using LifeQuest.Domain.Recommendations;
+using LifeQuest.Infrastructure.Admin;
 using Gvn.GvnFramework.BackgroundJobs.Abstractions;
 using Gvn.GvnFramework.DepedencyInjection.Extensions;
 using Gvn.GvnFramework.Domain.Repositories;
@@ -76,6 +80,7 @@ public sealed class CatalogModule : IModule
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IQuestCatalog, CachedQuestCatalog>();
+        services.AddScoped<IQuestTemplateRepository, QuestTemplateRepository>();
         services.AddScoped<CatalogSeeder>();
     }
 
@@ -120,7 +125,14 @@ public sealed class AdminModule : IModule
     public string Name => "Admin";
 
     public void ConfigureServices(IServiceCollection services)
-        => services.AddScoped<IProductMetricsReader, ProductMetricsReader>();
+    {
+        services.AddScoped<IProductMetricsReader, ProductMetricsReader>();
+        services.AddScoped<IAdminUserReader, AdminUserReader>();
+        services.AddScoped<IAdminAuditRepository, AdminAuditRepository>();
+        services.AddScoped<IRecommendationSettingsRepository, RecommendationSettingsRepository>();
+        services.AddScoped<IRecommendationWeightsProvider, RecommendationWeightsProvider>();
+        services.AddScoped<IAccountStateCache, AccountStateCache>();
+    }
 
     public void Configure(IApplicationBuilder app) { }
 }

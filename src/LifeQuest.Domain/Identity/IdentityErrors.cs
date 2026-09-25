@@ -19,6 +19,11 @@ public static class IdentityErrors
     public static readonly Error InvalidRefreshToken =
         Error.Unauthorized("INVALID_REFRESH_TOKEN", "Oturum geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapın.");
 
+    public static Error AccountSuspended(DateTime? untilUtc) => Error.Unauthorized("ACCOUNT_SUSPENDED",
+        untilUtc is null
+            ? "Hesabın askıya alındı. Destek ekibiyle iletişime geçebilirsin."
+            : $"Hesabın {untilUtc:dd.MM.yyyy HH:mm} (UTC) tarihine kadar askıya alındı.");
+
     public static readonly Error AccountNotFound =
         Error.NotFound("ACCOUNT_NOT_FOUND", "Hesap bulunamadı.");
 }

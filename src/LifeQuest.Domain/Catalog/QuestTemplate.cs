@@ -41,15 +41,25 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
     public int Version { get; private set; } = 1;
     public bool IsActive { get; private set; } = true;
 
+    /// <summary>
+    /// Seed kaynaklı template'ler her açılışta seed verisiyle senkronlanır. Admin bir template'i düzenlediğinde
+    /// veya güvenlik kararını verdiğinde kaynak <see cref="EditorialSource.Admin"/> olur ve seed artık üzerine yazmaz.
+    /// </summary>
+    public EditorialSource Source { get; private set; } = EditorialSource.Seed;
+
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string? DeletedBy { get; private set; }
 
     private QuestTemplate() { }
 
-    public static QuestTemplate Create(QuestTemplateSpec spec, SafetyLevel safety = SafetyLevel.Safe)
+    public static QuestTemplate Create(QuestTemplateSpec spec, SafetyLevel safety = SafetyLevel.Safe,
+        EditorialSource source = EditorialSource.Seed)
     {
-        var template = new QuestTemplate { Code = Guard.NotNullOrWhiteSpace(spec.Code, nameof(spec.Code)), Safety = safety };
+        var template = new QuestTemplate
+        {
+            Code = Guard.NotNullOrWhiteSpace(spec.Code, nameof(spec.Code)), Safety = safety, Source = source
+        };
         template.Apply(spec);
         return template;
     }
@@ -71,8 +81,23 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
         return true;
     }
 
+    /// <summary>Admin düzenlemesi: tanımı uygular ve template'i seed senkronundan çıkarır.</summary>
+    public bool ApplyAdminEdit(QuestTemplateSpec spec)
+    {
+        var changed = ApplyEditorial(spec);
+        Source = EditorialSource.Admin;
+        return changed;
+    }
+
     /// <summary>Editoryal güvenlik kontrolünden geçemeyen template önerilmez.</summary>
     public void SetSafety(SafetyLevel safety) => Safety = safety;
+
+    /// <summary>Admin'in güvenlik kararı; seed senkronu bu kararı artık geri almaz.</summary>
+    public void DecideSafety(SafetyLevel safety)
+    {
+        Safety = safety;
+        Source = EditorialSource.Admin;
+    }
 
     public QuestTemplateSpec ToSpec() => new(
         Code, Title, Description, Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
@@ -105,9 +130,25 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     public bool IsOfferable => IsActive && !IsDeleted && Safety == SafetyLevel.Safe;
 
-    public void Deactivate()
+    /// <returns>Durum değiştiyse <c>true</c>.</returns>
+    public bool Deactivate()
     {
+        if (!IsActive)
+            return false;
+
         IsActive = false;
         Version++;
+        return true;
+    }
+
+    /// <returns>Durum değiştiyse <c>true</c>.</returns>
+    public bool Activate()
+    {
+        if (IsActive)
+            return false;
+
+        IsActive = true;
+        Version++;
+        return true;
     }
 }

@@ -2,6 +2,19 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
   Achievement,
+  AdminAction,
+  AdminTemplate,
+  AdminTemplateListItem,
+  AdminUser,
+  AdminUserFilter,
+  AuditEntry,
+  CatalogHealth,
+  RecommendationWeights,
+  SafetyLevel,
+  TemplateInput,
+  TemplateSearch,
+  TemplateValidation,
+  UserRole,
   AuthTokens,
   Interest,
   InterestSelection,
@@ -169,5 +182,86 @@ export class AdminApi {
 
   metrics(days: number) {
     return this.http.get<ProductMetrics>(`${API}/admin/metrics`, { params: { days } });
+  }
+
+  // Kullanıcılar
+  users(search: string, filter: AdminUserFilter, pageNumber: number) {
+    return this.http.get<PagedResult<AdminUser>>(`${API}/admin/users`, {
+      params: { search, filter, pageNumber, pageSize: 20 },
+    });
+  }
+
+  suspend(id: string, days: number | null, reason: string) {
+    return this.http.post<AdminUser>(`${API}/admin/users/${id}/suspend`, { days, reason });
+  }
+
+  unsuspend(id: string) {
+    return this.http.post<AdminUser>(`${API}/admin/users/${id}/unsuspend`, null);
+  }
+
+  setRole(id: string, role: UserRole) {
+    return this.http.put<AdminUser>(`${API}/admin/users/${id}/role`, { role });
+  }
+
+  deleteUser(id: string, reason: string, confirmEmail: string) {
+    return this.http.delete<void>(`${API}/admin/users/${id}`, { body: { reason, confirmEmail } });
+  }
+
+  // Katalog
+  templates(search: TemplateSearch) {
+    const params: Record<string, string | number | boolean> = { pageNumber: search.pageNumber, pageSize: 20 };
+    if (search.text) params['text'] = search.text;
+    if (search.category) params['category'] = search.category;
+    if (search.safety) params['safety'] = search.safety;
+    if (search.isActive !== undefined) params['isActive'] = search.isActive;
+    return this.http.get<PagedResult<AdminTemplateListItem>>(`${API}/admin/templates`, { params });
+  }
+
+  template(id: string) {
+    return this.http.get<AdminTemplate>(`${API}/admin/templates/${id}`);
+  }
+
+  createTemplate(template: TemplateInput) {
+    return this.http.post<AdminTemplate>(`${API}/admin/templates`, template);
+  }
+
+  updateTemplate(id: string, version: number, template: TemplateInput) {
+    return this.http.put<AdminTemplate>(`${API}/admin/templates/${id}`, { version, template });
+  }
+
+  validateTemplate(template: TemplateInput) {
+    return this.http.post<TemplateValidation>(`${API}/admin/templates/validate`, template);
+  }
+
+  setTemplateSafety(id: string, safety: SafetyLevel, note: string | null) {
+    return this.http.post<AdminTemplate>(`${API}/admin/templates/${id}/safety`, { safety, note });
+  }
+
+  setTemplateActive(id: string, active: boolean) {
+    return this.http.post<AdminTemplate>(`${API}/admin/templates/${id}/${active ? 'activate' : 'deactivate'}`, null);
+  }
+
+  catalogHealth() {
+    return this.http.get<CatalogHealth>(`${API}/admin/catalog/health`);
+  }
+
+  // Öneri ağırlıkları
+  weights() {
+    return this.http.get<RecommendationWeights>(`${API}/admin/recommendation-weights`);
+  }
+
+  updateWeights(revision: number, values: Record<string, number>, reason: string) {
+    return this.http.put<RecommendationWeights>(`${API}/admin/recommendation-weights`, { revision, values, reason });
+  }
+
+  resetWeights(revision: number, keys: string[] | null, reason: string | null) {
+    return this.http.post<RecommendationWeights>(`${API}/admin/recommendation-weights/reset`, { revision, keys, reason });
+  }
+
+  // Denetim
+  audit(action: AdminAction | null, pageNumber: number) {
+    const params: Record<string, string | number> = { pageNumber, pageSize: 30 };
+    if (action) params['action'] = action;
+    return this.http.get<PagedResult<AuditEntry>>(`${API}/admin/audit`, { params });
   }
 }

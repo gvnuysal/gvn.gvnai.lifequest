@@ -44,6 +44,8 @@ internal sealed class RefreshTokenCommandHandler(
         var account = await accounts.GetByIdAsync(existing.UserId, cancellationToken);
         if (account is null || account.IsLockedOut(now))
             return Result<AuthTokensDto>.Fail(IdentityErrors.InvalidRefreshToken);
+        if (account.IsSuspended(now))
+            return Result<AuthTokensDto>.Fail(IdentityErrors.AccountSuspended(account.SuspendedUntil));
 
         var (tokens, replacement) = await tokenIssuer.IssueAsync(account, existing.FamilyId, cancellationToken);
         existing.Revoke(now, "rotated", replacement.Id);

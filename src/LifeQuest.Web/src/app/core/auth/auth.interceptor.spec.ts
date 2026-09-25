@@ -122,4 +122,35 @@ describe('authInterceptor', () => {
     expect(auth.isAuthenticated()).toBe(false);
     expect(localStorage.getItem('lq.refresh')).toBeNull();
   });
+
+  it('signs out without refreshing when the account is suspended', async () => {
+    await signIn();
+    const result = firstValueFrom(http.get('/api/v1/progress')).catch((e: unknown) => e);
+
+    backend.expectOne('/api/v1/progress').flush(
+      [{ code: 'ACCOUNT_SUSPENDED', message: 'Hesabın askıya alındı.', type: 'Unauthorized' }],
+      { status: 401, statusText: 'Unauthorized' },
+    );
+
+    await result;
+    backend.expectNone('/api/v1/auth/refresh');
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(auth.hasRefreshToken()).toBe(false);
+  });
+
+  it('refreshes a stale token after a role change so the new role takes effect', async () => {
+    await signIn();
+    const result = firstValueFrom(http.get<{ ok: boolean }>('/api/v1/admin/metrics'));
+
+    backend.expectOne('/api/v1/admin/metrics').flush(
+      [{ code: 'TOKEN_STALE', message: 'Yetkiler değişti.', type: 'Unauthorized' }],
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    backend.expectOne('/api/v1/auth/refresh').flush(tokens(2));
+    const retry = backend.expectOne('/api/v1/admin/metrics');
+    expect(retry.request.headers.get('Authorization')).toBe('Bearer access-2');
+    retry.flush({ ok: true });
+
+    expect(await result).toEqual({ ok: true });
+  });
 });

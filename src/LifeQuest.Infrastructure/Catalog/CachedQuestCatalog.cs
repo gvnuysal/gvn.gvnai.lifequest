@@ -30,6 +30,8 @@ internal sealed class CachedQuestCatalog(LifeQuestDbContext db, ICacheService ca
     public async Task<IReadOnlyList<StarterCard>> GetStarterCardsAsync(CancellationToken cancellationToken = default)
         => (await GetSnapshotAsync(cancellationToken)).Starters;
 
+    public Task InvalidateAsync(CancellationToken cancellationToken = default) => cache.RemoveAsync(CacheKey, cancellationToken);
+
     private Task<CatalogSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
         => cache.GetOrSetAsync(CacheKey, () => LoadAsync(cancellationToken), CacheDuration, cancellationToken);
 

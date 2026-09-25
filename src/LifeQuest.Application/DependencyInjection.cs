@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<QuestOfferService>();
         services.AddScoped<WeeklySummaryService>();
         services.AddScoped<QuestNarrationService>();
+        services.AddScoped<Admin.AdminAuditWriter>();
 
         // AI Quest Master portu: gerçek bir LLM adaptörü Infrastructure'da kaydedilirse onu kullanır.
         services.TryAddSingleton<IQuestNarrator, TemplateQuestNarrator>();

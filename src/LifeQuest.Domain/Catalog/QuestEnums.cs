@@ -23,6 +23,13 @@ public enum Difficulty
     Heroic = 4
 }
 
+/// <summary>Template'in editoryal sahibi: seed verisi mi, admin mi.</summary>
+public enum EditorialSource
+{
+    Seed = 1,
+    Admin = 2
+}
+
 public enum SafetyLevel
 {
     /// <summary>Yaş ve risk filtresini geçmiş; kullanıcıya önerilebilir.</summary>

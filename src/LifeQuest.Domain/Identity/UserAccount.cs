@@ -22,6 +22,13 @@ public sealed class UserAccount : AggregateRoot
     public DateTime? LockoutEndsAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
 
+    /// <summary>Admin tarafından askıya alma. Başarısız giriş kilidinden (<see cref="LockoutEndsAt"/>) ayrıdır.</summary>
+    public DateTime? SuspendedAt { get; private set; }
+
+    /// <summary><c>null</c> ve <see cref="SuspendedAt"/> doluysa süresiz askı.</summary>
+    public DateTime? SuspendedUntil { get; private set; }
+    public string? SuspensionReason { get; private set; }
+
     private UserAccount() { }
 
     public static Result<UserAccount> Register(
@@ -55,6 +62,29 @@ public sealed class UserAccount : AggregateRoot
     }
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
+
+    public bool IsSuspended(DateTime nowUtc)
+        => SuspendedAt is not null && (SuspendedUntil is null || SuspendedUntil > nowUtc);
+
+    public void Suspend(DateTime? untilUtc, string reason, DateTime nowUtc)
+    {
+        Guard.True(untilUtc is null || untilUtc > nowUtc, "Askı bitişi gelecekte olmalıdır.");
+        SuspendedAt = nowUtc;
+        SuspendedUntil = untilUtc;
+        SuspensionReason = Guard.NotNullOrWhiteSpace(reason, nameof(reason)).Trim();
+    }
+
+    /// <returns>Hesap askıdaydıysa <c>true</c>.</returns>
+    public bool Unsuspend()
+    {
+        if (SuspendedAt is null)
+            return false;
+
+        SuspendedAt = null;
+        SuspendedUntil = null;
+        SuspensionReason = null;
+        return true;
+    }
 
     public bool IsLockedOut(DateTime nowUtc) => LockoutEndsAt > nowUtc;
 

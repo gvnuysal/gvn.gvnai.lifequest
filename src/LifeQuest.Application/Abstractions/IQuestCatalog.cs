@@ -15,6 +15,9 @@ public interface IQuestCatalog
 
     /// <summary>Onboarding cold start kartları (editoryal olarak işaretlenmiş, önerilebilir template'ler).</summary>
     Task<IReadOnlyList<StarterCard>> GetStarterCardsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Admin katalogda değişiklik yaptığında snapshot'ı düşürür; sonraki okuma veritabanından gelir.</summary>
+    Task InvalidateAsync(CancellationToken cancellationToken = default);
 }
 
 public sealed record StarterCard(

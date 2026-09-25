@@ -94,7 +94,7 @@ public sealed class RiskFollowUpTests(LifeQuestApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, (await user.GetAsync("/api/v1/admin/metrics")).StatusCode);
 
         // Bootstrap listesindeki e-posta kayıt anında admin olur.
-        var admin = await factory.CreateUserClientAsync(AdminEmail);
+        var admin = await factory.CreateAdminClientAsync();
         await CompleteOnboardingAsync(user);
         var questId = (await user.GetFromJsonAsync<JsonElement>("/api/v1/quests/today", Json))
             .GetProperty("quests")[0].GetProperty("id").GetGuid();

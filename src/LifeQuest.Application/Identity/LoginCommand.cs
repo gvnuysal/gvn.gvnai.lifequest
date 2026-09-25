@@ -49,6 +49,10 @@ internal sealed class LoginCommandHandler(
             return Result<AuthTokensDto>.Fail(IdentityErrors.InvalidCredentials);
         }
 
+        // Askı bilgisi yalnızca şifreyi bilen kişiye gösterilir: hesap varlığı sızdırılmaz.
+        if (account.IsSuspended(now))
+            return Result<AuthTokensDto>.Fail(IdentityErrors.AccountSuspended(account.SuspendedUntil));
+
         account.RegisterSuccessfulLogin(now);
         var (tokens, _) = await tokenIssuer.IssueAsync(account, familyId: null, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

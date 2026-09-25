@@ -12,6 +12,9 @@ internal sealed class UserAccountRepository(LifeQuestDbContext context)
 
     public Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken = default)
         => DbSet.AnyAsync(x => x.Email == normalizedEmail, cancellationToken);
+
+    public Task<int> CountByRoleAsync(string role, CancellationToken cancellationToken = default)
+        => DbSet.CountAsync(x => x.Role == role, cancellationToken);
 }
 
 internal sealed class RefreshTokenRepository(LifeQuestDbContext context)
@@ -23,6 +26,13 @@ internal sealed class RefreshTokenRepository(LifeQuestDbContext context)
     public Task RevokeFamilyAsync(Guid familyId, DateTime nowUtc, string reason, CancellationToken cancellationToken = default)
         => DbSet
             .Where(x => x.FamilyId == familyId && x.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.RevokedAt, nowUtc)
+                .SetProperty(x => x.RevokeReason, reason), cancellationToken);
+
+    public Task RevokeAllForUserAsync(Guid userId, DateTime nowUtc, string reason, CancellationToken cancellationToken = default)
+        => DbSet
+            .Where(x => x.UserId == userId && x.RevokedAt == null)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.RevokedAt, nowUtc)
                 .SetProperty(x => x.RevokeReason, reason), cancellationToken);

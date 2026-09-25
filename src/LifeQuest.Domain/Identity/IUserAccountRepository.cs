@@ -7,6 +7,8 @@ public interface IUserAccountRepository : IRepository<UserAccount>
     Task<UserAccount?> GetByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default);
 
     Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken = default);
+
+    Task<int> CountByRoleAsync(string role, CancellationToken cancellationToken = default);
 }
 
 public interface IRefreshTokenRepository : IRepository<RefreshToken>
@@ -15,4 +17,7 @@ public interface IRefreshTokenRepository : IRepository<RefreshToken>
 
     /// <summary>Token yeniden kullanımı tespit edildiğinde tüm aileyi anında iptal eder (UoW dışında çalışır).</summary>
     Task RevokeFamilyAsync(Guid familyId, DateTime nowUtc, string reason, CancellationToken cancellationToken = default);
+
+    /// <summary>Hesap askıya alındığında kullanıcının tüm oturumlarını kapatır (UoW dışında çalışır).</summary>
+    Task RevokeAllForUserAsync(Guid userId, DateTime nowUtc, string reason, CancellationToken cancellationToken = default);
 }

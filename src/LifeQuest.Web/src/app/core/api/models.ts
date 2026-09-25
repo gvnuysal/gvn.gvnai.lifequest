@@ -45,6 +45,7 @@ export interface LoginRequest {
 
 // ── Katalog & profil ─────────────────────────────────────────────────────────
 export interface Interest {
+  id: string;
   code: string;
   name: string;
   category: LifeCategory;
@@ -270,4 +271,142 @@ export interface ProductMetrics {
   averageRating: number | null;
   skipReasons: Share<SkipReason>[];
   completionsByCategory: Share<LifeCategory>[];
+}
+
+// ── Yönetim (yalnızca admin) ───────────────────────────────────────────────
+
+export type SafetyLevel = 'Safe' | 'NeedsReview' | 'Blocked';
+export type EditorialSource = 'Seed' | 'Admin';
+export type DayPart = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
+export type AdminUserFilter = 'All' | 'Admins' | 'Suspended';
+export type UserRole = 'user' | 'admin';
+export type AdminAction =
+  | 'UserSuspended'
+  | 'UserUnsuspended'
+  | 'UserDeleted'
+  | 'UserRoleChanged'
+  | 'TemplateCreated'
+  | 'TemplateUpdated'
+  | 'TemplateSafetyChanged'
+  | 'TemplateActivated'
+  | 'TemplateDeactivated'
+  | 'WeightsUpdated'
+  | 'WeightsReset';
+export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings';
+export type WeightGroup = 'Interest' | 'Novelty' | 'Score' | 'Penalty' | 'TasteGraph' | 'Exploration' | 'Windows';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  createdAt: string;
+  lastLoginAt: string | null;
+  isSuspended: boolean;
+  suspendedUntil: string | null;
+  suspensionReason: string | null;
+  completedQuests: number;
+  lifeXp: number;
+  isBootstrapAdmin: boolean;
+  isSelf: boolean;
+}
+
+export interface TemplateInput {
+  code: string;
+  title: string;
+  description: string;
+  type: QuestType;
+  difficulty: Difficulty;
+  category: LifeCategory;
+  secondaryCategory: LifeCategory | null;
+  minMinutes: number;
+  maxMinutes: number;
+  cost: CostBand;
+  dayParts: DayPart[];
+  requiresCity: boolean;
+  isOutdoor: boolean;
+  cooldownDays: number;
+  riskScore: number;
+  interestIds: string[];
+  effort: PhysicalEffort;
+  isStarter: boolean;
+}
+
+export interface AdminTemplate extends TemplateInput {
+  id: string;
+  safety: SafetyLevel;
+  isActive: boolean;
+  source: EditorialSource;
+  version: number;
+  violations: string[];
+}
+
+export interface AdminTemplateListItem {
+  id: string;
+  code: string;
+  title: string;
+  category: LifeCategory;
+  type: QuestType;
+  cost: CostBand;
+  safety: SafetyLevel;
+  isActive: boolean;
+  source: EditorialSource;
+  version: number;
+  violationCount: number;
+}
+
+export interface TemplateSearch {
+  text?: string;
+  category?: LifeCategory;
+  safety?: SafetyLevel;
+  isActive?: boolean;
+  pageNumber: number;
+}
+
+export interface TemplateValidation {
+  violations: string[];
+  resultingSafety: SafetyLevel;
+}
+
+export interface CatalogHealth {
+  offerable: number;
+  needsReview: number;
+  blocked: number;
+  freeShare: number;
+  cityIndependentShare: number;
+  categories: { category: LifeCategory; templates: number; daily: number }[];
+  warnings: string[];
+}
+
+export interface WeightField {
+  key: string;
+  label: string;
+  group: WeightGroup;
+  description: string;
+  min: number;
+  max: number;
+  step: number;
+  isInteger: boolean;
+  value: number;
+  defaultValue: number;
+  isOverridden: boolean;
+}
+
+export interface RecommendationWeights {
+  revision: number;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  fields: WeightField[];
+}
+
+export interface AuditEntry {
+  id: string;
+  createdAt: string;
+  actorEmail: string;
+  action: AdminAction;
+  targetType: AdminTargetType;
+  targetId: string | null;
+  targetLabel: string;
+  reason: string | null;
+  details: string | null;
 }
