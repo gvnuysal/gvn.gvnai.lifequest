@@ -56,7 +56,7 @@ internal static class ExperimentMapping
             })
             .OrderBy(o => o.Label)
             .ToList(),
-        e.CreatedAt, e.CreatedBy, e.StartedAt, e.EndedAt);
+        e.CreatedAt, e.CreatedByEmail, e.StartedAt, e.EndedAt);
 }
 
 // ── Sorgular ──────────────────────────────────────────────────────────────────

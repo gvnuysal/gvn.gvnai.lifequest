@@ -42,7 +42,7 @@ internal sealed class ExperimentConfiguration : IEntityTypeConfiguration<Domain.
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Hypothesis).HasMaxLength(500).IsRequired();
-        builder.Property(x => x.CreatedBy).HasMaxLength(254).IsRequired();
+        builder.Property(x => x.CreatedByEmail).HasMaxLength(254).IsRequired();
         builder.Property(x => x.TreatmentOverrides).AsJsonb();
 
         // Aynı anda tek deney: eşzamanlı iki "başlat" isteğinden ikincisi veritabanında reddedilir.

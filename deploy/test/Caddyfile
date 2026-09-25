@@ -1,0 +1,32 @@
+# Caddy: TLS + ters proxy. Alan adları ortam değişkenlerinden gelir (docker-compose.yml → .env).
+#
+# TLS_MODE=internal → Caddy'nin yerel sertifika otoritesi. Site yalnızca bu makineden erişilir
+#                     (hosts kaydı); kök sertifika setup-local.sh ile bir kez güvenilir yapılır.
+# İnternete açarken:   TLS_MODE'u e-posta adresi yapın (ör. TLS_MODE=ops@gvnaitech.com). Caddy Let's Encrypt
+#                     sertifikasını otomatik alır. DNS'in bu makineye işaret etmesi ve 80/443'ün açık olması gerekir.
+
+{
+	# Yerel CA'nın kök sertifikasını container içinden sisteme kurmaya çalışma; setup-local.sh bunu hostta yapar.
+	skip_install_trust
+}
+
+(security) {
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	encode zstd gzip
+}
+
+{$UI_HOST} {
+	tls {$TLS_MODE}
+	import security
+	reverse_proxy web:8080
+}
+
+{$API_HOST} {
+	tls {$TLS_MODE}
+	import security
+	reverse_proxy api:8080
+}

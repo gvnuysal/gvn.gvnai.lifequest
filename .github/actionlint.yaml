@@ -1,0 +1,4 @@
+# actionlint: bu Mac'teki self-hosted runner'ın özel etiketi (deploy-test.yml).
+self-hosted-runner:
+  labels:
+    - lifequest-test

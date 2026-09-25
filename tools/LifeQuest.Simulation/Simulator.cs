@@ -92,7 +92,7 @@ internal sealed class Simulator(SimulationCatalog catalog)
 
             if (result.Items.Count < 3) run.ShortfallDays++;
 
-            var expires = TimeZones.EndOfLocalDayUtc(date, Istanbul);
+            var expires = TimeZones.EndOfQuestDayUtc(date, Istanbul);
             for (var slot = 0; slot < result.Items.Count; slot++)
             {
                 var item = result.Items[slot];

@@ -29,7 +29,8 @@ public sealed class Experiment : AggregateRoot
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
     public ExperimentOutcome Outcome { get; private set; } = ExperimentOutcome.None;
-    public string CreatedBy { get; private set; } = default!;
+    /// <summary>Deneyi oluşturan admin'in e-postası (denetim kaydıyla aynı biçim).</summary>
+    public string CreatedByEmail { get; private set; } = default!;
 
     private Experiment() { }
 
@@ -50,7 +51,7 @@ public sealed class Experiment : AggregateRoot
             Hypothesis = Guard.NotNullOrWhiteSpace(hypothesis, nameof(hypothesis)).Trim(),
             TreatmentOverrides = overrides.ToDictionary(o => o.Key, o => RecommendationWeightCatalog.Get(o.Key).Normalize(o.Value)),
             TreatmentShare = Math.Round(treatmentShare, 2),
-            CreatedBy = createdBy
+            CreatedByEmail = createdBy
         });
     }
 

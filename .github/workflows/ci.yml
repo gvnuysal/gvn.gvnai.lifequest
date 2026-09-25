@@ -4,10 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+  # deploy-test.yml deploy'dan önce testleri buradan çağırır.
+  workflow_call:
 
+# workflow_call ile çağrıldığında çağıranın concurrency'si geçerlidir; kendi grubunu yalnızca doğrudan tetiklenince kullanır.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend:

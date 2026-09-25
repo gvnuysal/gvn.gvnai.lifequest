@@ -1,0 +1,38 @@
+name: Deploy · Test
+
+# Deploy_Lifequest_Test dalına her push'ta: testler (GitHub'ın bulut makinesinde) → deploy (bu Mac'teki runner).
+# pull_request tetikleyicisi bilinçli olarak YOK: repo herkese açık, fork'lardan gelen kod self-hosted runner'da çalışmamalı.
+on:
+  push:
+    branches: [Deploy_Lifequest_Test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Testler
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Test ortamına deploy
+    needs: ci
+    runs-on: [self-hosted, macOS, lifequest-test]
+    environment:
+      name: test
+      url: https://lifequesttest.gvnaitech.com
+    # Aynı anda tek deploy; yeni push gelirse bekler, yarıda kesmez.
+    concurrency:
+      group: deploy-test
+      cancel-in-progress: false
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        run: deploy/test/deploy.sh
+
+      - name: Hata durumunda loglar
+        if: failure()
+        run: docker compose -p lifequest-test logs --tail=100 api web caddy || true

@@ -528,3 +528,4 @@ $RECYCLE.BIN/
 !packages/gvnframework/
 !packages/gvnframework/*.nupkg
 !.env.example
+!deploy/test/.env.example

@@ -48,8 +48,19 @@ import {
   SuggestRequest,
 } from './models';
 
-/** Göreli taban adres: geliştirmede proxy.conf.json, üretimde aynı origin. */
-export const API = '/api/v1';
+interface RuntimeConfig {
+  apiBaseUrl?: string;
+}
+
+/**
+ * API kök adresi çalışma anında `config.js`'ten okunur: geliştirmede boş (aynı köken, proxy.conf.json),
+ * test/üretimde ayrı API alan adı (ör. https://lifequesttestapi.gvnaitech.com). Sondaki "/" atılır.
+ */
+export function apiBaseUrl(config: RuntimeConfig | undefined = (globalThis as { __LIFEQUEST_CONFIG__?: RuntimeConfig }).__LIFEQUEST_CONFIG__): string {
+  return (config?.apiBaseUrl ?? '').trim().replace(/\/+$/, '');
+}
+
+export const API = `${apiBaseUrl()}/api/v1`;
 
 @Injectable({ providedIn: 'root' })
 export class AuthApi {

@@ -1,4 +1,6 @@
-# LifeQuest web: SPA + API ters proxy. Tarayıcı yalnızca bu kökle konuşur (CORS gerekmez).
+# LifeQuest web: SPA. Açılışta ortam değişkenleriyle doldurulur (nginx /etc/nginx/templates mekanizması).
+#   API_BASE_URL  boş  → API aynı kökende; /api istekleri "api" servisine proxy'lenir (kök docker-compose "app" profili).
+#   API_BASE_URL  dolu → UI API'yi doğrudan o adresten çağırır (CORS); test/üretim ayrı alan adları.
 upstream lifequest_api {
     server api:8080;
 }
@@ -11,7 +13,15 @@ server {
     server_tokens off;
     client_max_body_size 1m;
 
-    include /etc/nginx/snippets/security-headers.conf.inc;
+    include /etc/nginx/conf.d/security-headers.inc;
+
+    # Çalışma anı yapılandırması: aynı imaj her ortamda, yalnızca ortam değişkeni değişir.
+    location = /config.js {
+        default_type application/javascript;
+        add_header Cache-Control "no-store" always;
+        include /etc/nginx/conf.d/security-headers.inc;
+        return 200 "window.__LIFEQUEST_CONFIG__ = { apiBaseUrl: '${API_BASE_URL}' };\n";
+    }
 
     location /api/ {
         proxy_pass http://lifequest_api;
@@ -23,21 +33,22 @@ server {
     }
 
     location = /health {
-        proxy_pass http://lifequest_api;
-        proxy_set_header Host $host;
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
     }
 
     # Service worker ve uygulama kabuğu her zaman taze okunur; aksi halde yeni sürüm yayılmaz.
     location ~ ^/(index\.html|ngsw\.json|ngsw-worker\.js|safety-worker\.js|manifest\.webmanifest)$ {
         add_header Cache-Control "no-cache" always;
-        include /etc/nginx/snippets/security-headers.conf.inc;
+        include /etc/nginx/conf.d/security-headers.inc;
         try_files $uri =404;
     }
 
     # Adı içerik özetini taşıyan derleme çıktıları uzun süre önbelleğe alınabilir.
     location ~* \.(?:js|css|woff2?|svg|png|ico)$ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
-        include /etc/nginx/snippets/security-headers.conf.inc;
+        include /etc/nginx/conf.d/security-headers.inc;
         try_files $uri =404;
     }
 

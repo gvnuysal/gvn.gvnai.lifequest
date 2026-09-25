@@ -191,6 +191,8 @@ docs/
 packages/gvnframework/                Gvn.GvnFramework NuGet paketleri (yerel kaynak, bkz. nuget.config)
 scripts/update-framework-packages.sh  Framework paketlerini günceller
 .github/workflows/ci.yml              Build + test (Testcontainers) + web + Docker imajları
+.github/workflows/deploy-test.yml     Deploy_Lifequest_Test → testler → self-hosted runner ile test ortamına deploy
+deploy/test/                          Test ortamı: compose, Caddyfile, deploy/rollback/setup script'leri
 docker-compose.yml                    postgres · redis (opsiyonel) · app profili: api + web (nginx)
 ```
 
@@ -271,6 +273,14 @@ npm --prefix src/LifeQuest.Web start
 | http://localhost:5080/health | ✅ Sağlık kontrolü |
 
 ---
+
+### Test ortamı (Docker + CI/CD)
+
+`Deploy_Lifequest_Test` dalına push edilen her sürüm testlerden geçtikten sonra bu Mac'teki Docker'a otomatik deploy edilir:
+- UI: https://lifequesttest.gvnaitech.com
+- API: https://lifequesttestapi.gvnaitech.com
+
+Caddy (HTTPS) + nginx + ASP.NET + PostgreSQL; her sürüm commit kimliğiyle etiketlenir. Deploy öncesi veritabanı yedeklenir, sağlık kontrolü başarısız olursa önceki sürüme dönülür. Kurulum ve işletme rehberi: [docs/deploy-test.md](docs/deploy-test.md).
 
 <a id="testler"></a>
 

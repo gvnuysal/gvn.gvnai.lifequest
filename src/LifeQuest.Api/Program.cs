@@ -36,7 +36,9 @@ builder.Services
 builder.Services.AddCors(o => o.AddDefaultPolicy(policy => policy
     .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
     .AllowAnyHeader()
-    .AllowAnyMethod()));
+    .AllowAnyMethod()
+    // UI ayrı alan adındayken indirilen dosyanın (.ics, veri dışa aktarma) adını okuyabilmesi için.
+    .WithExposedHeaders("Content-Disposition")));
 
 builder.Services.AddLifeQuestRateLimiting(configuration);
 
@@ -98,12 +100,12 @@ app.UseAuthorization();
 
 app.UseModules();
 
-if (app.Environment.IsDevelopment())
-{
+// API dokümantasyonu geliştirmede her zaman, test ortamında ApiDocs:Enabled ile açılır; üretimde kapalı kalır.
+if (app.Environment.IsDevelopment() || configuration.GetValue("ApiDocs:Enabled", false))
     app.UseGvnSwagger();
-    if (backgroundJobsEnabled)
-        app.UseGvnHangfireDashboard();
-}
+
+if (app.Environment.IsDevelopment() && backgroundJobsEnabled)
+    app.UseGvnHangfireDashboard();
 
 app.MapControllers();
 app.MapHealthChecks("/health").AllowAnonymous();
