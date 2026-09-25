@@ -88,6 +88,8 @@ Test sunucusu olarak çalışacaksa, adaptöre bağlıyken uykuyu kapat:
 sudo pmset -c sleep 0
 ```
 
+Docker Desktop → Settings → General → **"Start Docker Desktop when you sign in to your computer"** açık olsun. Servisler `restart: always` ile tanımlı; Docker açılınca kendiliğinden geri gelirler.
+
 ### 2.5 Otomatik deploy için GitHub runner
 Runner, GitHub'daki iş akışının bu Mac'te komut çalıştırmasını sağlayan küçük bir servistir.
 
@@ -174,6 +176,7 @@ Admin hesabı: `.env` içindeki `ADMIN_EMAIL` (varsayılan `admin@lifequest.loca
 
 | Belirti | Sebep / çözüm |
 |---|---|
+| Siteler birden açılmıyor, `docker compose -p lifequest-test ps` boş | Docker Desktop güncellenip yeniden başlamış olabilir. Servisler `restart: always` ile geri gelir; gelmezse: `docker compose -p lifequest-test start` |
 | Tarayıcı "bağlantı güvenli değil" diyor | `setup-local.sh` çalışmamış ya da `caddy-data` volume'u silinip yeni kök sertifika üretilmiş → `setup-local.sh`'i tekrar çalıştır |
 | Alan adı açılmıyor | `/etc/hosts` kaydı yok → `setup-local.sh`. Kontrol: `ping -c1 lifequesttest.gvnaitech.com` |
 | `deploy.sh`: "port is already allocated" | 80/443'ü başka bir uygulama kullanıyor: `sudo lsof -iTCP:443 -sTCP:LISTEN` |
