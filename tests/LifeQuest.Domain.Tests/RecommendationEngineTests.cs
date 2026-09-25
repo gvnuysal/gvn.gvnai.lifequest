@@ -191,7 +191,7 @@ public sealed class RecommendationEngineTests
     }
 
     [Fact]
-    public void Chill_never_uses_an_exploration_slot_while_surprise_me_does()
+    public void Chill_never_explores_unrelated_areas_while_surprise_me_does()
     {
         var known = Enumerable.Range(0, 3).Select(i => Candidate($"known-{i}", LifeCategory.Culture, [Art])).ToList();
         // Bağlama zayıf uyan (sabah görevi, akşam saati) ve ilgiyle eşleşmeyen yeni alan: normal sıralamada
@@ -200,13 +200,59 @@ public sealed class RecommendationEngineTests
             cost: CostBand.Medium, dayParts: DayPart.Morning);
         var history = History([Completed(Candidate("past", LifeCategory.Culture, [Art]), 30)]);
 
-        var chill = _engine.Recommend([.. known, unknown], Profile(new() { [Art] = 0.9 }, DiscoveryRadius.Chill), history, Graph, Context());
-        var surprise = _engine.Recommend([.. known, unknown], Profile(new() { [Art] = 0.9 }, DiscoveryRadius.SurpriseMe), history, Graph, Context());
+        for (var seed = 0; seed < 20; seed++)
+        {
+            var chill = _engine.Recommend([.. known, unknown], Profile(new() { [Art] = 0.9 }, DiscoveryRadius.Chill),
+                history, Graph, Context(seed: seed));
+            Assert.DoesNotContain(chill.Items, i => i.IsExploration);
+        }
 
-        Assert.DoesNotContain(chill.Items, i => i.IsExploration);
+        var surprise = _engine.Recommend([.. known, unknown], Profile(new() { [Art] = 0.9 }, DiscoveryRadius.SurpriseMe), history, Graph, Context());
         var exploration = Assert.Single(surprise.Items, i => i.IsExploration);
         Assert.Equal("unknown", exploration.Candidate.Code);
         Assert.Contains(exploration.Reasons, r => r.Code == ReasonCode.ExplorationPick);
+    }
+
+    [Fact]
+    public void Chill_occasionally_explores_only_taste_graph_neighbours()
+    {
+        var known = Enumerable.Range(0, 3).Select(i => Candidate($"known-{i}", LifeCategory.Explorer, [Coffee])).ToList();
+        var adjacent = Candidate("cafe-culture-walk", LifeCategory.Culture, [CafeCulture], cost: CostBand.Medium);
+        var unrelated = Candidate("random-new", LifeCategory.Creativity, [Photography], cost: CostBand.Medium);
+        var history = History([Completed(Candidate("past", LifeCategory.Explorer, [Coffee]), 30)]);
+
+        var explorationDays = 0;
+        for (var seed = 0; seed < 50; seed++)
+        {
+            var result = _engine.Recommend([.. known, adjacent, unrelated],
+                Profile(new() { [Coffee] = 0.9 }, DiscoveryRadius.Chill), history, Graph, Context(seed: seed));
+
+            var exploration = result.Items.SingleOrDefault(i => i.IsExploration);
+            if (exploration is not null)
+            {
+                explorationDays++;
+                Assert.Equal("cafe-culture-walk", exploration.Candidate.Code);
+            }
+        }
+
+        // Sakin modda keşif hafif kalır: varsayılan %20 olasılık.
+        Assert.InRange(explorationDays, 3, 20);
+    }
+
+    [Fact]
+    public void Chill_exploration_can_be_turned_off()
+    {
+        var engine = new QuestRecommendationEngine(new RecommendationWeights { ExplorationRateChill = 0 });
+        var known = Enumerable.Range(0, 3).Select(i => Candidate($"known-{i}", LifeCategory.Explorer, [Coffee])).ToList();
+        var adjacent = Candidate("cafe-culture-walk", LifeCategory.Culture, [CafeCulture], cost: CostBand.Medium);
+        var history = History([Completed(Candidate("past", LifeCategory.Explorer, [Coffee]), 30)]);
+
+        for (var seed = 0; seed < 20; seed++)
+        {
+            var result = engine.Recommend([.. known, adjacent], Profile(new() { [Coffee] = 0.9 }, DiscoveryRadius.Chill),
+                history, Graph, Context(seed: seed));
+            Assert.DoesNotContain(result.Items, i => i.IsExploration);
+        }
     }
 
     [Fact]

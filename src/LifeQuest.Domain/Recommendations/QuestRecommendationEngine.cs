@@ -264,7 +264,7 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         var remaining = eligible.ToList();
         var selected = new List<Selection>();
         var random = new Random(context.Seed);
-        var explorationSlots = RecommendationWeights.ExplorationSlotsFor(profile.Radius, context.Count);
+        var explorationSlots = RecommendationWeights.ExplorationSlotsFor(context.Count);
         if (random.NextDouble() >= weights.ExplorationRateFor(profile.Radius))
             explorationSlots = 0;
 
@@ -285,7 +285,7 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
             {
                 choice = ranked.First(x => IsShort(x.Candidate.Candidate));
             }
-            else if (isExplorationSlot && ExplorationPool(ranked) is { Count: > 0 } pool)
+            else if (isExplorationSlot && ExplorationPool(ranked, adjacentOnly: profile.Radius == DiscoveryRadius.Chill) is { Count: > 0 } pool)
             {
                 choice = pool[random.Next(pool.Count)];
                 isExploration = true;
@@ -307,9 +307,10 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
     /// denenir (güdümlü keşif: "kahve seviyorsan mimariye bak"); böyle aday yoksa ilgi skoru düşük ama yeni
     /// alanlara düşülür. Offline simülasyonda rastgele keşif, kabul oranı düşük olduğu için north-star'ı
     /// düşürüp gizli ilgi keşfine çok az katkı veriyordu (docs/simulasyon-raporu.md).
+    /// Sakin modda (<paramref name="adjacentOnly"/>) yalnızca komşu adaylar kullanılır; rastgele alana düşülmez.
     /// </summary>
     private List<(ScoredCandidate Candidate, ScoreBreakdown Breakdown)> ExplorationPool(
-        List<(ScoredCandidate Candidate, ScoreBreakdown Breakdown)> ranked)
+        List<(ScoredCandidate Candidate, ScoreBreakdown Breakdown)> ranked, bool adjacentOnly)
     {
         var eligible = ranked
             .Where(x => x.Candidate.Novelty >= weights.ExplorationMinNovelty &&
@@ -320,7 +321,9 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         var adjacent = weights.GuidedExploration
             ? eligible.Where(x => x.Candidate.Interest.ViaInterestId is not null).Take(3).ToList()
             : [];
-        return adjacent.Count > 0 ? adjacent : eligible.Take(3).ToList();
+        if (adjacent.Count > 0 || adjacentOnly)
+            return adjacent;
+        return eligible.Take(3).ToList();
     }
 
     private static bool IsShort(QuestCandidate c) => c.Type == QuestType.Daily || c.MaxMinutes <= ShortQuestMaxMinutes;

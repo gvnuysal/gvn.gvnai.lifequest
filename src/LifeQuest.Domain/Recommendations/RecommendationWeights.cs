@@ -13,7 +13,7 @@ public sealed record RecommendationWeights
 
     public double NoveltyChill { get; init; } = 0.05;
     public double NoveltyExplore { get; init; } = 0.20;
-    public double NoveltySurpriseMe { get; init; } = 0.35;
+    public double NoveltySurpriseMe { get; init; } = 0.25;
 
     public double Context { get; init; } = 0.15;
     public double GoalFit { get; init; } = 0.15;
@@ -55,20 +55,23 @@ public sealed record RecommendationWeights
         _ => NoveltyExplore
     };
 
-    /// <summary>Keşif slotunun açılma olasılığı (günlük, tohumlu). Chill'de hiç açılmaz.</summary>
+    /// <summary>
+    /// Keşif slotunun açılma olasılığı (günlük, tohumlu). Chill'de yalnızca Taste Graph komşusu ve risksiz
+    /// adaylarla hafif keşif yapılır; aday yoksa slot normal öneriye döner.
+    /// </summary>
+    public double ExplorationRateChill { get; init; } = 0.2;
     public double ExplorationRateExplore { get; init; } = 0.5;
 
     /// <summary>Keşif slotu önce Taste Graph komşularını dener. <c>false</c> yalnızca karşılaştırma içindir (ilk sürüm).</summary>
     public bool GuidedExploration { get; init; } = true;
     public double ExplorationRateSurpriseMe { get; init; } = 1.0;
 
-    /// <summary>Contextual bandit'e geçmeden önce kontrollü keşif: Chill'de 0, diğerlerinde en fazla 1 keşif slotu.</summary>
-    public static int ExplorationSlotsFor(DiscoveryRadius radius, int count)
-        => radius == DiscoveryRadius.Chill || count < 2 ? 0 : 1;
+    /// <summary>Contextual bandit'e geçmeden önce kontrollü keşif: günde en fazla 1 keşif slotu.</summary>
+    public static int ExplorationSlotsFor(int count) => count < 2 ? 0 : 1;
 
     public double ExplorationRateFor(DiscoveryRadius radius) => radius switch
     {
-        DiscoveryRadius.Chill => 0,
+        DiscoveryRadius.Chill => ExplorationRateChill,
         DiscoveryRadius.SurpriseMe => ExplorationRateSurpriseMe,
         _ => ExplorationRateExplore
     };

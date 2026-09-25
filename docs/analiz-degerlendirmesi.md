@@ -79,9 +79,11 @@ Durum etiketleri: ✅ uygulandı · 🧭 karar (politika) · 🗺️ yol haritas
 | 9 | **Bildirimler.** | ✅ uygulama içi / 🗺️ push | `NotificationPreference` (Kapalı / Haftalık özet, varsayılan haftalık özet). `WeeklySummaryJob` her Pazartesi kullanıcının yerel haftasına göre idempotent özet üretiyor ve metin suçlayıcı olmayan bir tonda yazılıyor. Bugün ekranında kart olarak gösteriliyor. Karar: push kanalı ve günlük hatırlatma, kullanıcının açıkça seçmesi şartıyla sonraki fazda. |
 
 **Simülasyonla bulunup düzeltilen sorunlar** (8 persona × 20 tohum × 30 gün, gerçek domain kodu):
-- İlk sürümün keşif slotu rastgeleydi. Artık Taste Graph komşularını önceliklendiriyor ve Dengeli modda %50 olasılıkla açılıyor. Gizli ilgi keşfi %48 → %60.
-- Görmezden gelinen öneriler tekrar ediyordu. 7 günlük pencere ve gösterim başına ceza ile tekrar %45 → %34.
-- İsabet (%73 → %74) ve north-star (6,25 → 6,32) korundu.
+- İlk sürümün keşif slotu rastgeleydi. Artık Taste Graph komşularını önceliklendiriyor ve Dengeli modda %50 olasılıkla açılıyor.
+- Görmezden gelinen öneriler tekrar ediyordu. 7 günlük pencere ve gösterim başına ceza ile tekrar %45 → %33.
+- Şaşırt Beni modu anlamlı deneyimi fazla düşürüyordu. Yenilik ağırlığı 0,35 → 0,25 ile keşif kaybedilmeden north-star %12 arttı.
+- Sakin kullanıcı gizli ilgilerini hiç keşfetmiyordu. Sakin modda %20 olasılıkla yalnızca Taste Graph komşusu önerilir; az vakitli çalışan personada gizli ilgi keşfi %5 → %45.
+- Toplamda gizli ilgi keşfi %48 → %62; isabet (%73 → %74) ve north-star (6,25 → 6,33) korundu.
 
 ---
 
@@ -115,6 +117,6 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 
 1. Katalog derinliği: ilgi başına 3-4 template, özellikle kısa, ücretsiz ve şehirden bağımsız görevler (simülasyon öneri 1).
 2. Framework 1–5 düzeltmeleri ve Hangfire için kalıcı PostgreSQL storage.
-3. Motor ayarları için A/B: "sevdiğini tekrarla" muafiyeti, Şaşırt Beni yeniliği 0,28, Sakin modda %10 güdümlü keşif.
+3. "Sevdiğini tekrarla" muafiyeti ve mod ayarlarının (Şaşırt Beni 0,25, Sakin %20) canlı veride A/B ile doğrulanması.
 4. Gerçek LLM adaptörü (`IQuestNarrator`) ve guard ihlal oranının izlenmesi.
 5. Push kanalı ve kullanıcı seçimli günlük hatırlatma; hava durumu entegrasyonu.

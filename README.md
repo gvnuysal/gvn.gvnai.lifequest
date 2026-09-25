@@ -9,7 +9,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.0.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-199%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-201%20passing-22A559?style=flat-square)](#testler)
 [![Web tests](https://img.shields.io/badge/web%20tests-19%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 
@@ -101,7 +101,7 @@ flowchart LR
 - Discovery Radius, İlgi ve Yenilik ağırlığını değiştirir.
 - Diversity her seçimden sonra yeniden hesaplanır. Bu, *"kahve seviyor → hep kahve"* döngüsünü kırar.
 - İlk slot mümkünse kısa bir görevdir, böylece ilk 5 dakikada uygulanabilir bir öneri olur.
-- Keşif modlarında bir slot kontrollü keşfe ayrılır (Dengeli %50, Şaşırt Beni her gün). Önce Taste Graph'ta sevdiğin bir ilgiye komşu quest'ler denenir. Seçim kullanıcı + gün ile tohumlanır, yani tekrarlanabilir ve test edilebilir.
+- Keşif modlarında bir slot kontrollü keşfe ayrılır (Sakin %20, Dengeli %50, Şaşırt Beni her gün). Önce Taste Graph'ta sevdiğin bir ilgiye komşu quest'ler denenir; Sakin modda yalnızca bunlar. Seçim kullanıcı + gün ile tohumlanır, yani tekrarlanabilir ve test edilebilir.
 - Son 7 günde gösterilip seçilmeyen öneriler her gösterimde biraz daha geriye düşer.
 - "İlgimi çekmedi" ilgi ağırlığını düşürür. "Pahalı / zamanım yok / uzak" ise ilgiyi değil, benzer maliyet ve süredeki önerilerin skorunu etkiler.
 
@@ -119,7 +119,7 @@ flowchart LR
 
 ### Offline simülasyon
 
-Motor saf olduğu için gerçek domain koduyla 8 persona × 20 tohum × 30 gün simüle edilir (`tools/LifeQuest.Simulation`). Analiz sonrası yapılan motor değişiklikleri, isabet ve north-star'ı koruyarak gizli ilgi keşfini **%48 → %60**'a çıkardı, tekrar eden öneriyi **%45 → %34**'e indirdi. Ayrıntılar: [simülasyon raporu](docs/simulasyon-raporu.md).
+Motor saf olduğu için gerçek domain koduyla 8 persona × 20 tohum × 30 gün simüle edilir (`tools/LifeQuest.Simulation`). Analiz sonrası yapılan motor değişiklikleri, isabet ve north-star'ı koruyarak gizli ilgi keşfini **%48 → %62**'ye çıkardı, tekrar eden öneriyi **%45 → %33**'e indirdi. Ayrıntılar: [simülasyon raporu](docs/simulasyon-raporu.md).
 
 <img src="docs/images/sim-ablation.svg" alt="Simülasyon: bileşen ablasyonu" width="100%" />
 
@@ -270,7 +270,7 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 | Paket | Kapsam |
 |---|---|
-| `LifeQuest.Domain.Tests` (60) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni |
+| `LifeQuest.Domain.Tests` (62) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni |
 | `LifeQuest.Application.Tests` (19) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si |
 | `LifeQuest.Catalog.Tests` (104) | 100 seed template'in her biri ve katalog dengesi (CI kapısı) |
 | `LifeQuest.Api.IntegrationTests` (16) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, admin metrik yetkisi, haftalık özet |

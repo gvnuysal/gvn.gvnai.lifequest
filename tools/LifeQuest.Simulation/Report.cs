@@ -11,14 +11,14 @@ internal static partial class Report
             Console.WriteLine($"{m.Scenario.Key + " " + m.Scenario.Name,-34} {Pct(m.Precision),7}±{m.PrecisionSe*100:0} {Pct(m.EarlyPrecision),6} {Pct(m.LatePrecision),6} {Pct(m.Acceptance),6} {m.NorthStar,6:0.00}±{m.NorthStarSe:0.00} {m.AverageRating,5:0.0} {m.CategoryCoverage,6:0.0} {m.CatalogCoverage,7:0.0} {Pct(m.Repetition),6} {m.IntraListDiversity,5:0.00} {Pct(m.HiddenDiscovery),6}±{m.HiddenDiscoverySe*100:0} {Pct(m.FirstDayShortAndRelevant),5} {Pct(m.AboveAbilityShare),6} {m.ShortfallDays,5:0.0} {Pct(m.ExplorationAcceptance),6} {m.ExplorationAffinity,6:0.00}");
     }
 
-    public static void PrintPersonas(IEnumerable<(Persona Persona, ScenarioMetrics Metrics)> personas)
+    public static void PrintPersonas(IEnumerable<(Persona Persona, ScenarioMetrics Metrics)> personas, string title = "Persona (A)")
     {
-        Console.WriteLine($"{"Persona (A)",-34} {"İsabet",7} {"İlk5",6} {"Son5",6} {"NS/hf",6} {"KatKap",6} {"Gizli",6} {"Eksik",5}");
+        Console.WriteLine($"{title,-34} {"İsabet",7} {"İlk5",6} {"Son5",6} {"NS/hf",6} {"KatKap",6} {"Gizli",6} {"Eksik",5}");
         foreach (var (p, m) in personas)
             Console.WriteLine($"{p.Name,-34} {Pct(m.Precision),7} {Pct(m.EarlyPrecision),6} {Pct(m.LatePrecision),6} {m.NorthStar,6:0.00} {m.CategoryCoverage,6:0.0} {Pct(m.HiddenDiscovery),6} {m.ShortfallDays,5:0.0}");
     }
 
-    public static partial void Write(string docsDir, ReportData data);
+    public static partial void Write(string docsDir, ReportData d);
 }
 
 internal sealed record ReportData(
@@ -30,5 +30,14 @@ internal sealed record ReportData(
     ScenarioMetrics MobilityWith,
     ScenarioMetrics MobilityWithout,
     IReadOnlyList<(Persona Persona, ScenarioMetrics Metrics)> Personas,
+    TuningData Tuning,
     int Days,
     int Seeds);
+
+/// <summary>Şaşırt Beni yeniliği ve Sakin keşif oranı taraması; önceki mod ayarlarıyla persona karşılaştırması.</summary>
+internal sealed record TuningData(
+    IReadOnlyList<ScenarioMetrics> SurpriseSweep,
+    IReadOnlyList<ScenarioMetrics> ChillSweep,
+    double ProductionSurpriseNovelty,
+    double ProductionChillRate,
+    IReadOnlyList<(Persona Persona, ScenarioMetrics Metrics)> PersonasBefore);

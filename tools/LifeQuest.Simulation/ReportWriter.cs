@@ -43,6 +43,25 @@ internal static partial class Report
                 ("Farklı template (30 gün)", v => v.ToString("0"), 50, d.Radius.Select(m => (RadiusName(m), m.CatalogCoverage, m.Scenario.Key == "R-Explore")).ToList())
             ]));
 
+        bool IsSurpriseProduction(ScenarioMetrics m) => m.Scenario.Weights.NoveltySurpriseMe == d.Tuning.ProductionSurpriseNovelty;
+        bool IsChillProduction(ScenarioMetrics m) => m.Scenario.Weights.ExplorationRateChill == d.Tuning.ProductionChillRate;
+        string SurpriseLabel(ScenarioMetrics m) => $"Şaşırt · yenilik {m.Scenario.Weights.NoveltySurpriseMe:0.00}";
+        string ChillLabel(ScenarioMetrics m) => $"Sakin · keşif %{m.Scenario.Weights.ExplorationRateChill * 100:0}";
+        File.WriteAllText(Path.Combine(images, "sim-tuning.svg"), Svg.BarPanels(
+            "Mod ayarları: ne kazanıyoruz, ne veriyoruz?",
+            "Tüm personalar ilgili moda zorlanarak çalıştırıldı · koyu çubuk: üretimdeki ayar",
+            [
+                ("North-star / hafta", v => v.ToString("0.00"), 9,
+                    [.. d.Tuning.SurpriseSweep.Select(m => (SurpriseLabel(m), m.NorthStar, IsSurpriseProduction(m))),
+                     .. d.Tuning.ChillSweep.Select(m => (ChillLabel(m), m.NorthStar, IsChillProduction(m)))]),
+                ("Gizli ilgi keşfi", Pct, 1,
+                    [.. d.Tuning.SurpriseSweep.Select(m => (SurpriseLabel(m), m.HiddenDiscovery, IsSurpriseProduction(m))),
+                     .. d.Tuning.ChillSweep.Select(m => (ChillLabel(m), m.HiddenDiscovery, IsChillProduction(m)))]),
+                ("İsabet", Pct, 1,
+                    [.. d.Tuning.SurpriseSweep.Select(m => (SurpriseLabel(m), m.Precision, IsSurpriseProduction(m))),
+                     .. d.Tuning.ChillSweep.Select(m => (ChillLabel(m), m.Precision, IsChillProduction(m)))])
+            ]));
+
         var findingsPath = Path.GetFullPath(Path.Combine(docsDir, "..", "tools", "LifeQuest.Simulation", "bulgular.md"));
         var findings = File.Exists(findingsPath) ? File.ReadAllText(findingsPath).Trim() : "_Bulgular henüz yazılmadı._";
 
@@ -81,6 +100,20 @@ internal static partial class Report
         md.AppendLine("![Keşif modu bir tercih](images/sim-radius.svg)");
         md.AppendLine();
         Table(md, d.Radius);
+        md.AppendLine("### Mod ayarları: Şaşırt Beni yeniliği ve Sakin keşif oranı");
+        md.AppendLine();
+        md.AppendLine("![Mod ayarı taraması](images/sim-tuning.svg)");
+        md.AppendLine();
+        md.AppendLine($"Herkes ilgili moda zorlanarak çalıştırıldı. Üretim değerleri: Şaşırt Beni yeniliği **{d.Tuning.ProductionSurpriseNovelty:0.00}**, Sakin keşif oranı **{d.Tuning.ProductionChillRate:0.0}**.");
+        md.AppendLine();
+        Table(md, [.. d.Tuning.SurpriseSweep, .. d.Tuning.ChillSweep]);
+        md.AppendLine("Persona bazında önceki mod ayarları (A0: yenilik 0,35, Sakin'de keşif yok) ile güncel ayarlar (A):");
+        md.AppendLine();
+        md.AppendLine("| Persona | Keşif modu | İsabet A0 → A | North-star A0 → A | Gizli ilgi keşfi A0 → A |");
+        md.AppendLine("|---|---|---|---|---|");
+        foreach (var ((p, before), (_, after)) in d.Tuning.PersonasBefore.Zip(d.Personas))
+            md.AppendLine($"| {p.Name} | {p.Radius} | {Pct(before.Precision)} → {Pct(after.Precision)} | {before.NorthStar:0.00} → {after.NorthStar:0.00} | {Pct(before.HiddenDiscovery)} → {Pct(after.HiddenDiscovery)} |");
+        md.AppendLine();
         md.AppendLine("### Erişilebilirlik: hareket kısıtı olan persona");
         md.AppendLine();
         md.AppendLine("| Senaryo | Kapasitesini aşan öneri | İsabet | North-star / hafta |");

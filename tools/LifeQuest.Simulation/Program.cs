@@ -26,7 +26,8 @@ Scenario[] core =
 [
     new("V0", "İlk sürüm (analiz öncesi)", production with
     {
-        GuidedExploration = false, ExplorationRateExplore = 1.0, IgnoredOfferWindowDays = 3
+        GuidedExploration = false, ExplorationRateExplore = 1.0, ExplorationRateChill = 0,
+        IgnoredOfferWindowDays = 3, NoveltySurpriseMe = 0.35
     }),
     new("A", "Tam motor + cold start kartları", production),
     new("B", "Tam motor, kartsız", production, StarterCards: false),
@@ -58,6 +59,16 @@ Scenario[] sparse =
     new("S-B", "Tek ilgi beyanı, kartsız", production, StarterCards: false, SparseDeclaration: true)
 ];
 
+// Mod ayarı taraması: herkes ilgili moda zorlanır; üretim değeri raporda vurgulanır.
+Scenario[] surpriseSweep = [.. new[] { 0.35, 0.30, 0.25, 0.20 }
+    .Select(n => new Scenario($"SN{n:0.00}", $"Şaşırt Beni, yenilik {n:0.00}", production with { NoveltySurpriseMe = n },
+        RadiusOverride: DiscoveryRadius.SurpriseMe))];
+Scenario[] chillSweep = [.. new[] { 0.0, 0.1, 0.2, 0.3 }
+    .Select(rate => new Scenario($"CR{rate:0.0}", $"Sakin, keşif oranı {rate:0.0}", production with { ExplorationRateChill = rate },
+        RadiusOverride: DiscoveryRadius.Chill))];
+var previousModes = new Scenario("A0", "Tam motor, önceki mod ayarları",
+    production with { NoveltySurpriseMe = 0.35, ExplorationRateChill = 0 });
+
 var effortOff = new Scenario("E", "Efor sınırı beyan edilmedi", production, DeclareEffortLimit: false);
 
 IReadOnlyList<UserRun> RunAll(Scenario scenario, IEnumerable<Persona>? personas = null)
@@ -70,13 +81,20 @@ var coreMetrics = core.Select(s => ScenarioMetrics.From(s, coreRuns[s], Days)).T
 var radiusMetrics = radius.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
 var ablationMetrics = ablations.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
 var sparseMetrics = sparse.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
+var surpriseMetrics = surpriseSweep.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
+var chillMetrics = chillSweep.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
+var previousRuns = RunAll(previousModes);
 
+var full = core.Single(s => s.Key == "A");
 var mobility = Persona.All.Where(p => p.Key == "mobility").ToList();
-var mobilityWith = ScenarioMetrics.From(core[0], RunAll(core[0], mobility), Days);
+var mobilityWith = ScenarioMetrics.From(full, RunAll(full, mobility), Days);
 var mobilityWithout = ScenarioMetrics.From(effortOff, RunAll(effortOff, mobility), Days);
 
 var perPersona = Persona.All
-    .Select(p => (Persona: p, Metrics: ScenarioMetrics.From(core[0], coreRuns[core[0]].Where(r => r.Persona == p).ToList(), Days)))
+    .Select(p => (Persona: p, Metrics: ScenarioMetrics.From(full, coreRuns[full].Where(r => r.Persona == p).ToList(), Days)))
+    .ToList();
+var perPersonaBefore = Persona.All
+    .Select(p => (Persona: p, Metrics: ScenarioMetrics.From(previousModes, previousRuns.Where(r => r.Persona == p).ToList(), Days)))
     .ToList();
 
 Console.WriteLine($"Katalog: {catalog.Candidates.Count} template, {catalog.StarterCards.Count} başlangıç kartı · {Persona.All.Count} persona × {SeedsPerPersona} tohum × {Days} gün");
@@ -85,10 +103,16 @@ Report.PrintTable(coreMetrics.Concat(ablationMetrics).Concat(sparseMetrics).Conc
     .Append(mobilityWithout with { Scenario = mobilityWithout.Scenario with { Name = "Hareket kısıtlı · efor beyansız" } }));
 Console.WriteLine();
 Report.PrintPersonas(perPersona);
+Console.WriteLine();
+Report.PrintTable(surpriseMetrics.Concat(chillMetrics));
+Console.WriteLine();
+Report.PrintPersonas(perPersonaBefore, "Persona (A0)");
 
 if (docsDir is not null)
 {
     Report.Write(docsDir, new ReportData(catalog, coreMetrics, ablationMetrics, sparseMetrics, radiusMetrics,
-        mobilityWith, mobilityWithout, perPersona, Days, SeedsPerPersona));
+        mobilityWith, mobilityWithout, perPersona,
+        new TuningData(surpriseMetrics, chillMetrics, production.NoveltySurpriseMe, production.ExplorationRateChill, perPersonaBefore),
+        Days, SeedsPerPersona));
     Console.WriteLine($"\nRapor yazıldı: {Path.Combine(docsDir, "simulasyon-raporu.md")}");
 }
