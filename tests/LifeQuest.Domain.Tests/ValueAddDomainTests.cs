@@ -109,3 +109,21 @@ public sealed class QuestIdeaTests
         Assert.Equal("Benzer bir deneyim zaten katalogda var.", idea.ReviewNote);
     }
 }
+
+public sealed class QuestDayTests
+{
+    private static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+
+    [Theory]
+    [InlineData("2026-09-25T00:10", "2026-09-24")] // gece yarısından sonra: hâlâ dünün görev günü
+    [InlineData("2026-09-25T03:59", "2026-09-24")]
+    [InlineData("2026-09-25T04:00", "2026-09-25")]
+    [InlineData("2026-09-25T23:50", "2026-09-25")]
+    public void Quest_day_starts_at_four_in_the_morning(string localNow, string expected)
+        => Assert.Equal(DateOnly.Parse(expected), TimeZones.QuestDay(DateTime.Parse(localNow), 4));
+
+    [Fact]
+    public void Quest_day_ends_at_the_next_day_start_in_utc()
+        => Assert.Equal(new DateTime(2026, 9, 26, 1, 0, 0, DateTimeKind.Utc),
+            TimeZones.EndOfQuestDayUtc(new DateOnly(2026, 9, 25), Istanbul, 4)); // İstanbul UTC+3
+}

@@ -19,4 +19,10 @@ public sealed class QuestOptions
 
     /// <summary>Öneri geçmişi penceresi (repetition, feedback, skip sinyalleri).</summary>
     public int HistoryWindowDays { get; set; } = 30;
+
+    /// <summary>
+    /// Görev gününün başladığı yerel saat. Gece yarısından sonra yapılan görevler kullanıcının algısıyla uyumlu
+    /// olarak önceki güne sayılır; yeni günlük öneriler bu saatte açılır.
+    /// </summary>
+    public int DayStartHour { get; set; } = 4;
 }

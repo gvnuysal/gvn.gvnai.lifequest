@@ -39,6 +39,8 @@ public sealed class QuestOfferService(
 
     private QuestOptions Options => questOptions.Value;
 
+    private int DayStartHour => Math.Clamp(Options.DayStartHour, 0, 12);
+
     /// <summary>Kullanıcının yerel günü için 3'lü günlük öneriyi döner; yoksa üretir. Tekrar çağrılabilir.</summary>
     public async Task<Result<QuestOffers>> GetOrCreateDailyOffersAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -56,7 +58,7 @@ public sealed class QuestOfferService(
 
         var context = new RecommendationContext(localNow, nowUtc, Options.DailyOfferCount, Seed(userId, today));
         var offers = await CreateOffersAsync(profile, context, QuestSource.Daily, today, slotOffset: 0,
-            TimeZones.EndOfLocalDayUtc(today, timeZone), cancellationToken);
+            TimeZones.EndOfQuestDayUtc(today, timeZone, DayStartHour), cancellationToken);
 
         try
         {
@@ -232,7 +234,7 @@ public sealed class QuestOfferService(
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var timeZone = profile.ResolveTimeZone();
         var localNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timeZone);
-        return (nowUtc, localNow, DateOnly.FromDateTime(localNow), timeZone);
+        return (nowUtc, localNow, TimeZones.QuestDay(localNow, DayStartHour), timeZone);
     }
 
     /// <summary>Kullanıcı + gün için süreçten bağımsız, tekrarlanabilir tohum (HashCode.Combine süreç başına rastgeledir).</summary>

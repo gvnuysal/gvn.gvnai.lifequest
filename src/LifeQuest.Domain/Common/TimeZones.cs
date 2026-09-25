@@ -12,10 +12,17 @@ public static class TimeZones
             ? tz
             : TimeZoneInfo.Utc;
 
-    /// <summary>Kullanıcının yerel gününün bitişini (bir sonraki gece yarısı) UTC olarak döner.</summary>
-    public static DateTime EndOfLocalDayUtc(DateOnly localDate, TimeZoneInfo timeZone)
+    /// <summary>
+    /// Görev günü: yerel saatle <paramref name="dayStartHour"/>'da başlar. Gece 00:00–04:00 arası yapılanlar
+    /// kullanıcının algısındaki gibi önceki güne sayılır ("dün gece tamamladım").
+    /// </summary>
+    public static DateOnly QuestDay(DateTime localNow, int dayStartHour)
+        => DateOnly.FromDateTime(localNow.AddHours(-dayStartHour));
+
+    /// <summary>Görev gününün bitişini (ertesi gün <paramref name="dayStartHour"/>) UTC olarak döner.</summary>
+    public static DateTime EndOfQuestDayUtc(DateOnly questDay, TimeZoneInfo timeZone, int dayStartHour = 0)
     {
-        var nextMidnight = localDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        return TimeZoneInfo.ConvertTimeToUtc(nextMidnight, timeZone);
+        var nextStart = questDay.AddDays(1).ToDateTime(new TimeOnly(dayStartHour, 0), DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(nextStart, timeZone);
     }
 }

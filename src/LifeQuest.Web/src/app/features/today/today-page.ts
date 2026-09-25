@@ -70,16 +70,41 @@ import { EmptyState, Skeleton } from '../../ui/states';
           <lq-empty-state icon="info" title="Öneriler yüklenemedi" [message]="error()">
             <button lq-button variant="secondary" size="sm" (click)="load()"><lq-icon name="refresh" [size]="16" /> Tekrar dene</button>
           </lq-empty-state>
-        } @else if (today()?.quests?.length) {
-          @for (quest of today()!.quests; track quest.id) {
+        } @else if (openQuests().length) {
+          @for (quest of openQuests(); track quest.id) {
             <lq-quest-card [quest]="quest" />
           }
+        } @else if (doneQuests().length) {
+          <div class="all-done">
+            <lq-icon name="check" [size]="22" />
+            <div>
+              <strong>Bugünün önerilerini tamamladın</strong>
+              <p class="muted">Yeni öneriler yarın sabah {{ dayStart }}:00'da gelir. Beklemek istemezsen aşağıdan boş vaktine göre öneri alabilirsin.</p>
+            </div>
+          </div>
         } @else {
           <lq-empty-state icon="compass" title="Bugün için öneri yok" [message]="today()?.message ?? null">
             <a lq-button variant="secondary" size="sm" routerLink="/profil">Tercihlerimi düzenle</a>
           </lq-empty-state>
         }
       </section>
+
+      @if (!loading() && completedToday().length) {
+        <section class="stack">
+          <h2 class="section-title">Bugün tamamladıkların</h2>
+          <ul class="done">
+            @for (quest of completedToday(); track quest.id) {
+              <li>
+                <a [routerLink]="['/quest', quest.id]">
+                  <lq-icon name="check" [size]="16" />
+                  <span>{{ quest.title }}</span>
+                  <span class="done__xp">+{{ quest.reward.lifeXp }} XP</span>
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
 
       <a class="cta" routerLink="/oner">
         <span class="cta__icon"><lq-icon name="clock" [size]="24" /></span>
@@ -105,6 +130,16 @@ import { EmptyState, Skeleton } from '../../ui/states';
       background: var(--primary-soft); color: var(--primary-text); font-weight: 700; text-decoration: none !important;
     }
     .active-strip span { flex: 1; }
+    .all-done { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-radius: var(--radius-lg);
+      background: var(--success-soft); color: var(--success); }
+    .all-done strong { color: var(--ink); }
+    .all-done p { margin-top: 4px; font-size: var(--fs-sm); }
+    .done { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .done a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md);
+      background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-weight: 700; text-decoration: none; }
+    .done a span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .done a lq-icon { color: var(--success); }
+    .done__xp { font-size: var(--fs-xs); color: var(--xp-ink); font-weight: 800; }
     .saved-strip { background: var(--surface-2); color: var(--ink-2); }
     .summary {
       display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: var(--radius-lg);
@@ -143,6 +178,21 @@ export class TodayPage {
   protected readonly savedCount = signal(0);
 
   protected readonly activeCount = computed(() => this.active().length);
+
+  /** Görev günü 04:00'te başlar (sunucudaki Quests:DayStartHour ile aynı). */
+  protected readonly dayStart = '04';
+
+  /** Açık öneriler: henüz karar verilmemiş (önerilen) veya kabul edilip süren günlük görevler. */
+  protected readonly openQuests = computed(() =>
+    (this.today()?.quests ?? []).filter((q) => q.status === 'Offered' || q.status === 'Accepted'),
+  );
+
+  /** Bugünün listesinden kapanmış olanlar; tamamlananlar ayrıca özetlenir, geçilen/süresi dolanlar gösterilmez. */
+  protected readonly doneQuests = computed(() =>
+    (this.today()?.quests ?? []).filter((q) => q.status !== 'Offered' && q.status !== 'Accepted'),
+  );
+
+  protected readonly completedToday = computed(() => this.doneQuests().filter((q) => q.status === 'Completed'));
   protected readonly dateLabel = computed(() =>
     formatDate(this.today()?.date ?? new Date(), { weekday: 'long', day: 'numeric', month: 'long' }),
   );
