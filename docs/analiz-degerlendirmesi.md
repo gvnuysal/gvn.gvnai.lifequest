@@ -68,7 +68,7 @@ Durum etiketleri: ✅ uygulandı · 🧭 karar (politika) · 🗺️ yol haritas
 
 | # | Risk / öneri | Durum | Nasıl ele alındı |
 |---|---|---|---|
-| 1 | **Katalog ürünün kendisidir.** 39 template ile çeşitlilik hızla tükenir. | ✅ | Katalog **100 template**e çıktı (6 kategori × 16–17). `CatalogSafetyRules` editoryal kontrol listesi, `LifeQuest.Catalog.Tests` içinde CI kapısı olarak çalışıyor: her template ve katalog dengesi (kategori başına ≥ 12, ≥ 2 Daily, ücretsiz ≥ %35, şehirden bağımsız ≥ %45). Seeder upsert yapıyor ve template `Version`'ını artırıyor; kurala uymayan template `NeedsReview` olarak işaretleniyor ve önerilmiyor. Simülasyon, katalog derinliğinin hâlâ zamanla düşen isabetin ana sebebi olduğunu gösteriyor; ilgi başına 3-4 template hedefi yol haritasında. |
+| 1 | **Katalog ürünün kendisidir.** 39 template ile çeşitlilik hızla tükenir. | ✅ | Katalog **142 template**e çıktı; her ilgi alanında en az 4 görev ve en az 1 kısa görev var (`ValidateInterestCoverage`). `CatalogSafetyRules` editoryal kontrol listesi, `LifeQuest.Catalog.Tests` içinde CI kapısı olarak çalışıyor: her template ve katalog dengesi (kategori başına ≥ 12, ≥ 2 Daily, ücretsiz ≥ %35, şehirden bağımsız ≥ %45). Seeder upsert yapıyor ve template `Version`'ını artırıyor; kurala uymayan template `NeedsReview` olarak işaretleniyor ve önerilmiyor. 100 → 142 template simülasyonda north-star'ı %9, gizli ilgi keşfini %61 → %70 artırdı. |
 | 2 | **Tamamlama beyana dayalıdır**, XP şişirilebilir. | 🧭 | Politika: XP ve seviye **özel** kalır. Herkese açık liderlik tablosu, sosyal karşılaştırma ya da XP karşılığı ödül doğrulama mekanizması olmadan açılmaz. Kodda bu yüzeylerin hiçbiri yok. Narration guard da LLM çıktısında XP/para ifadesini reddediyor. |
 | 3 | **Cold start.** | ✅ | Onboarding'de "Sana göre mi?" adımı: kategori başına 2, toplam 12 başlangıç kartı (`GET /onboarding/starter-cards`). 👍 ilgileri +0,15 artırıyor (yoksa Learned olarak ekliyor), 👎 −0,10 düşürüyor. Simülasyon: tek ilgi beyan eden kullanıcıda isabet %67 → %72. Zengin beyanda etki gürültü içinde, bu yüzden adım atlanabilir. |
 | 4 | **North-star tanımı.** | ✅ | `GET /admin/metrics` (yalnızca admin rolü): anlamlı deneyim (tamamlanmış ve puansız ya da puan ≥ 4) / aktif kullanıcı / hafta, offered → accepted → completed hunisi, skip sebepleri, yeni kategori ve keşif kabul oranı. Web'de `/admin` ekranı var. Admin hesapları `Admin:BootstrapEmails` ayarından atanıyor. |
@@ -125,8 +125,8 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 
 ## 5. Sonraki adımlar (öncelik sırasıyla)
 
-1. Katalog derinliği: ilgi başına 3-4 template, özellikle kısa, ücretsiz ve şehirden bağımsız görevler (simülasyon öneri 1).
+1. Katalog büyümesi: ilgi başına 6 görev hedefi; topluluk fikirleri ve katalog sağlığı uyarılarıyla (ilk adım tamamlandı: 142 template).
 2. Framework 1–5 düzeltmeleri ve Hangfire için kalıcı PostgreSQL storage.
-3. "Sevdiğini tekrarla" muafiyeti ve mod ayarlarının (Şaşırt Beni 0,25, Sakin %20) canlı veride A/B ile doğrulanması.
+3. Mod ayarlarının canlı veride A/B ile doğrulanması: sevdiğini tekrarla 0,6 ↔ 0,8, Sakin keşif %20 ↔ %10, Şaşırt Beni 0,25 ↔ 0,20.
 4. Gerçek LLM adaptörü (`IQuestNarrator`) ve guard ihlal oranının izlenmesi.
 5. Push kanalı ve kullanıcı seçimli günlük hatırlatma; hava durumu entegrasyonu.

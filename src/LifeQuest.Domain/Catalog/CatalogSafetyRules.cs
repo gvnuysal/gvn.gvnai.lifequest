@@ -20,6 +20,15 @@ public static class CatalogSafetyRules
     public const double MinFreeShare = 0.35;
     public const double MinCityIndependentShare = 0.45;
 
+    /// <summary>
+    /// İlgi alanı derinliği: her ilgide en az bu kadar görev olmalı. Daha azında en sevilen görevler bekleme
+    /// süresine girince öneri havuzu tükenir (offline simülasyon, bulgu 4).
+    /// </summary>
+    public const int MinTemplatesPerInterest = 4;
+
+    /// <summary>Her ilgi alanında en az bir kısa görev: az vakti olan kullanıcı da o ilgiyi deneyebilmeli.</summary>
+    public const int ShortQuestMaxMinutes = 60;
+
     /// <summary>Tek bir template'in editoryal kurallara uygunluğu.</summary>
     public static IReadOnlyList<string> ValidateTemplate(QuestTemplateSpec t)
     {
@@ -89,6 +98,24 @@ public static class CatalogSafetyRules
         var cityIndependentShare = templates.Count(t => !t.RequiresCity) / (double)templates.Count;
         if (cityIndependentShare < MinCityIndependentShare)
             violations.Add($"Şehirden bağımsız quest payı %{cityIndependentShare * 100:0} (en az %{MinCityIndependentShare * 100:0}).");
+
+        return violations;
+    }
+
+    /// <summary>İlgi alanı kapsaması: her ilgide yeterli sayıda ve en az bir kısa görev var mı?</summary>
+    /// <param name="interests">İlgi kimliği → görünen ad (uyarı metni için).</param>
+    public static IReadOnlyList<string> ValidateInterestCoverage(
+        IReadOnlyCollection<QuestTemplateSpec> templates, IReadOnlyDictionary<Guid, string> interests)
+    {
+        var violations = new List<string>();
+        foreach (var (id, name) in interests.OrderBy(i => i.Value, StringComparer.Create(new System.Globalization.CultureInfo("tr-TR"), false)))
+        {
+            var tagged = templates.Where(t => t.InterestIds.Contains(id)).ToList();
+            if (tagged.Count < MinTemplatesPerInterest)
+                violations.Add($"{name}: {tagged.Count} görev (en az {MinTemplatesPerInterest}).");
+            if (tagged.Count > 0 && !tagged.Any(t => t.MaxMinutes <= ShortQuestMaxMinutes))
+                violations.Add($"{name}: {ShortQuestMaxMinutes} dakikalık kısa görev yok.");
+        }
 
         return violations;
     }

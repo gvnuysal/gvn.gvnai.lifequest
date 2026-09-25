@@ -9,8 +9,8 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.0.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-276%20passing-22A559?style=flat-square)](#testler)
-[![Web tests](https://img.shields.io/badge/web%20tests-25%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-325%20passing-22A559?style=flat-square)](#testler)
+[![Web tests](https://img.shields.io/badge/web%20tests-42%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 [![CI](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml/badge.svg)](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml)
 
@@ -33,7 +33,7 @@ LifeQuest; zamanına, bütçene, ilgi alanlarına ve ne kadar keşif istediğine
 | 🌱 **Sağlıklı oyunlaştırma** | Streak yok, kayıp korkusu yok. Süresi dolan görevin cezası da yok. |
 | 🕸️ **Taste Graph** | *Kahve → Kafe Kültürü → Mimari → Fotoğrafçılık* gibi komşu ilgi alanlarına geçiş. |
 | 🔒 **Önce mahremiyet** | Konum takibi yok, fotoğraf doğrulaması yok. Tek tıkla tüm veriler silinir (KVKK/GDPR). |
-| 🛡️ **Güvenli katalog** | 100 editoryal template; her biri güvenlik kontrol listesinden CI'da geçer. Gece açık hava görevi yok; efor sınırına saygı. |
+| 🛡️ **Güvenli katalog** | 142 editoryal template, her ilgi alanında en az 4 görev; her biri güvenlik kontrol listesinden CI'da geçer. Gece açık hava görevi yok; efor sınırına saygı. |
 | 🃏 **Hızlı ısınma** | Onboarding'deki "Sana göre mi?" kartları ilk günden isabetli öneri sağlar. |
 | 📬 **Suçlamayan haftalık özet** | Bildirim yalnızca seçersen; varsayılan, uygulama içi haftalık özet. |
 | 💾 **Sonra yaparım + takvim** | Beğendiğin öneriyi kaybetme; kabul ettiğini planla ve `.ics` ile kendi takvimine ekle. Çok sevdiğin deneyim, bir süre sonra yeniden önerilir. |
@@ -296,11 +296,11 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 | Paket | Kapsam |
 |---|---|
-| `LifeQuest.Domain.Tests` (83) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi |
+| `LifeQuest.Domain.Tests` (89) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi, görev günü sınırı, ilgi kapsama kuralı |
 | `LifeQuest.Application.Tests` (51) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması |
-| `LifeQuest.Catalog.Tests` (104) | 100 seed template'in her biri ve katalog dengesi (CI kapısı) |
+| `LifeQuest.Catalog.Tests` (147) | 142 seed template'in her biri, katalog dengesi ve ilgi kapsaması: her ilgide ≥ 4 görev, ≥ 1 kısa görev (CI kapısı) |
 | `LifeQuest.Api.IntegrationTests` (38) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit) |
-| `LifeQuest.Web` (25, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi |
+| `LifeQuest.Web` (42, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi, çalışma anı API adresi, İngilizce rotalar ve eski Türkçe adres yönlendirmeleri |
 
 ---
 
@@ -383,7 +383,9 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 - [x] Yönetim paneli: kullanıcılar, katalog inceleme kuyruğu, canlı öneri ağırlıkları, denetim kaydı
 - [x] Katma değer: A/B deneyleri, topluluk fikirleri, sonra yaparım + takvim, sevdiğini tekrarla, KVKK dışa aktarma, CI + Docker
 - [ ] Gvn.GvnFramework 1.1.0-preview'a geçiş (paket adları düzeltildi; bilinen hataların düzelip düzelmediği kontrol edilmeli)
-- [ ] Katalog derinliği (ilgi başına 3-4 template) · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
+- [x] Test ortamı ve CI/CD: Docker + Caddy (HTTPS), deploy/rollback script'leri, self-hosted runner ile otomatik deploy · İngilizce URL'ler
+- [x] Katalog derinliği: 142 template, her ilgide ≥ 4 görev ve ≥ 1 kısa görev (north-star +%9, gizli ilgi keşfi %61 → %70)
+- [ ] Katalog: ilgi başına 6 görev · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
 - [ ] Refresh token'ın httpOnly çereze taşınması · Hangfire için kalıcı PostgreSQL storage
 - [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
 - [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma

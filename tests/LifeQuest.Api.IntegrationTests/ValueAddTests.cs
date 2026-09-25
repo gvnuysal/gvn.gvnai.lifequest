@@ -60,8 +60,11 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
         var startedId = quest.GetProperty("id").GetGuid();
         await AssertErrorAsync(await client.GetAsync($"/api/v1/quests/{startedId}/calendar.ics"), HttpStatusCode.Conflict, "QUEST_NOT_PLANNED");
 
-        var planned = await client.PutAsJsonAsync($"/api/v1/quests/{startedId}/plan",
-            new { plannedAtLocal = DateTime.UtcNow.AddHours(3).AddDays(1).Date.AddHours(10) });
+        // Plan, görevin tamamlama süresi içinde olmalı (günlük görevlerde 1 gün): iki saat sonrası her türde geçerli.
+        var istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        var plannedLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istanbul).AddHours(2);
+        plannedLocal = new DateTime(plannedLocal.Year, plannedLocal.Month, plannedLocal.Day, plannedLocal.Hour, 0, 0);
+        var planned = await client.PutAsJsonAsync($"/api/v1/quests/{startedId}/plan", new { plannedAtLocal = plannedLocal });
         Assert.Equal(HttpStatusCode.OK, planned.StatusCode);
         Assert.NotEqual(JsonValueKind.Null, (await planned.Content.ReadFromJsonAsync<JsonElement>(Json)).GetProperty("plannedAt").ValueKind);
 
@@ -70,7 +73,8 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
         var content = await ics.Content.ReadAsStringAsync();
         Assert.Contains("BEGIN:VEVENT", content);
         Assert.Contains("DTSTART:", content);
-        Assert.Contains("T070000Z", content); // İstanbul 10:00 = 07:00 UTC
+        var expectedUtc = TimeZoneInfo.ConvertTimeToUtc(plannedLocal, istanbul);
+        Assert.Contains($"DTSTART:{expectedUtc:yyyyMMdd'T'HHmmss}Z", content); // yerel saat UTC'ye çevrilir
     }
 
     // ── A/B deneyi ───────────────────────────────────────────────────────────

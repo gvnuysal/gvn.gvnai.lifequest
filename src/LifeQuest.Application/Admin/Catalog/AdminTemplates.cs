@@ -223,12 +223,14 @@ public sealed record CatalogHealthDto(
 /// <summary>Önerilebilir katalogun editoryal dengesi (kategori başına sayı, ücretsiz ve şehirden bağımsız pay).</summary>
 public sealed record GetCatalogHealthQuery : IQuery<CatalogHealthDto>;
 
-internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository templates, IQuestIdeaRepository ideas)
+internal sealed class GetCatalogHealthQueryHandler(
+    IQuestTemplateRepository templates, IQuestIdeaRepository ideas, IQuestCatalog catalog)
     : IQueryHandler<GetCatalogHealthQuery, CatalogHealthDto>
 {
     public async Task<Result<CatalogHealthDto>> Handle(GetCatalogHealthQuery query, CancellationToken cancellationToken)
     {
         var specs = await templates.GetOfferableSpecsAsync(cancellationToken);
+        var interests = (await catalog.GetInterestsAsync(cancellationToken)).ToDictionary(i => i.Id, i => i.Name);
         var total = Math.Max(1, specs.Count);
 
         return Result<CatalogHealthDto>.Ok(new CatalogHealthDto(
@@ -241,7 +243,9 @@ internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository temp
             LifeCategories.All
                 .Select(c => new CategoryHealthDto(c, specs.Count(s => s.Category == c), specs.Count(s => s.Category == c && s.Type == QuestType.Daily)))
                 .ToList(),
-            CatalogSafetyRules.ValidateCatalog(specs.ToList())));
+            // Kategori dengesi + ilgi alanı derinliği: admin'in (ve topluluk fikirlerinin) nereye içerik gerektiğini gösterir.
+            [.. CatalogSafetyRules.ValidateCatalog(specs.ToList()),
+             .. CatalogSafetyRules.ValidateInterestCoverage(specs.ToList(), interests)]));
     }
 }
 
