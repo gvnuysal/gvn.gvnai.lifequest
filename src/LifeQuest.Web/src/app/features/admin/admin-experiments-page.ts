@@ -10,6 +10,7 @@ import { Button } from '../../ui/button';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { EXPERIMENT_STATUS_LABELS } from './admin-labels';
+import { experimentPath } from '../../core/routing/app-paths';
 
 interface OverrideRow {
   field: WeightField;
@@ -38,7 +39,7 @@ interface OverrideRow {
         <lq-empty-state icon="info" title="Deneyler yüklenemedi" [message]="error()" />
       } @else if (experiments(); as list) {
         @for (e of list; track e.id) {
-          <a class="surface item" [routerLink]="['/yonetim/deneyler', e.id]">
+          <a class="surface item" [routerLink]="experimentPath(e.id)">
             <div class="item__head">
               <strong>{{ e.name }}</strong>
               <span [class]="'pill pill--' + statusMeta(e).tone">{{ statusMeta(e).label }}</span>
@@ -120,6 +121,7 @@ interface OverrideRow {
   `,
 })
 export class AdminExperimentsPage {
+  protected readonly experimentPath = experimentPath;
   private readonly api = inject(AdminApi);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -195,7 +197,7 @@ export class AdminExperimentsPage {
         this.busy.set(false);
         this.createOpen.set(false);
         this.toast.success('Deney taslağı oluşturuldu.');
-        void this.router.navigate(['/yonetim/deneyler', experiment.id]);
+        void this.router.navigate(experimentPath(experiment.id));
       },
       error: (err: unknown) => {
         this.busy.set(false);

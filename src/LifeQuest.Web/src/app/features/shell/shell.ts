@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Icon, IconName } from '../../ui/icon';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 interface NavItem {
   path: string;
@@ -65,9 +66,9 @@ interface NavItem {
 })
 export class Shell {
   protected readonly items: NavItem[] = [
-    { path: '/bugun', label: 'Bugün', icon: 'sun' },
-    { path: '/aktif', label: 'Görevlerim', icon: 'list' },
-    { path: '/ilerleme', label: 'İlerleme', icon: 'trophy' },
-    { path: '/profil', label: 'Profil', icon: 'user' },
+    { path: APP_PATHS.today, label: 'Bugün', icon: 'sun' },
+    { path: APP_PATHS.quests, label: 'Görevlerim', icon: 'list' },
+    { path: APP_PATHS.progress, label: 'İlerleme', icon: 'trophy' },
+    { path: APP_PATHS.profile, label: 'Profil', icon: 'user' },
   ];
 }

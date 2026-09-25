@@ -11,6 +11,7 @@ import { Icon } from '../../ui/icon';
 import { ProgressBar } from '../../ui/progress';
 import { QuestCard } from '../../ui/quest-card';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { APP_PATHS, questPath } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-today-page',
@@ -24,7 +25,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
           <h1>{{ greeting }}{{ name() ? ', ' + name() : '' }}</h1>
         </div>
         @if (progress(); as p) {
-          <a class="level" routerLink="/ilerleme" [attr.aria-label]="'Seviye ' + p.lifeLevel + ', ilerlemeyi gör'">
+          <a class="level" [routerLink]="paths.progress" [attr.aria-label]="'Seviye ' + p.lifeLevel + ', ilerlemeyi gör'">
             <span class="level__badge"><lq-icon name="star" [size]="14" [strokeWidth]="2.6" /> Sv. {{ p.lifeLevel }}</span>
             <lq-progress-bar [value]="p.levelProgress" [height]="6" label="Sonraki seviyeye ilerleme" />
             <span class="level__xp">{{ p.lifeXp }} / {{ p.nextLevelXp }} XP</span>
@@ -46,14 +47,14 @@ import { EmptyState, Skeleton } from '../../ui/states';
       }
 
       @if (activeCount() > 0) {
-        <a class="active-strip" routerLink="/aktif">
+        <a class="active-strip" [routerLink]="paths.quests">
           <lq-icon name="flag" [size]="18" />
           <span><strong>{{ activeCount() }}</strong> görevin devam ediyor</span>
           <lq-icon name="chevron-right" [size]="18" />
         </a>
       }
       @if (savedCount() > 0) {
-        <a class="active-strip saved-strip" routerLink="/kaydedilenler">
+        <a class="active-strip saved-strip" [routerLink]="paths.saved">
           <lq-icon name="heart" [size]="18" />
           <span>"Sonra yaparım" listende <strong>{{ savedCount() }}</strong> deneyim var</span>
           <lq-icon name="chevron-right" [size]="18" />
@@ -84,7 +85,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
           </div>
         } @else {
           <lq-empty-state icon="compass" title="Bugün için öneri yok" [message]="today()?.message ?? null">
-            <a lq-button variant="secondary" size="sm" routerLink="/profil">Tercihlerimi düzenle</a>
+            <a lq-button variant="secondary" size="sm" [routerLink]="paths.profile">Tercihlerimi düzenle</a>
           </lq-empty-state>
         }
       </section>
@@ -95,7 +96,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
           <ul class="done">
             @for (quest of completedToday(); track quest.id) {
               <li>
-                <a [routerLink]="['/quest', quest.id]">
+                <a [routerLink]="questPath(quest.id)">
                   <lq-icon name="check" [size]="16" />
                   <span>{{ quest.title }}</span>
                   <span class="done__xp">+{{ quest.reward.lifeXp }} XP</span>
@@ -106,7 +107,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
         </section>
       }
 
-      <a class="cta" routerLink="/oner">
+      <a class="cta" [routerLink]="paths.suggest">
         <span class="cta__icon"><lq-icon name="clock" [size]="24" /></span>
         <span class="cta__text">
           <strong>Boş vaktin mi var?</strong>
@@ -161,6 +162,8 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class TodayPage {
+  protected readonly paths = APP_PATHS;
+  protected readonly questPath = questPath;
   private readonly quests = inject(QuestsApi);
   private readonly progressApi = inject(ProgressApi);
 

@@ -6,7 +6,7 @@
     <lq-skeleton [height]="120" />
   } @else if (notFound()) {
     <lq-empty-state icon="compass" title="Quest bulunamadı" message="Bu quest artık mevcut değil ya da sana ait değil.">
-      <a lq-button variant="secondary" size="sm" routerLink="/bugun">Bugüne dön</a>
+      <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Bugüne dön</a>
     </lq-empty-state>
   } @else if (quest(); as q) {
     <article class="hero">

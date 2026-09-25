@@ -1,15 +1,18 @@
 import { Routes } from '@angular/router';
 import { adminGuard, authGuard, guestGuard, onboardedGuard, onboardingPendingGuard } from './core/auth/guards';
+import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
+
+/** Adresler İngilizce, başlıklar Türkçe. Bağlantılar core/routing/app-paths.ts sabitlerini kullanır. */
 
 export const routes: Routes = [
   {
-    path: 'giris',
+    path: 'login',
     canActivate: [guestGuard],
     title: 'Giriş · LifeQuest',
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
   },
   {
-    path: 'kayit',
+    path: 'register',
     canActivate: [guestGuard],
     title: 'Kayıt ol · LifeQuest',
     loadComponent: () => import('./features/auth/register-page').then((m) => m.RegisterPage),
@@ -20,49 +23,51 @@ export const routes: Routes = [
     title: 'Hoş geldin · LifeQuest',
     loadComponent: () => import('./features/onboarding/onboarding-page').then((m) => m.OnboardingPage),
   },
+  // Eski Türkçe adresler (/bugun, /yonetim/...) yeni adreslere yönlenir; kabuğun guard'larından önce eşleşmeli.
+  ...LEGACY_REDIRECTS,
   {
     path: '',
     canActivate: [authGuard, onboardedGuard],
     loadComponent: () => import('./features/shell/shell').then((m) => m.Shell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'bugun' },
+      { path: '', pathMatch: 'full', redirectTo: 'today' },
       {
-        path: 'bugun',
+        path: 'today',
         title: 'Bugün · LifeQuest',
         loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage),
       },
       {
-        path: 'kaydedilenler',
+        path: 'saved',
         title: 'Sonra yaparım · LifeQuest',
         loadComponent: () => import('./features/saved/saved-page').then((m) => m.SavedPage),
       },
       {
-        path: 'fikir',
+        path: 'ideas',
         title: 'Bir deneyim öner · LifeQuest',
         loadComponent: () => import('./features/ideas/ideas-page').then((m) => m.IdeasPage),
       },
       {
-        path: 'oner',
+        path: 'suggest',
         title: 'Boş vaktim var · LifeQuest',
         loadComponent: () => import('./features/suggest/suggest-page').then((m) => m.SuggestPage),
       },
       {
-        path: 'quest/:id',
+        path: 'quests/:id',
         title: 'Quest · LifeQuest',
         loadComponent: () => import('./features/quest/quest-page').then((m) => m.QuestPage),
       },
       {
-        path: 'aktif',
+        path: 'quests',
         title: 'Görevlerim · LifeQuest',
         loadComponent: () => import('./features/active/active-page').then((m) => m.ActivePage),
       },
       {
-        path: 'ilerleme',
+        path: 'progress',
         title: 'İlerleme · LifeQuest',
         loadComponent: () => import('./features/progress/progress-page').then((m) => m.ProgressPage),
       },
       {
-        path: 'yonetim',
+        path: 'admin',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/admin/admin-shell').then((m) => m.AdminShell),
         children: [
@@ -72,54 +77,54 @@ export const routes: Routes = [
             loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
           },
           {
-            path: 'kullanicilar',
+            path: 'users',
             title: 'Kullanıcılar · Yönetim',
             loadComponent: () => import('./features/admin/admin-users-page').then((m) => m.AdminUsersPage),
           },
           {
-            path: 'katalog',
+            path: 'catalog',
             title: 'Katalog · Yönetim',
             loadComponent: () => import('./features/admin/admin-catalog-page').then((m) => m.AdminCatalogPage),
           },
           {
-            path: 'katalog/yeni',
+            path: 'catalog/new',
             title: 'Yeni template · Yönetim',
             loadComponent: () => import('./features/admin/admin-template-page').then((m) => m.AdminTemplatePage),
           },
           {
-            path: 'katalog/:id',
+            path: 'catalog/:id',
             title: 'Template · Yönetim',
             loadComponent: () => import('./features/admin/admin-template-page').then((m) => m.AdminTemplatePage),
           },
           {
-            path: 'fikirler',
+            path: 'ideas',
             title: 'Topluluk fikirleri · Yönetim',
             loadComponent: () => import('./features/admin/admin-ideas-page').then((m) => m.AdminIdeasPage),
           },
           {
-            path: 'deneyler',
+            path: 'experiments',
             title: 'Deneyler · Yönetim',
             loadComponent: () => import('./features/admin/admin-experiments-page').then((m) => m.AdminExperimentsPage),
           },
           {
-            path: 'deneyler/:id',
+            path: 'experiments/:id',
             title: 'Deney · Yönetim',
             loadComponent: () => import('./features/admin/admin-experiment-page').then((m) => m.AdminExperimentPage),
           },
           {
-            path: 'oneri-ayarlari',
+            path: 'recommendation-settings',
             title: 'Öneri ayarları · Yönetim',
             loadComponent: () => import('./features/admin/admin-weights-page').then((m) => m.AdminWeightsPage),
           },
           {
-            path: 'denetim',
+            path: 'audit-log',
             title: 'Denetim kaydı · Yönetim',
             loadComponent: () => import('./features/admin/admin-audit-page').then((m) => m.AdminAuditPage),
           },
         ],
       },
       {
-        path: 'profil',
+        path: 'profile',
         title: 'Profil · LifeQuest',
         loadComponent: () => import('./features/profile/profile-page').then((m) => m.ProfilePage),
       },

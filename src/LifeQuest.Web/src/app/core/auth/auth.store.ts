@@ -4,6 +4,7 @@ import { Observable, finalize, firstValueFrom, map, shareReplay, tap } from 'rxj
 import { AuthApi } from '../api/api-clients';
 import { AuthTokens, LoginRequest, RegisterRequest } from '../api/models';
 import { ToastService } from '../state/toast.service';
+import { APP_PATHS } from '../routing/app-paths';
 
 const REFRESH_KEY = 'lq.refresh';
 
@@ -79,7 +80,7 @@ export class AuthStore {
       }
     }
     this.clear();
-    await this.router.navigate(['/giris']);
+    await this.router.navigate([APP_PATHS.login]);
   }
 
   /** Yenileme başarısız olduğunda veya hesap askıya alındığında interceptor tarafından çağrılır. */
@@ -88,7 +89,7 @@ export class AuthStore {
     this.clear();
     if (reason === 'suspended') this.toast.error('Hesabın askıya alındı. Destek ekibiyle iletişime geçebilirsin.');
     else this.toast.show('Oturumun sona erdi. Lütfen tekrar giriş yap.');
-    void this.router.navigate(['/giris'], { queryParams: { returnUrl: this.router.url } });
+    void this.router.navigate([APP_PATHS.login], { queryParams: { returnUrl: this.router.url } });
   }
 
   clear(): void {

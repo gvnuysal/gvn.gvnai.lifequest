@@ -10,6 +10,7 @@ import { Button } from '../../ui/button';
 import { CategoryIcon } from '../../ui/category-badge';
 import { Icon } from '../../ui/icon';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { APP_PATHS, questPath } from '../../core/routing/app-paths';
 
 /** "Sonra yaparım": kabul edilmeyen öneriler kaybolmasın; hazır olunca buradan başlatılır. */
 @Component({
@@ -56,7 +57,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
             </li>
           } @empty {
             <lq-empty-state icon="heart" title="Listen boş" message="Bir önerinin detayında &quot;Sonra yaparım&quot;a dokunarak buraya ekleyebilirsin.">
-              <a lq-button variant="secondary" size="sm" routerLink="/bugun">Önerilere göz at</a>
+              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Önerilere göz at</a>
             </lq-empty-state>
           }
         </ul>
@@ -81,6 +82,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class SavedPage {
+  protected readonly paths = APP_PATHS;
   private readonly api = inject(SavedApi);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -118,7 +120,7 @@ export class SavedPage {
       next: (quest) => {
         this.busy.set(null);
         this.toast.success('Başladı! Aktif görevlerine eklendi.');
-        void this.router.navigate(['/quest', quest.id]);
+        void this.router.navigate(questPath(quest.id));
       },
       error: (err: unknown) => {
         this.busy.set(null);

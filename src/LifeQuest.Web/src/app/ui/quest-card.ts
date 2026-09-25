@@ -5,6 +5,7 @@ import { formatDate, formatDuration, formatRemaining } from '../core/labels/form
 import { CATEGORIES, COST_LABELS, QUEST_TYPE_LABELS, STATUS_LABELS } from '../core/labels/labels';
 import { CategoryIcon } from './category-badge';
 import { Icon } from './icon';
+import { questPath } from '../core/routing/app-paths';
 
 @Component({
   selector: 'lq-quest-card',
@@ -12,7 +13,7 @@ import { Icon } from './icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[style.--c]': 'color()', '[style.--c-ink]': 'inkColor()' },
   template: `
-    <a class="card" [routerLink]="['/quest', quest().id]" [attr.aria-label]="quest().title + ', ' + categoryLabel()">
+    <a class="card" [routerLink]="questPath(quest().id)" [attr.aria-label]="quest().title + ', ' + categoryLabel()">
       <div class="top">
         <lq-category-icon [category]="quest().category" [size]="46" />
         <div class="heading">
@@ -103,6 +104,7 @@ import { Icon } from './icon';
   `,
 })
 export class QuestCard {
+  protected readonly questPath = questPath;
   protected readonly planned = computed(() => {
     const at = this.quest().plannedAt;
     return at ? formatDate(at, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';

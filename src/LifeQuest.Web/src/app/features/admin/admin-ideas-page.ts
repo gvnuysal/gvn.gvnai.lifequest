@@ -11,6 +11,7 @@ import { Button } from '../../ui/button';
 import { Segmented, SegmentOption } from '../../ui/segmented';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
 
 /**
  * Topluluk fikirleri kuyruğu. Gönderenin kimliği gösterilmez: karar içeriğe göre verilir. Kabul, fikri düzenlenebilir
@@ -47,14 +48,14 @@ import { EmptyState, Skeleton } from '../../ui/states';
             }
             @if (idea.status === 'Pending') {
               <div class="actions">
-                <a lq-button size="sm" routerLink="/yonetim/katalog/yeni" [queryParams]="{ fikir: idea.id }">Template'e dönüştür</a>
+                <a lq-button size="sm" [routerLink]="paths.admin.newTemplate" [queryParams]="{ idea: idea.id }">Template'e dönüştür</a>
                 <button lq-button variant="soft" size="sm" (click)="openReject(idea)">Reddet</button>
               </div>
             } @else {
               <p class="small review">
                 {{ idea.status === 'Accepted' ? 'Kataloğa eklendi' : 'Reddedildi' }} · {{ idea.reviewedBy }}
                 @if (idea.reviewNote) { · “{{ idea.reviewNote }}” }
-                @if (idea.templateId) { · <a [routerLink]="['/yonetim/katalog', idea.templateId]">template'i aç</a> }
+                @if (idea.templateId) { · <a [routerLink]="templatePath(idea.templateId)">template'i aç</a> }
               </p>
             }
           </article>
@@ -100,6 +101,8 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class AdminIdeasPage {
+  protected readonly paths = APP_PATHS;
+  protected readonly templatePath = templatePath;
   private readonly api = inject(AdminApi);
   private readonly toast = inject(ToastService);
 

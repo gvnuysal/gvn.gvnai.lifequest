@@ -10,6 +10,7 @@ import { CategoryIcon } from '../../ui/category-badge';
 import { Chip } from '../../ui/chip';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { SAFETY_LABELS } from './admin-labels';
+import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
 
 type StatusFilter = 'all' | SafetyLevel | 'inactive';
 
@@ -25,7 +26,7 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
           <h1>Katalog</h1>
           <p class="muted">Kurallara uymayan template kaydedilir ama incelemeden geçene kadar önerilmez.</p>
         </div>
-        <a lq-button size="sm" routerLink="/yonetim/katalog/yeni">Yeni template</a>
+        <a lq-button size="sm" [routerLink]="paths.admin.newTemplate">Yeni template</a>
       </header>
 
       @if (health(); as h) {
@@ -35,7 +36,7 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
             <button type="button" class="stat-link" (click)="setStatus('NeedsReview')">
               <span class="value" [class.warn]="h.needsReview > 0">{{ h.needsReview }}</span><span class="label">İnceleme bekliyor</span>
             </button>
-            <a class="stat-link" routerLink="/yonetim/fikirler">
+            <a class="stat-link" [routerLink]="paths.admin.ideas">
               <span class="value" [class.warn]="h.pendingIdeas > 0">{{ h.pendingIdeas }}</span><span class="label">Bekleyen fikir</span>
             </a>
             <div><span class="value">{{ percent(h.freeShare) }}</span><span class="label">Ücretsiz</span></div>
@@ -83,7 +84,7 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
         <ul class="list">
           @for (t of p.items; track t.id) {
             <li>
-              <a class="surface item" [routerLink]="['/yonetim/katalog', t.id]">
+              <a class="surface item" [routerLink]="templatePath(t.id)">
                 <lq-category-icon [category]="t.category" [size]="20" />
                 <div class="item__body">
                   <strong>{{ t.title }}</strong>
@@ -144,6 +145,8 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
   `,
 })
 export class AdminCatalogPage {
+  protected readonly paths = APP_PATHS;
+  protected readonly templatePath = templatePath;
   private readonly api = inject(AdminApi);
 
   protected readonly categoryOrder = CATEGORY_ORDER;

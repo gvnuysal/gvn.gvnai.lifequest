@@ -313,7 +313,7 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 - **Oturum:** access token yalnızca bellekte tutulur. Refresh token açılışta oturumu sessizce geri yükler. 401 alındığında tek seferlik yenileme yapılır.
 - **PWA:** service worker yalnızca uygulama kabuğunu önbelleğe alır. API yanıtları mahremiyet nedeniyle önbelleğe alınmaz.
 - **Erişilebilirlik:** 44 px dokunma hedefleri, görünür odak, AA kontrast, `prefers-reduced-motion` desteği.
-- **Yönetim paneli (`/yonetim`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
+- **Yönetim paneli (`/admin`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
 
 > ⚠️ Refresh token şu an `localStorage`'da tutuluyor. Üretim öncesinde httpOnly + SameSite çereze taşınması planlanıyor.
 

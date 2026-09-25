@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 /** Yönetim paneli kabuğu: sekmeler (yatay kaydırılabilir) ve alt sayfa. */
 @Component({
@@ -50,12 +51,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 })
 export class AdminShell {
   protected readonly tabs = [
-    { path: '/yonetim', label: 'Metrikler', exact: true },
-    { path: '/yonetim/kullanicilar', label: 'Kullanıcılar', exact: false },
-    { path: '/yonetim/katalog', label: 'Katalog', exact: false },
-    { path: '/yonetim/fikirler', label: 'Fikirler', exact: false },
-    { path: '/yonetim/deneyler', label: 'Deneyler', exact: false },
-    { path: '/yonetim/oneri-ayarlari', label: 'Öneri ayarları', exact: false },
-    { path: '/yonetim/denetim', label: 'Denetim kaydı', exact: false },
+    { path: APP_PATHS.admin.root, label: 'Metrikler', exact: true },
+    { path: APP_PATHS.admin.users, label: 'Kullanıcılar', exact: false },
+    { path: APP_PATHS.admin.catalog, label: 'Katalog', exact: false },
+    { path: APP_PATHS.admin.ideas, label: 'Fikirler', exact: false },
+    { path: APP_PATHS.admin.experiments, label: 'Deneyler', exact: false },
+    { path: APP_PATHS.admin.recommendationSettings, label: 'Öneri ayarları', exact: false },
+    { path: APP_PATHS.admin.auditLog, label: 'Denetim kaydı', exact: false },
   ];
 }

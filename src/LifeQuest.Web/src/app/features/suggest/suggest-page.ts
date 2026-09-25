@@ -11,6 +11,7 @@ import { Icon } from '../../ui/icon';
 import { QuestCard } from '../../ui/quest-card';
 import { Segmented, SegmentOption } from '../../ui/segmented';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-suggest-page',
@@ -18,7 +19,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <a class="back" routerLink="/bugun"><lq-icon name="arrow-left" [size]="18" /> Bugün</a>
+      <a class="back" [routerLink]="paths.today"><lq-icon name="arrow-left" [size]="18" /> Bugün</a>
       <header class="stack">
         <h1>Ne kadar vaktin var?</h1>
         <p class="muted">Bu ana uygun, gerçek hayatta yapabileceğin öneriler getirelim.</p>
@@ -43,7 +44,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
         <lq-skeleton [height]="150" />
       } @else if (limitReached()) {
         <lq-empty-state icon="hourglass" title="Bugünlük bu kadar" message="Bugünkü bağlamsal öneri hakkını kullandın. Günün önerileri seni bekliyor.">
-          <a lq-button variant="secondary" size="sm" routerLink="/bugun">Bugünün önerileri</a>
+          <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Bugünün önerileri</a>
         </lq-empty-state>
       } @else if (result(); as list) {
         <section class="stack" aria-live="polite">
@@ -63,6 +64,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class SuggestPage {
+  protected readonly paths = APP_PATHS;
   private readonly quests = inject(QuestsApi);
   private readonly toast = inject(ToastService);
 

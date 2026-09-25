@@ -5,6 +5,7 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { fieldErrors, firstErrorMessage } from '../../core/http/api-error';
 import { Button } from '../../ui/button';
 import { AuthLayout } from './auth-layout';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 const currentYear = new Date().getFullYear();
 
@@ -53,12 +54,13 @@ function strongPassword(control: AbstractControl<string>): ValidationErrors | nu
         }
         <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Hesap oluştur</button>
       </form>
-      <p footer class="switch">Zaten hesabın var mı? <a routerLink="/giris">Giriş yap</a></p>
+      <p footer class="switch">Zaten hesabın var mı? <a [routerLink]="paths.login">Giriş yap</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,
 })
 export class RegisterPage {
+  protected readonly paths = APP_PATHS;
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
 
@@ -87,7 +89,7 @@ export class RegisterPage {
     this.busy.set(true);
     this.error.set(null);
     this.auth.register(this.form.getRawValue()).subscribe({
-      next: () => void this.router.navigate(['/onboarding']),
+      next: () => void this.router.navigate([APP_PATHS.onboarding]),
       error: (err: unknown) => {
         const fields = fieldErrors(err);
         this.serverErrors.set(fields);

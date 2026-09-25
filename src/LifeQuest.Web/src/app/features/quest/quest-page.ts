@@ -26,6 +26,7 @@ import { Rating } from '../../ui/rating';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { Celebration, FeedbackSubmission } from './celebration';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-quest-page',
@@ -35,6 +36,7 @@ import { Celebration, FeedbackSubmission } from './celebration';
   styleUrl: './quest-page.scss',
 })
 export class QuestPage {
+  protected readonly paths = APP_PATHS;
   private readonly api = inject(QuestsApi);
   private readonly toast = inject(ToastService);
   private readonly location = inject(Location);

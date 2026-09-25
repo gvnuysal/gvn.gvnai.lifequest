@@ -10,6 +10,7 @@ import { Icon } from '../../ui/icon';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { EXPERIMENT_STATUS_LABELS, VERDICT_LABELS } from './admin-labels';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 interface MetricRow {
   label: string;
@@ -28,7 +29,7 @@ interface MetricRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="section">
-      <a class="back" routerLink="/yonetim/deneyler"><lq-icon name="arrow-left" [size]="18" /> Deneyler</a>
+      <a class="back" [routerLink]="paths.admin.experiments"><lq-icon name="arrow-left" [size]="18" /> Deneyler</a>
 
       @if (error()) {
         <lq-empty-state icon="info" title="Deney yüklenemedi" [message]="error()" />
@@ -143,6 +144,7 @@ interface MetricRow {
   `,
 })
 export class AdminExperimentPage {
+  protected readonly paths = APP_PATHS;
   readonly id = input.required<string>();
 
   private readonly api = inject(AdminApi);

@@ -29,6 +29,7 @@ import { InterestPicker, LOVE_WEIGHT } from '../../ui/interest-picker';
 import { Segmented, SegmentOption } from '../../ui/segmented';
 import { Sheet } from '../../ui/sheet';
 import { Skeleton } from '../../ui/states';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-profile-page',
@@ -38,6 +39,7 @@ import { Skeleton } from '../../ui/states';
   styleUrl: './profile-page.scss',
 })
 export class ProfilePage {
+  protected readonly paths = APP_PATHS;
   private readonly profileApi = inject(ProfileApi);
   private readonly profiles = inject(ProfileStore);
   private readonly auth = inject(AuthStore);
@@ -169,7 +171,7 @@ export class ProfilePage {
         this.deleteOpen.set(false);
         this.auth.clear();
         this.toast.show('Hesabın ve tüm verilerin silindi.');
-        void this.router.navigate(['/kayit']);
+        void this.router.navigate([APP_PATHS.register]);
       },
       error: (err: unknown) => {
         this.toast.error(firstErrorMessage(err));

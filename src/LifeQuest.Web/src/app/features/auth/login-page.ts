@@ -5,6 +5,7 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { Button } from '../../ui/button';
 import { AuthLayout } from './auth-layout';
+import { APP_PATHS, HOME_PATH } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-login-page',
@@ -26,12 +27,13 @@ import { AuthLayout } from './auth-layout';
         }
         <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Giriş yap</button>
       </form>
-      <p footer class="switch">Hesabın yok mu? <a routerLink="/kayit">Kayıt ol</a></p>
+      <p footer class="switch">Hesabın yok mu? <a [routerLink]="paths.register">Kayıt ol</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,
 })
 export class LoginPage {
+  protected readonly paths = APP_PATHS;
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
 
@@ -65,6 +67,6 @@ export class LoginPage {
   /** Açık yönlendirmeye karşı yalnızca uygulama içi yollar kabul edilir. */
   private safeReturnUrl(): string {
     const url = this.returnUrl();
-    return url && url.startsWith('/') && !url.startsWith('//') ? url : '/bugun';
+    return url && url.startsWith('/') && !url.startsWith('//') ? url : HOME_PATH;
   }
 }

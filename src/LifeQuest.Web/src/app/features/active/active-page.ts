@@ -11,6 +11,7 @@ import { Chip } from '../../ui/chip';
 import { QuestCard } from '../../ui/quest-card';
 import { Segmented, SegmentOption } from '../../ui/segmented';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { APP_PATHS, questPath } from '../../core/routing/app-paths';
 
 type Tab = 'active' | 'history';
 
@@ -34,7 +35,7 @@ type Tab = 'active' | 'history';
             <lq-quest-card [quest]="quest" [showExplanation]="false" />
           } @empty {
             <lq-empty-state icon="flag" title="Devam eden görevin yok" message="Bugünün önerilerinden birini kabul ederek başlayabilirsin.">
-              <a lq-button variant="secondary" size="sm" routerLink="/bugun">Önerilere göz at</a>
+              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Önerilere göz at</a>
             </lq-empty-state>
           }
         }
@@ -48,7 +49,7 @@ type Tab = 'active' | 'history';
         <ul class="history">
           @for (quest of history(); track quest.id) {
             <li>
-              <a [routerLink]="['/quest', quest.id]">
+              <a [routerLink]="questPath(quest.id)">
                 <lq-category-icon [category]="quest.category" [size]="40" />
                 <span class="history__text">
                   <strong>{{ quest.title }}</strong>
@@ -86,6 +87,8 @@ type Tab = 'active' | 'history';
   `,
 })
 export class ActivePage {
+  protected readonly paths = APP_PATHS;
+  protected readonly questPath = questPath;
   private readonly api = inject(QuestsApi);
 
   protected readonly tabs: SegmentOption<Tab>[] = [

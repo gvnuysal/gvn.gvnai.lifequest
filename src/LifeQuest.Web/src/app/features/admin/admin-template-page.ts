@@ -33,6 +33,7 @@ import { Icon } from '../../ui/icon';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { DAY_PART_OPTIONS, SAFETY_LABELS } from './admin-labels';
+import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
 
 type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
 
@@ -46,7 +47,7 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="section">
-      <a class="back" routerLink="/yonetim/katalog"><lq-icon name="arrow-left" [size]="18" /> Katalog</a>
+      <a class="back" [routerLink]="paths.admin.catalog"><lq-icon name="arrow-left" [size]="18" /> Katalog</a>
 
       @if (loadError()) {
         <lq-empty-state icon="info" title="Template yüklenemedi" [message]="loadError()" />
@@ -279,11 +280,12 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
   `,
 })
 export class AdminTemplatePage implements OnInit {
+  protected readonly paths = APP_PATHS;
   /** Rota parametresi; "yeni" rotasında tanımsızdır. */
   readonly id = input<string>();
 
-  /** Topluluk fikrinden oluşturma: ?fikir={id}. Form fikirle ön doldurulur, kayıtta fikir kabul edilir. */
-  readonly fikir = input<string>();
+  /** Topluluk fikrinden oluşturma: ?idea={id}. Form fikirle ön doldurulur, kayıtta fikir kabul edilir. */
+  readonly idea = input<string>();
   protected readonly sourceIdea = signal<AdminIdea | null>(null);
 
   private readonly api = inject(AdminApi);
@@ -349,7 +351,7 @@ export class AdminTemplatePage implements OnInit {
 
   ngOnInit(): void {
     const id = this.id();
-    const ideaId = id ? undefined : this.fikir();
+    const ideaId = id ? undefined : this.idea();
     forkJoin({
       interests: this.catalogApi.interests(),
       template: id ? this.api.template(id) : of(null),
@@ -433,7 +435,7 @@ export class AdminTemplatePage implements OnInit {
         this.busy.set(false);
         this.toast.success(saved.safety === 'Safe' ? 'Template kaydedildi ve yayında.' : 'Template kaydedildi; inceleme bekliyor.');
         if (current) this.fill(saved);
-        else void this.router.navigate(['/yonetim/katalog', saved.id]);
+        else void this.router.navigate(templatePath(saved.id));
       },
       error: (err: unknown) => {
         this.busy.set(false);
