@@ -45,5 +45,18 @@ https_contains() {
   [[ "$body" == *"$3"* ]]
 }
 
+# API /health, UI ana sayfası ve config.js (doğru API adresi) hazır olana kadar bekler (en fazla ~120 sn).
+wait_healthy() {
+  for _ in $(seq 1 40); do
+    if https_contains "$API_HOST" /health "Healthy" \
+       && https_contains "$UI_HOST" / "<app-root" \
+       && https_contains "$UI_HOST" /config.js "$API_HOST"; then
+      return 0
+    fi
+    sleep 3
+  done
+  return 1
+}
+
 current_tag()  { cat "$STATE_DIR/current-tag" 2>/dev/null || true; }
 previous_tag() { cat "$STATE_DIR/previous-tag" 2>/dev/null || true; }

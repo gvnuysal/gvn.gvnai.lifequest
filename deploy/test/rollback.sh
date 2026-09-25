@@ -15,7 +15,8 @@ step "Uygulama geri alınıyor: $CURRENT → $PREVIOUS"
 IMAGE_TAG="$PREVIOUS" compose up -d api web
 echo "$PREVIOUS" > "$STATE_DIR/current-tag"
 echo "$CURRENT" > "$STATE_DIR/previous-tag"
-ok "Yayında: $PREVIOUS"
+wait_healthy || fail "Geri alınan sürüm ($PREVIOUS) sağlık kontrolünden geçmedi. Loglar: docker compose -p $PROJECT logs --tail=100 api"
+ok "Yayında ve sağlıklı: $PREVIOUS"
 
 if [[ "${1:-}" == "--restore-db" ]]; then
   file="${2:-$(ls -1t "$BACKUP_DIR"/lifequest-*.sql.gz 2>/dev/null | head -1)}"

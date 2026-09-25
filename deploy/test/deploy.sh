@@ -41,17 +41,7 @@ IMAGE_TAG="$TAG" compose up -d --remove-orphans
 ok "Container'lar güncellendi"
 
 step "5/6 Sağlık kontrolü (en fazla 120 sn)"
-healthy=0
-for _ in $(seq 1 40); do
-  if https_contains "$API_HOST" /health "Healthy" \
-     && https_contains "$UI_HOST" / "<app-root" \
-     && https_contains "$UI_HOST" /config.js "$API_HOST"; then
-    healthy=1; break
-  fi
-  sleep 3
-done
-
-if [[ $healthy -ne 1 ]]; then
+if ! wait_healthy; then
   warn "Sağlık kontrolü başarısız. Son loglar:"
   compose logs --tail=40 api web caddy || true
   if [[ -n "$PREVIOUS" ]]; then
