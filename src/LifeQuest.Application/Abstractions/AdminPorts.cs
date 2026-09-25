@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Quests;
 using LifeQuest.Domain.Recommendations;
 
 namespace LifeQuest.Application.Abstractions;
@@ -7,8 +8,16 @@ public interface IRecommendationWeightsProvider
 {
     Task<RecommendationWeights> GetAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Kullanıcıya özel ağırlıklar: çalışan bir A/B deneyi varsa kullanıcı deterministik olarak bir gruba atanır;
+    /// Deneme grubundaysa deneme override'ları üretim ağırlıklarının üzerine uygulanır.
+    /// </summary>
+    Task<UserWeights> GetForUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
     Task InvalidateAsync(CancellationToken cancellationToken = default);
 }
+
+public sealed record UserWeights(RecommendationWeights Weights, Guid? ExperimentId, ExperimentVariant? Variant);
 
 /// <summary>
 /// Hesabın güncel rolü ve askı durumu. Her kimlikli istekte okunur (kısa süreli cache); admin işlemi sonrası temizlenir.

@@ -1,5 +1,5 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
+using LifeQuest.Application.Safety;
 
 namespace LifeQuest.Application.Narration;
 
@@ -13,29 +13,6 @@ public static partial class NarrationGuard
     public const int MaxTitleLength = 80;
     public const int MaxDescriptionLength = 300;
     public const int MinDescriptionLength = 20;
-
-    private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
-
-    /// <summary>
-    /// Riskli ifadeler kelime başından eşleşir (Türkçe ekler serbest), ancak masum kelimelerle çakışmalar
-    /// hariç tutulur: "biraz" ≠ "bira", "rakım" ≠ "rakı". "Yarış" gibi bağlama göre masum olan kelimeler
-    /// ("bilgi yarışması") yalnızca riskli bağlamıyla ("hız yarışı") listelenir.
-    /// </summary>
-    private static readonly Regex[] RiskyPatterns =
-    [
-        .. new[]
-        {
-            "alkol", "içki", "bira(?!z|der)", "şarap", "rakı(?!m)", "sarhoş", "kumar", "bahis",
-            "ıssız", "gece yarısı", "tek başına gece", "karanlıkta", "yüksekten", "uçurum", "çatıya", "çatıda",
-            "tren yolu", "raylar", "otostop", "izinsiz", "gizlice", "yasak bölge", "hız yap", "hız yarış", "tehlikeli"
-        }.Select(p => new Regex(@"(?<!\p{L})" + p, RegexOptions.Compiled | RegexOptions.CultureInvariant))
-    ];
-
-    private static readonly string[] PersonalDataRequests =
-    [
-        "konumunu paylaş", "konum paylaş", "konumunu gönder", "canlı konum", "fotoğrafını paylaş",
-        "fotoğraf paylaş", "fotoğrafını gönder", "adresini", "telefon numaran", "kimlik", "şifre"
-    ];
 
     private static readonly string[] MoneyAndRewardTerms = ["₺", " tl", "lira", "$", "€", "xp", "puan kazan"];
 
@@ -52,12 +29,12 @@ public static partial class NarrationGuard
             violations.Add("description_length");
 
         var text = $"{title} {description}";
-        var lower = " " + text.ToLower(Turkish) + " ";
+        var lower = ContentScreen.Normalize(text);
 
-        if (UrlPattern().IsMatch(text))
+        if (ContentScreen.ContainsUrl(text))
             violations.Add("url");
 
-        if (text.Contains('<') || text.Contains('>'))
+        if (ContentScreen.ContainsMarkup(text))
             violations.Add("markup");
 
         if (MoneyAndRewardTerms.Any(lower.Contains))
@@ -68,17 +45,14 @@ public static partial class NarrationGuard
         if (NumberPattern().Matches(text).Any(m => !allowedNumbers.Contains(m.Value)))
             violations.Add("invented_number");
 
-        if (RiskyPatterns.Any(p => p.IsMatch(lower)))
+        if (ContentScreen.ContainsRiskyContent(text))
             violations.Add("risky_content");
 
-        if (PersonalDataRequests.Any(p => lower.Contains(p)))
+        if (ContentScreen.RequestsPersonalData(text))
             violations.Add("personal_data_request");
 
         return violations;
     }
-
-    [GeneratedRegex(@"(https?://|www\.)", RegexOptions.IgnoreCase)]
-    private static partial Regex UrlPattern();
 
     [GeneratedRegex(@"\d+")]
     private static partial Regex NumberPattern();

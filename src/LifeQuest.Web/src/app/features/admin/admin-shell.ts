@@ -53,6 +53,8 @@ export class AdminShell {
     { path: '/yonetim', label: 'Metrikler', exact: true },
     { path: '/yonetim/kullanicilar', label: 'Kullanıcılar', exact: false },
     { path: '/yonetim/katalog', label: 'Katalog', exact: false },
+    { path: '/yonetim/fikirler', label: 'Fikirler', exact: false },
+    { path: '/yonetim/deneyler', label: 'Deneyler', exact: false },
     { path: '/yonetim/oneri-ayarlari', label: 'Öneri ayarları', exact: false },
     { path: '/yonetim/denetim', label: 'Denetim kaydı', exact: false },
   ];

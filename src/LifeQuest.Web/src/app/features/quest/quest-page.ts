@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { QuestsApi } from '../../core/api/api-clients';
+import { saveResponse } from '../../core/http/download';
 import { QuestCompletion, QuestDetail, SkipReason } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, formatDuration, formatRemaining } from '../../core/labels/format';
@@ -50,6 +51,8 @@ export class QuestPage {
   protected readonly skipReason = signal<SkipReason | null>(null);
   protected readonly completion = signal<QuestCompletion | null>(null);
   protected readonly rating = signal<number | null>(null);
+  protected readonly planOpen = signal(false);
+  protected readonly planValue = signal('');
 
   protected readonly skipReasons = SKIP_REASONS;
   protected readonly scoreComponents = SCORE_COMPONENTS;
@@ -81,6 +84,16 @@ export class QuestPage {
     effect(() => this.load(this.id()));
   }
 
+  protected readonly plannedLabel = computed(() => {
+    const at = this.quest()?.plannedAt;
+    return at ? formatDate(at, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+  });
+  protected readonly planMin = computed(() => toLocalInput(new Date()));
+  protected readonly planMax = computed(() => {
+    const expires = this.quest()?.expiresAt;
+    return expires ? toLocalInput(new Date(new Date(expires).getTime() - 60_000)) : '';
+  });
+
   protected back(): void {
     this.location.back();
   }
@@ -107,6 +120,38 @@ export class QuestPage {
       this.skipOpen.set(false);
       this.toast.show('Geçildi. Geri bildirimin sonraki önerileri şekillendirecek.');
     });
+  }
+
+  protected saveForLater(): void {
+    this.run(this.api.save(this.quest()!.id), () =>
+      this.toast.success('"Sonra yaparım" listene eklendi. Hazır olduğunda oradan başlatabilirsin.'));
+  }
+
+  protected openPlan(): void {
+    const current = this.quest()?.plannedAt;
+    const suggestion = new Date(Date.now() + 24 * 3600_000);
+    suggestion.setHours(10, 0, 0, 0);
+    this.planValue.set(toLocalInput(current ? new Date(current) : suggestion));
+    this.planOpen.set(true);
+  }
+
+  protected savePlan(): void {
+    this.run(this.api.plan(this.quest()!.id, this.planValue()), (quest) => {
+      this.patchQuest(quest);
+      this.planOpen.set(false);
+      this.toast.success('Planlandı. "Takvime ekle" ile kendi takvimine koyabilirsin.');
+    });
+  }
+
+  protected clearPlan(): void {
+    this.run(this.api.plan(this.quest()!.id, null), (quest) => {
+      this.patchQuest(quest);
+      this.planOpen.set(false);
+    });
+  }
+
+  protected downloadCalendar(): void {
+    this.run(this.api.calendar(this.quest()!.id), (response) => saveResponse(response, 'lifequest.ics'));
   }
 
   /** Kutlama ekranından gelen değerlendirme. */
@@ -168,4 +213,10 @@ export class QuestPage {
       },
     });
   }
+}
+
+/** datetime-local girdisi için yerel saat biçimi: 2026-10-03T10:00 */
+function toLocalInput(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

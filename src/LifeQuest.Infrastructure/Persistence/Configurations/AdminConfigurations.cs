@@ -1,8 +1,6 @@
-using System.Text.Json;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Recommendations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LifeQuest.Infrastructure.Persistence.Configurations;
@@ -26,22 +24,29 @@ internal sealed class AdminAuditEntryConfiguration : IEntityTypeConfiguration<Ad
 
 internal sealed class RecommendationSettingsConfiguration : IEntityTypeConfiguration<RecommendationSettings>
 {
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.General);
-
     public void Configure(EntityTypeBuilder<RecommendationSettings> builder)
     {
         builder.ToTable("recommendation_settings");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.UpdatedBy).HasMaxLength(254);
-        builder.Property(x => x.Overrides)
-            .HasColumnType("jsonb")
-            .HasConversion(
-                v => JsonSerializer.Serialize(v, Json),
-                v => JsonSerializer.Deserialize<Dictionary<string, double>>(v, Json) ?? new Dictionary<string, double>(),
-                new ValueComparer<Dictionary<string, double>>(
-                    (a, b) => a!.Count == b!.Count && !a.Except(b).Any(),
-                    v => v.Aggregate(0, (hash, kv) => HashCode.Combine(hash, kv.Key, kv.Value)),
-                    v => new Dictionary<string, double>(v)));
+        builder.Property(x => x.Overrides).AsJsonb();
+        builder.HasRowVersion();
+    }
+}
+
+internal sealed class ExperimentConfiguration : IEntityTypeConfiguration<Domain.Experiments.Experiment>
+{
+    public void Configure(EntityTypeBuilder<Domain.Experiments.Experiment> builder)
+    {
+        builder.ToTable("experiments");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.Hypothesis).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.CreatedBy).HasMaxLength(254).IsRequired();
+        builder.Property(x => x.TreatmentOverrides).AsJsonb();
+
+        // Aynı anda tek deney: eşzamanlı iki "başlat" isteğinden ikincisi veritabanında reddedilir.
+        builder.HasIndex(x => x.Status).IsUnique().HasFilter("status = 'Running'").HasDatabaseName("ux_experiments_single_running");
         builder.HasRowVersion();
     }
 }

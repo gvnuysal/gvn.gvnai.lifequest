@@ -28,6 +28,7 @@ internal sealed class UserQuestConfiguration : IEntityTypeConfiguration<UserQues
 
         // Template'e FK bilinçli olarak yok: UserQuest bir snapshot'tır, template silinse/değişse de geçmiş kalır.
         builder.HasIndex(x => x.TemplateId);
+        builder.HasIndex(x => new { x.ExperimentId, x.ExperimentVariant });
         builder.HasIndex(x => new { x.UserId, x.Status, x.ExpiresAt });
         builder.HasIndex(x => new { x.UserId, x.OfferDate, x.Source });
         builder.HasIndex(x => new { x.Status, x.ExpiresAt });

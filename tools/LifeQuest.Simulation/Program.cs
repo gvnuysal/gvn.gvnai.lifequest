@@ -27,7 +27,7 @@ Scenario[] core =
     new("V0", "İlk sürüm (analiz öncesi)", production with
     {
         GuidedExploration = false, ExplorationRateExplore = 1.0, ExplorationRateChill = 0,
-        IgnoredOfferWindowDays = 3, NoveltySurpriseMe = 0.35
+        IgnoredOfferWindowDays = 3, NoveltySurpriseMe = 0.35, LovedRepeatNovelty = 0.2
     }),
     new("A", "Tam motor + cold start kartları", production),
     new("B", "Tam motor, kartsız", production, StarterCards: false),
@@ -66,6 +66,10 @@ Scenario[] surpriseSweep = [.. new[] { 0.35, 0.30, 0.25, 0.20 }
 Scenario[] chillSweep = [.. new[] { 0.0, 0.1, 0.2, 0.3 }
     .Select(rate => new Scenario($"CR{rate:0.0}", $"Sakin, keşif oranı {rate:0.0}", production with { ExplorationRateChill = rate },
         RadiusOverride: DiscoveryRadius.Chill))];
+// Sevdiğini tekrarla: 5 puan verilen template'in cooldown sonrası yenilik skoru (0.2 = özellik kapalı).
+Scenario[] lovedSweep = [.. new[] { 0.2, 0.4, 0.6, 0.8 }
+    .Select(n => new Scenario($"LR{n:0.0}", $"Sevdiğini tekrarla, yenilik {n:0.0}", production with { LovedRepeatNovelty = n }))];
+
 var previousModes = new Scenario("A0", "Tam motor, önceki mod ayarları",
     production with { NoveltySurpriseMe = 0.35, ExplorationRateChill = 0 });
 
@@ -83,6 +87,7 @@ var ablationMetrics = ablations.Select(s => ScenarioMetrics.From(s, RunAll(s), D
 var sparseMetrics = sparse.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
 var surpriseMetrics = surpriseSweep.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
 var chillMetrics = chillSweep.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
+var lovedMetrics = lovedSweep.Select(s => ScenarioMetrics.From(s, RunAll(s), Days)).ToList();
 var previousRuns = RunAll(previousModes);
 
 var full = core.Single(s => s.Key == "A");
@@ -104,7 +109,7 @@ Report.PrintTable(coreMetrics.Concat(ablationMetrics).Concat(sparseMetrics).Conc
 Console.WriteLine();
 Report.PrintPersonas(perPersona);
 Console.WriteLine();
-Report.PrintTable(surpriseMetrics.Concat(chillMetrics));
+Report.PrintTable(surpriseMetrics.Concat(chillMetrics).Concat(lovedMetrics));
 Console.WriteLine();
 Report.PrintPersonas(perPersonaBefore, "Persona (A0)");
 
@@ -112,7 +117,8 @@ if (docsDir is not null)
 {
     Report.Write(docsDir, new ReportData(catalog, coreMetrics, ablationMetrics, sparseMetrics, radiusMetrics,
         mobilityWith, mobilityWithout, perPersona,
-        new TuningData(surpriseMetrics, chillMetrics, production.NoveltySurpriseMe, production.ExplorationRateChill, perPersonaBefore),
+        new TuningData(surpriseMetrics, chillMetrics, production.NoveltySurpriseMe, production.ExplorationRateChill, perPersonaBefore,
+            lovedMetrics, production.LovedRepeatNovelty),
         Days, SeedsPerPersona));
     Console.WriteLine($"\nRapor yazıldı: {Path.Combine(docsDir, "simulasyon-raporu.md")}");
 }

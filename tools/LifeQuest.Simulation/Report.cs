@@ -40,4 +40,6 @@ internal sealed record TuningData(
     IReadOnlyList<ScenarioMetrics> ChillSweep,
     double ProductionSurpriseNovelty,
     double ProductionChillRate,
-    IReadOnlyList<(Persona Persona, ScenarioMetrics Metrics)> PersonasBefore);
+    IReadOnlyList<(Persona Persona, ScenarioMetrics Metrics)> PersonasBefore,
+    IReadOnlyList<ScenarioMetrics> LovedSweep,
+    double ProductionLovedNovelty);

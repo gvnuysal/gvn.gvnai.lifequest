@@ -30,7 +30,10 @@ public enum QuestSource
     Daily = 1,
 
     /// <summary>"Bu akşam 2 saatim var" gibi bağlamsal, kullanıcı tetiklemeli öneri.</summary>
-    OnDemand = 2
+    OnDemand = 2,
+
+    /// <summary>Kullanıcının "sonra yaparım" listesinden başlattığı quest.</summary>
+    Saved = 3
 }
 
 public enum FeedbackPreference

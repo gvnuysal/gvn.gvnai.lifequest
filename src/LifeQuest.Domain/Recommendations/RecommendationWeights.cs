@@ -41,6 +41,12 @@ public sealed record RecommendationWeights
     public double ExplorationMaxInterest { get; init; } = 0.5;
     public double ExplorationMinNovelty { get; init; } = 0.6;
 
+    /// <summary>
+    /// Çok sevilen (5 puan / "daha fazla") ve cooldown'u geçmiş template'in yenilik skoru. 0.2 = sıradan tekrar
+    /// (özellik kapalı). Simülasyonda 0.6 geç dönem isabetini ve north-star'ı keşfi düşürmeden artırdı.
+    /// </summary>
+    public double LovedRepeatNovelty { get; init; } = 0.6;
+
     public double InterestWeightFor(DiscoveryRadius radius) => radius switch
     {
         DiscoveryRadius.Chill => InterestChill,

@@ -54,6 +54,14 @@ public sealed class UserQuest : AggregateRoot
     public DateTime? ExpiredAt { get; private set; }
     public SkipReason? SkipReason { get; private set; }
 
+    /// <summary>Kullanıcının kendi takvimine koyduğu zaman (UTC). Hatırlatma değildir; yalnızca planlama.</summary>
+    public DateTime? PlannedAt { get; private set; }
+
+    // ── A/B deneyi ───────────────────────────────────────────────────────────
+    /// <summary>Öneri üretildiği anda çalışan deney ve kullanıcının grubu; sonuçlar bu alanlardan hesaplanır.</summary>
+    public Guid? ExperimentId { get; private set; }
+    public ExperimentVariant? ExperimentVariant { get; private set; }
+
     // ── Geri bildirim ────────────────────────────────────────────────────────
     public int? Rating { get; private set; }
     public FeedbackPreference? Preference { get; private set; }
@@ -117,6 +125,26 @@ public sealed class UserQuest : AggregateRoot
         QuestType.Epic => TimeSpan.FromDays(30),
         _ => TimeSpan.FromDays(7)
     };
+
+    /// <summary>Deney grubunu öneri anında kaydeder.</summary>
+    public void AssignExperiment(Guid experimentId, ExperimentVariant variant)
+    {
+        ExperimentId = experimentId;
+        ExperimentVariant = variant;
+    }
+
+    /// <summary>Kabul edilmiş quest'i tamamlama süresi içinde bir zamana planlar; <c>null</c> planı kaldırır.</summary>
+    public Result Plan(DateTime? plannedAtUtc, DateTime nowUtc)
+    {
+        if (Status != QuestStatus.Accepted)
+            return Result.Fail(QuestErrors.PlanRequiresAccepted);
+
+        if (plannedAtUtc is { } at && (at < nowUtc.AddMinutes(-5) || at >= ExpiresAt))
+            return Result.Fail(QuestErrors.PlanOutsideWindow(ExpiresAt));
+
+        PlannedAt = plannedAtUtc;
+        return Result.Ok();
+    }
 
     public Result Accept(DateTime nowUtc)
     {

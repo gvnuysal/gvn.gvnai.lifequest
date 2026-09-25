@@ -242,8 +242,14 @@ internal sealed class Simulator(SimulationCatalog catalog)
             .GroupBy(q => q.TemplateId)
             .ToDictionary(g => g.Key, g => g.Max(q => q.CompletedAt!.Value));
 
+        var loved = quests.Where(q => q.Status == QuestStatus.Completed)
+            .GroupBy(q => q.TemplateId)
+            .Where(g => g.Any(q => q.Rating == 5 || q.Preference == FeedbackPreference.MoreLikeThis) &&
+                        !g.Any(q => q.Rating <= 2 || q.Preference == FeedbackPreference.LessLikeThis))
+            .Select(g => g.Key);
+
         return new RecommendationHistory(recent, open, completed,
-            progress.Categories.Where(c => c.CompletedCount > 0).Select(c => c.Category));
+            progress.Categories.Where(c => c.CompletedCount > 0).Select(c => c.Category), loved);
     }
 
     private static DateTime ToUtc(DateTime local)

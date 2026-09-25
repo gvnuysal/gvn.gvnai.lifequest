@@ -1,4 +1,4 @@
-import { AdminAction, DayPart, SafetyLevel, WeightGroup } from '../../core/api/models';
+import { AdminAction, DayPart, ExperimentStatus, ExperimentVerdict, SafetyLevel, WeightGroup } from '../../core/api/models';
 
 export const SAFETY_LABELS: Record<SafetyLevel, { label: string; tone: 'success' | 'warning' | 'danger' }> = {
   Safe: { label: 'Yayında', tone: 'success' },
@@ -35,6 +35,26 @@ export const AUDIT_ACTION_LABELS: Record<AdminAction, string> = {
   TemplateDeactivated: 'Template pasifleştirildi',
   WeightsUpdated: 'Ağırlıklar güncellendi',
   WeightsReset: 'Ağırlıklar varsayılana döndü',
+  ExperimentCreated: 'Deney oluşturuldu',
+  ExperimentStarted: 'Deney başlatıldı',
+  ExperimentStopped: 'Deney durduruldu',
+  ExperimentAdopted: 'Deney kazananı uygulandı',
+  ExperimentDiscarded: 'Deney kapatıldı',
+  IdeaRejected: 'Fikir reddedildi',
+  IdeaAccepted: 'Fikir kataloğa eklendi',
+};
+
+export const VERDICT_LABELS: Record<ExperimentVerdict, { label: string; tone: string; hint: string }> = {
+  InsufficientData: { label: 'Yetersiz veri', tone: '', hint: 'Her grupta en az {min} kullanıcı olmalı. Deneyi biraz daha çalıştır.' },
+  NoDifference: { label: 'Fark yok', tone: 'warning', hint: 'Güven aralığı sıfırı içeriyor; iki ayar arasında anlamlı fark görünmüyor.' },
+  TreatmentBetter: { label: 'Deneme daha iyi', tone: 'success', hint: 'Deneme grubu north-star\'da anlamlı biçimde önde.' },
+  TreatmentWorse: { label: 'Deneme daha kötü', tone: 'danger', hint: 'Deneme grubu north-star\'da anlamlı biçimde geride.' },
+};
+
+export const EXPERIMENT_STATUS_LABELS: Record<ExperimentStatus, { label: string; tone: string }> = {
+  Draft: { label: 'Taslak', tone: '' },
+  Running: { label: 'Çalışıyor', tone: 'brand' },
+  Stopped: { label: 'Durduruldu', tone: 'warning' },
 };
 
 export const SUSPEND_OPTIONS: { value: number | null; label: string }[] = [

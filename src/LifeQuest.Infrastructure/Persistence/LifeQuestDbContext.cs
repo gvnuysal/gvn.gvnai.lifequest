@@ -3,6 +3,8 @@ using Gvn.GvnFramework.Domain.Entities;
 using Gvn.GvnFramework.EntityFramewokCore.Context;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
+using LifeQuest.Domain.Community;
+using LifeQuest.Domain.Experiments;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Identity;
 using LifeQuest.Domain.Notifications;
@@ -34,6 +36,9 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
     public DbSet<WeeklySummary> WeeklySummaries => Set<WeeklySummary>();
     public DbSet<AdminAuditEntry> AdminAuditEntries => Set<AdminAuditEntry>();
     public DbSet<RecommendationSettings> RecommendationSettings => Set<RecommendationSettings>();
+    public DbSet<Experiment> Experiments => Set<Experiment>();
+    public DbSet<QuestIdea> QuestIdeas => Set<QuestIdea>();
+    public DbSet<SavedQuest> SavedQuests => Set<SavedQuest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,6 +84,10 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
         StoreAsString<EditorialSource>(configurationBuilder);
         StoreAsString<AdminAction>(configurationBuilder);
         StoreAsString<AdminTargetType>(configurationBuilder);
+        StoreAsString<ExperimentStatus>(configurationBuilder);
+        StoreAsString<ExperimentOutcome>(configurationBuilder);
+        StoreAsString<ExperimentVariant>(configurationBuilder);
+        StoreAsString<IdeaStatus>(configurationBuilder);
     }
 
     private static void StoreAsString<TEnum>(ModelConfigurationBuilder builder) where TEnum : struct, Enum

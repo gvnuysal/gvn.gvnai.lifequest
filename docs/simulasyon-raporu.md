@@ -69,9 +69,9 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | **V0** İlk sürüm (analiz öncesi) | %73 ±1 | %78 → %70 | %41 | 6.25 ±0.14 | 4.1 | 4.8 | 34 | %45 | %48 ±3 | %100 |
-| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %70 | %41 | 6.33 ±0.14 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
-| **B** Tam motor, kartsız | %72 ±1 | %83 → %69 | %41 | 6.33 ±0.14 | 4.1 | 4.8 | 36 | %33 | %66 ±3 | %100 |
-| **C** Öğrenme kapalı | %69 ±1 | %84 → %64 | %41 | 6.41 ±0.17 | 4.1 | 4.9 | 35 | %34 | %58 ±3 | %100 |
+| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
+| **B** Tam motor, kartsız | %74 ±1 | %83 → %71 | %42 | 6.54 ±0.14 | 4.1 | 4.8 | 36 | %35 | %65 ±3 | %100 |
+| **C** Öğrenme kapalı | %71 ±1 | %84 → %67 | %41 | 6.53 ±0.17 | 4.1 | 4.9 | 34 | %36 | %57 ±3 | %100 |
 | **D** Yalnızca ilgi skoru (greedy) | %94 ±1 | %98 → %94 | %51 | 8.20 ±0.16 | 4.2 | 4.3 | 20 | %66 | %43 ±3 | %100 |
 
 ### Ablasyon: tam motordan tek bileşen çıkarıldığında
@@ -80,19 +80,19 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %70 | %41 | 6.33 ±0.14 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
-| **X-Rep** A − tekrar cezası | %82 ±1 | %88 → %78 | %46 | 7.28 ±0.14 | 4.1 | 4.4 | 28 | %56 | %69 ±3 | %100 |
+| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
+| **X-Rep** A − tekrar cezası | %82 ±1 | %88 → %79 | %46 | 7.26 ±0.14 | 4.1 | 4.4 | 27 | %57 | %68 ±3 | %100 |
 | **X-Nov** A − yenilik | %80 ±1 | %84 → %76 | %44 | 6.99 ±0.14 | 4.1 | 4.5 | 32 | %40 | %63 ±3 | %100 |
-| **X-Div** A − çeşitlilik | %75 ±1 | %83 → %71 | %42 | 6.56 ±0.14 | 4.1 | 4.7 | 35 | %33 | %72 ±3 | %100 |
-| **X-Exp** A − keşif slotu | %80 ±1 | %90 → %77 | %44 | 6.88 ±0.15 | 4.1 | 4.7 | 31 | %37 | %46 ±3 | %100 |
-| **X-Ign3** A, eski tekrar penceresi (3 gün) | %76 ±1 | %82 → %72 | %42 | 6.47 ±0.14 | 4.1 | 4.7 | 33 | %47 | %65 ±3 | %100 |
+| **X-Div** A − çeşitlilik | %76 ±1 | %83 → %72 | %43 | 6.77 ±0.14 | 4.1 | 4.7 | 34 | %36 | %67 ±3 | %100 |
+| **X-Exp** A − keşif slotu | %81 ±1 | %90 → %80 | %46 | 7.12 ±0.16 | 4.1 | 4.7 | 30 | %39 | %46 ±3 | %100 |
+| **X-Ign3** A, eski tekrar penceresi (3 gün) | %76 ±1 | %82 → %74 | %43 | 6.58 ±0.14 | 4.1 | 4.8 | 32 | %48 | %64 ±3 | %100 |
 
 ### Cold start: kullanıcı onboarding'de yalnızca tek ilgi beyan ederse
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **S-A** Tek ilgi beyanı + kartlar | %71 ±1 | %79 → %70 | %40 | 5.92 ±0.16 | 4.1 | 4.8 | 36 | %32 | %61 ±3 | %100 |
-| **S-B** Tek ilgi beyanı, kartsız | %67 ±1 | %77 → %67 | %37 | 5.71 ±0.16 | 4.1 | 4.7 | 38 | %31 | %68 ±3 | %100 |
+| **S-A** Tek ilgi beyanı + kartlar | %72 ±1 | %79 → %71 | %40 | 6.11 ±0.16 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
+| **S-B** Tek ilgi beyanı, kartsız | %68 ±1 | %77 → %68 | %38 | 5.80 ±0.17 | 4.1 | 4.7 | 37 | %32 | %66 ±3 | %100 |
 
 ### Discovery Radius
 
@@ -100,9 +100,9 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **R-Chill** Herkes Sakin | %86 ±1 | %92 → %83 | %48 | 7.59 ±0.15 | 4.2 | 4.5 | 29 | %47 | %52 ±3 | %100 |
-| **R-Explore** Herkes Dengeli | %72 ±1 | %82 → %68 | %41 | 6.25 ±0.14 | 4.1 | 5.0 | 37 | %29 | %64 ±3 | %100 |
-| **R-Surprise** Herkes Şaşırt Beni | %54 ±1 | %67 → %48 | %32 | 4.68 ±0.13 | 4.0 | 5.0 | 43 | %19 | %75 ±3 | %100 |
+| **R-Chill** Herkes Sakin | %86 ±1 | %92 → %83 | %48 | 7.62 ±0.15 | 4.2 | 4.5 | 29 | %47 | %49 ±3 | %100 |
+| **R-Explore** Herkes Dengeli | %73 ±1 | %82 → %69 | %41 | 6.41 ±0.13 | 4.1 | 4.9 | 36 | %31 | %63 ±3 | %100 |
+| **R-Surprise** Herkes Şaşırt Beni | %56 ±1 | %67 → %53 | %33 | 4.96 ±0.13 | 4.1 | 5.0 | 42 | %22 | %70 ±3 | %100 |
 
 ### Mod ayarları: Şaşırt Beni yeniliği ve Sakin keşif oranı
 
@@ -112,47 +112,58 @@ Herkes ilgili moda zorlanarak çalıştırıldı. Üretim değerleri: Şaşırt 
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **SN0.35** Şaşırt Beni, yenilik 0.35 | %49 ±1 | %65 → %43 | %29 | 4.17 ±0.12 | 4.0 | 5.1 | 46 | %17 | %75 ±3 | %100 |
-| **SN0.30** Şaşırt Beni, yenilik 0.30 | %52 ±1 | %66 → %46 | %31 | 4.48 ±0.12 | 4.0 | 5.1 | 45 | %18 | %75 ±3 | %100 |
-| **SN0.25** Şaşırt Beni, yenilik 0.25 | %54 ±1 | %67 → %48 | %32 | 4.68 ±0.13 | 4.0 | 5.0 | 43 | %19 | %75 ±3 | %100 |
-| **SN0.20** Şaşırt Beni, yenilik 0.20 | %57 ±1 | %68 → %53 | %34 | 4.89 ±0.13 | 4.0 | 5.0 | 42 | %22 | %70 ±3 | %100 |
-| **CR0.0** Sakin, keşif oranı 0.0 | %89 ±1 | %95 → %88 | %50 | 7.93 ±0.16 | 4.2 | 4.5 | 26 | %50 | %44 ±3 | %100 |
-| **CR0.1** Sakin, keşif oranı 0.1 | %88 ±1 | %94 → %86 | %49 | 7.81 ±0.16 | 4.2 | 4.5 | 27 | %48 | %46 ±3 | %100 |
-| **CR0.2** Sakin, keşif oranı 0.2 | %86 ±1 | %92 → %83 | %48 | 7.59 ±0.15 | 4.2 | 4.5 | 29 | %47 | %52 ±3 | %100 |
-| **CR0.3** Sakin, keşif oranı 0.3 | %84 ±1 | %90 → %82 | %47 | 7.47 ±0.14 | 4.1 | 4.6 | 30 | %45 | %57 ±3 | %100 |
+| **SN0.35** Şaşırt Beni, yenilik 0.35 | %51 ±1 | %65 → %47 | %31 | 4.49 ±0.13 | 4.0 | 5.2 | 44 | %21 | %73 ±3 | %100 |
+| **SN0.30** Şaşırt Beni, yenilik 0.30 | %54 ±1 | %66 → %50 | %32 | 4.79 ±0.12 | 4.1 | 5.0 | 43 | %21 | %74 ±3 | %100 |
+| **SN0.25** Şaşırt Beni, yenilik 0.25 | %56 ±1 | %67 → %53 | %33 | 4.96 ±0.13 | 4.1 | 5.0 | 42 | %22 | %70 ±3 | %100 |
+| **SN0.20** Şaşırt Beni, yenilik 0.20 | %59 ±1 | %69 → %55 | %35 | 5.19 ±0.13 | 4.1 | 5.0 | 41 | %24 | %72 ±3 | %100 |
+| **CR0.0** Sakin, keşif oranı 0.0 | %90 ±1 | %95 → %88 | %50 | 7.97 ±0.16 | 4.2 | 4.5 | 25 | %50 | %43 ±3 | %100 |
+| **CR0.1** Sakin, keşif oranı 0.1 | %88 ±1 | %94 → %85 | %49 | 7.85 ±0.16 | 4.2 | 4.5 | 27 | %48 | %44 ±3 | %100 |
+| **CR0.2** Sakin, keşif oranı 0.2 | %86 ±1 | %92 → %83 | %48 | 7.62 ±0.15 | 4.2 | 4.5 | 29 | %47 | %49 ±3 | %100 |
+| **CR0.3** Sakin, keşif oranı 0.3 | %84 ±1 | %90 → %81 | %47 | 7.43 ±0.14 | 4.2 | 4.6 | 30 | %45 | %53 ±3 | %100 |
 
 Persona bazında önceki mod ayarları (A0: yenilik 0,35, Sakin'de keşif yok) ile güncel ayarlar (A):
 
 | Persona | Keşif modu | İsabet A0 → A | North-star A0 → A | Gizli ilgi keşfi A0 → A |
 |---|---|---|---|---|
-| Kahve ve kafe tutkunu | Explore | %65 → %65 | 4.45 → 4.45 | %80 → %80 |
-| Kültür meraklısı | Chill | %86 → %82 | 7.21 → 6.70 | %88 → %85 |
-| Düşük bütçeli öğrenci | Explore | %75 → %75 | 6.87 → 6.87 | %83 → %83 |
-| Az vakitli çalışan | Chill | %100 → %97 | 5.55 → 5.79 | %5 → %45 |
-| Hareket kısıtı olan kullanıcı | Explore | %70 → %70 | 5.54 → 5.54 | %90 → %90 |
-| Sosyal kelebek | Explore | %74 → %74 | 8.97 → 8.97 | %53 → %53 |
-| Şehir bilgisi vermeyen doğa sever | Explore | %78 → %78 | 8.17 → 8.17 | %30 → %30 |
-| Şaşırt Beni kaşifi | SurpriseMe | %46 → %49 | 3.77 → 4.13 | %23 → %25 |
+| Kahve ve kafe tutkunu | Explore | %65 → %65 | 4.81 → 4.81 | %85 → %85 |
+| Kültür meraklısı | Chill | %86 → %82 | 7.26 → 6.69 | %83 → %80 |
+| Düşük bütçeli öğrenci | Explore | %76 → %76 | 6.78 → 6.78 | %83 → %83 |
+| Az vakitli çalışan | Chill | %100 → %97 | 5.68 → 5.69 | %5 → %45 |
+| Hareket kısıtı olan kullanıcı | Explore | %71 → %71 | 5.65 → 5.65 | %95 → %95 |
+| Sosyal kelebek | Explore | %74 → %74 | 9.04 → 9.04 | %48 → %48 |
+| Şehir bilgisi vermeyen doğa sever | Explore | %79 → %79 | 8.45 → 8.45 | %25 → %25 |
+| Şaşırt Beni kaşifi | SurpriseMe | %48 → %51 | 4.03 → 4.29 | %30 → %20 |
+
+### Sevdiğini tekrarla
+
+5 puan (veya "daha fazla") verilen template cooldown bittikten sonra 0,2 yerine bu yenilik skoruyla yeniden önerilebilir. 0,2 özelliğin kapalı olması demektir. Üretim değeri **0.6**.
+
+| Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **LR0.2** Sevdiğini tekrarla, yenilik 0.2 | %74 ±1 | %81 → %70 | %41 | 6.33 ±0.14 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
+| **LR0.4** Sevdiğini tekrarla, yenilik 0.4 | %74 ±1 | %81 → %69 | %41 | 6.40 ±0.15 | 4.1 | 4.7 | 35 | %33 | %62 ±3 | %100 |
+| **LR0.6** Sevdiğini tekrarla, yenilik 0.6 | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
+| **LR0.8** Sevdiğini tekrarla, yenilik 0.8 | %75 ±1 | %81 → %72 | %42 | 6.56 ±0.15 | 4.1 | 4.7 | 35 | %35 | %63 ±3 | %100 |
 
 ### Erişilebilirlik: hareket kısıtı olan persona
 
 | Senaryo | Kapasitesini aşan öneri | İsabet | North-star / hafta |
 |---|---|---|---|
-| Efor sınırı beyan edildi | %0 | %70 | 5.54 |
-| Efor sınırı beyan edilmedi | %3 | %69 | 5.43 |
+| Efor sınırı beyan edildi | %0 | %71 | 5.65 |
+| Efor sınırı beyan edilmedi | %3 | %70 | 5.75 |
 
 ### Persona kırılımı (senaryo A)
 
 | Persona | Keşif modu | İsabet | İlk 5 gün | Son 5 gün | North-star / hafta | Tamamlanan kategori | Gizli ilgi keşfi |
 |---|---|---|---|---|---|---|---|
-| Kahve ve kafe tutkunu | Explore | %65 | %68 | %67 | 4.45 | 4.7 | %80 |
-| Kültür meraklısı | Chill | %82 | %89 | %78 | 6.70 | 4.4 | %85 |
-| Düşük bütçeli öğrenci | Explore | %75 | %83 | %72 | 6.87 | 4.3 | %83 |
-| Az vakitli çalışan | Chill | %97 | %99 | %95 | 5.79 | 4.6 | %45 |
-| Hareket kısıtı olan kullanıcı | Explore | %70 | %80 | %70 | 5.54 | 4.4 | %90 |
-| Sosyal kelebek | Explore | %74 | %83 | %69 | 8.97 | 5.7 | %53 |
-| Şehir bilgisi vermeyen doğa sever | Explore | %78 | %85 | %74 | 8.17 | 4.4 | %30 |
-| Şaşırt Beni kaşifi | SurpriseMe | %49 | %61 | %36 | 4.13 | 6.0 | %25 |
+| Kahve ve kafe tutkunu | Explore | %65 | %68 | %67 | 4.81 | 4.6 | %85 |
+| Kültür meraklısı | Chill | %82 | %89 | %78 | 6.69 | 4.5 | %80 |
+| Düşük bütçeli öğrenci | Explore | %76 | %83 | %75 | 6.78 | 4.3 | %83 |
+| Az vakitli çalışan | Chill | %97 | %99 | %94 | 5.69 | 4.5 | %45 |
+| Hareket kısıtı olan kullanıcı | Explore | %71 | %80 | %68 | 5.65 | 4.1 | %95 |
+| Sosyal kelebek | Explore | %74 | %83 | %67 | 9.04 | 5.9 | %48 |
+| Şehir bilgisi vermeyen doğa sever | Explore | %79 | %85 | %76 | 8.45 | 4.4 | %25 |
+| Şaşırt Beni kaşifi | SurpriseMe | %51 | %62 | %47 | 4.29 | 6.0 | %20 |
 
 ## Yöntem
 

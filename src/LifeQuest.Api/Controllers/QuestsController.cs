@@ -54,6 +54,28 @@ public sealed class QuestsController(ISender sender) : ApiControllerBase
     [HttpPost("{id:guid}/feedback")]
     public async Task<IActionResult> Feedback(Guid id, QuestFeedbackRequest request, CancellationToken cancellationToken)
         => HandleResult(await sender.Send(new SubmitQuestFeedbackCommand(id, request.Rating, request.Preference), cancellationToken));
+
+    /// <summary>Quest'in deneyimini "sonra yaparım" listesine ekler.</summary>
+    [HttpPost("{id:guid}/save")]
+    public async Task<IActionResult> Save(Guid id, CancellationToken cancellationToken)
+        => HandleResult(await sender.Send(new SaveQuestCommand(id), cancellationToken));
+
+    /// <summary>Kabul edilmiş quest'i kullanıcının yerel saatiyle planlar; <c>null</c> planı kaldırır.</summary>
+    [HttpPut("{id:guid}/plan")]
+    public async Task<IActionResult> Plan(Guid id, PlanRequest request, CancellationToken cancellationToken)
+        => HandleResult(await sender.Send(new PlanQuestCommand(id, request.PlannedAtLocal), cancellationToken));
+
+    /// <summary>Planlanmış quest için iCalendar (.ics) dosyası; konum bilgisi içermez.</summary>
+    [HttpGet("{id:guid}/calendar.ics")]
+    public async Task<IActionResult> Calendar(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetQuestCalendarQuery(id), cancellationToken);
+        return result.Succeeded
+            ? File(System.Text.Encoding.UTF8.GetBytes(result.Data!.Content), "text/calendar; charset=utf-8", result.Data.FileName)
+            : HandleResult(result);
+    }
+
+    public sealed record PlanRequest(DateTime? PlannedAtLocal);
 }
 
 public sealed record SkipQuestRequest(SkipReason Reason);

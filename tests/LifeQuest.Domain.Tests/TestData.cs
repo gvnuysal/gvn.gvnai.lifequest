@@ -48,7 +48,8 @@ internal static class TestData
         => new(c.TemplateId, c.Category, c.InterestIds, QuestStatus.Skipped,
             UtcNow.AddDays(-daysAgo), UtcNow.AddDays(-daysAgo), reason, null, null);
 
-    public static RecommendationHistory History(IEnumerable<QuestHistoryItem> items, IEnumerable<Guid>? open = null)
+    public static RecommendationHistory History(
+        IEnumerable<QuestHistoryItem> items, IEnumerable<Guid>? open = null, IEnumerable<Guid>? loved = null)
     {
         var list = items.ToList();
         var completed = list.Where(i => i.Status == QuestStatus.Completed)
@@ -56,6 +57,6 @@ internal static class TestData
             .ToDictionary(g => g.Key, g => g.Max(i => i.LastActivityAt));
 
         return new RecommendationHistory(list, open ?? [], completed,
-            list.Where(i => i.Status == QuestStatus.Completed).Select(i => i.Category));
+            list.Where(i => i.Status == QuestStatus.Completed).Select(i => i.Category), loved);
     }
 }

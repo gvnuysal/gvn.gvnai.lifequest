@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (build + test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore LifeQuest.slnx
+
+      - name: Build
+        run: dotnet build LifeQuest.slnx --no-restore -c Release
+
+      # Katalog testleri editoryal güvenlik kapısıdır; entegrasyon testleri Testcontainers ile runner'ın Docker'ını kullanır.
+      - name: Test
+        run: dotnet test LifeQuest.slnx --no-build -c Release --logger "trx;LogFilePrefix=results" --results-directory TestResults
+
+      - name: Test sonuçlarını sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+  web:
+    name: Web (test + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: src/LifeQuest.Web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/LifeQuest.Web/package-lock.json
+
+      - run: npm ci
+      - run: npm test -- --watch=false
+      - run: npm run build
+
+  docker:
+    name: Docker imajları
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: API imajı
+        run: docker build -f src/LifeQuest.Api/Dockerfile -t lifequest-api:ci .
+      - name: Web imajı
+        run: docker build -f src/LifeQuest.Web/Dockerfile -t lifequest-web:ci src/LifeQuest.Web

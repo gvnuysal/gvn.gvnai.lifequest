@@ -74,7 +74,8 @@ public enum ReasonCode
     InterestMatch,
     GoalFit,
     FitsAvailableTime,
-    Free
+    Free,
+    LovedBefore
 }
 
 public sealed record RecommendationReason(ReasonCode Code, string Text);

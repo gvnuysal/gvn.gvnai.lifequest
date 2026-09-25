@@ -115,6 +115,14 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 
 **Yönetim (sonradan eklendi).** Admin artık kullanıcıları askıya alabiliyor/silebiliyor, rol verebiliyor; katalogda template oluşturup düzenleyebiliyor, inceleme kuyruğunu yönetebiliyor ve öneri ağırlıklarını panelden anında değiştirebiliyor. Her işlem gerekçesiyle `admin_audit_entries` tablosuna yazılır. Admin'in düzenlediği template seed senkronundan çıkar; seed verisi artık admin kararlarını ezmez.
 
+**Katma değer paketi (sonradan eklendi).**
+- **A/B deneyleri:** Ağırlık değişiklikleri önce kullanıcıların bir kısmında denenir. Atama deterministiktir ve saklanmaz. Sonuç, kullanıcı başına haftalık anlamlı deneyimin %95 güven aralığıyla verilir; koruma metriği "ilgimi çekmedi" oranıdır. Kazanan tek tıkla üretime alınır.
+- **Topluluk fikirleri:** Katalog derinliğini artırmak için kullanıcılar fikir gönderir. Bağlantı ve iletişim bilgisi reddedilir, riskli ifadeler admin için işaretlenir. Kabul edilen fikir kimlik taşımadan template olur; XP ödülü yoktur.
+- **Sonra yaparım + takvim:** Kabul edilmeyen öneriler kaybolmaz; kabul edilen görev planlanıp `.ics` olarak kişisel takvime eklenir (bildirim göndermeden).
+- **Sevdiğini tekrarla:** 5 puan verilen deneyim cooldown sonrası yeniden önerilebilir. Simülasyonda geç dönem isabeti %70 → %72.
+- **KVKK veri taşınabilirliği:** "Verilerimi indir".
+- **Operasyon:** Framework paketleri repoda; GitHub Actions CI ve Docker ile tek komutla tam uygulama.
+
 ## 5. Sonraki adımlar (öncelik sırasıyla)
 
 1. Katalog derinliği: ilgi başına 3-4 template, özellikle kısa, ücretsiz ve şehirden bağımsız görevler (simülasyon öneri 1).

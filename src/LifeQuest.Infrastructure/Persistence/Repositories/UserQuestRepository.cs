@@ -73,6 +73,15 @@ internal sealed class UserQuestRepository : EfRepository<UserQuest, LifeQuestDbC
             .Select(g => new { TemplateId = g.Key, LastCompletedAt = g.Max(x => x.CompletedAt)!.Value })
             .ToDictionaryAsync(x => x.TemplateId, x => x.LastCompletedAt, cancellationToken);
 
+    public async Task<IReadOnlyList<Guid>> GetLovedTemplateIdsAsync(Guid userId, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking()
+            .Where(x => x.UserId == userId && x.Status == QuestStatus.Completed)
+            .GroupBy(x => x.TemplateId)
+            .Where(g => g.Any(x => x.Rating == 5 || x.Preference == FeedbackPreference.MoreLikeThis) &&
+                        !g.Any(x => x.Rating <= 2 || x.Preference == FeedbackPreference.LessLikeThis))
+            .Select(g => g.Key)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<UserQuest>> GetCompletedBetweenAsync(
         Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default)
         => await DbSet.AsNoTracking()

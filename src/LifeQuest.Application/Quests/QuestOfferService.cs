@@ -107,48 +107,61 @@ public sealed class QuestOfferService(
         return Result<QuestOffers>.Ok(new QuestOffers(today, offers, offers.Count == 0 ? NoMatchMessage : null));
     }
 
+    /// <summary>
+    /// "Sonra yaparım" listesinden başlatma: tek template motorun uygunluk filtrelerinden (cooldown, efor, açık
+    /// görev…) geçirilir ve skor dökümüyle birlikte kabul edilmiş bir quest olarak oluşturulur.
+    /// </summary>
+    public async Task<Result<UserQuest>> StartTemplateAsync(Guid userId, Guid templateId, CancellationToken cancellationToken)
+    {
+        var profile = await profiles.GetByUserIdAsync(userId, cancellationToken);
+        if (profile is null)
+            return Result<UserQuest>.Fail(ProfileErrors.ProfileNotFound);
+        if (!profile.OnboardingCompleted)
+            return Result<UserQuest>.Fail(ProfileErrors.OnboardingRequired);
+
+        if (await quests.CountAcceptedAsync(userId, cancellationToken) >= Options.MaxActiveQuests)
+            return Result<UserQuest>.Fail(QuestErrors.TooManyActiveQuests(Options.MaxActiveQuests));
+
+        var (nowUtc, localNow, today, _) = Now(profile);
+        var input = await LoadInputAsync(profile, nowUtc, cancellationToken);
+        var candidate = input.Candidates.FirstOrDefault(c => c.TemplateId == templateId);
+        if (candidate is null)
+            return Result<UserQuest>.Fail(QuestErrors.TemplateUnavailable);
+
+        var context = new RecommendationContext(localNow, nowUtc, 1, Seed(userId, today), RequireShortQuest: false);
+        var result = new QuestRecommendationEngine(input.Weights.Weights)
+            .Recommend([candidate], input.Profile, input.History, input.Graph, context);
+        if (result.IsEmpty)
+            return Result<UserQuest>.Fail(QuestErrors.NotOfferableNow(result.FilteredOut.Keys.FirstOrDefault() ?? string.Empty));
+
+        var quest = await ToQuestAsync(result.Items[0], input, QuestSource.Saved, today, SavedSlot, nowUtc, nowUtc.AddHours(1), cancellationToken);
+        var accepted = quest.Accept(nowUtc);
+        if (!accepted.Succeeded)
+            return Result<UserQuest>.Fail(accepted.Errors);
+
+        await quests.AddAsync(quest, cancellationToken);
+        metrics.Offered(QuestSource.Saved, 1);
+        metrics.Accepted(quest.Category);
+        return Result<UserQuest>.Ok(quest);
+    }
+
+    private const int SavedSlot = 100;
+
     private async Task<IReadOnlyList<UserQuest>> CreateOffersAsync(
         UserProfile profile, RecommendationContext context, QuestSource source, DateOnly offerDate,
         int slotOffset, DateTime expiresAtUtc, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
-        var userId = profile.UserId;
+        var input = await LoadInputAsync(profile, context.UtcNow, cancellationToken);
 
-        var candidates = await catalog.GetOfferableCandidatesAsync(cancellationToken);
-        var graph = await catalog.GetTasteGraphAsync(cancellationToken);
-        var progress = await progressRepository.GetByUserIdAsync(userId, cancellationToken);
-        var completedTemplates = await quests.GetCompletedTemplatesAsync(userId, cancellationToken);
-        var openTemplates = await quests.GetOpenTemplateIdsAsync(userId, context.UtcNow, cancellationToken);
-        var recent = await quests.GetHistoryItemsAsync(
-            userId, context.UtcNow.AddDays(-Options.HistoryWindowDays), cancellationToken);
-
-        var completedCategories = progress?.Categories.Where(c => c.CompletedCount > 0).Select(c => c.Category) ?? [];
-        var history = new RecommendationHistory(recent, openTemplates, completedTemplates, completedCategories);
-
-        var recommendationProfile = new RecommendationProfile(
-            profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
-            profile.Goals.ToHashSet(), profile.InterestWeights(), profile.City is not null, profile.MaxPhysicalEffort);
-
-        var result = new QuestRecommendationEngine(await weights.GetAsync(cancellationToken))
-            .Recommend(candidates, recommendationProfile, history, graph, context);
+        var result = new QuestRecommendationEngine(input.Weights.Weights)
+            .Recommend(input.Candidates, input.Profile, input.History, input.Graph, context);
 
         var offers = new List<UserQuest>(result.Items.Count);
         for (var i = 0; i < result.Items.Count; i++)
         {
-            var item = result.Items[i];
-            var candidate = item.Candidate;
-
-            var novelty = RewardCalculator.NoveltyMultiplier(
-                history.CompletedCategories.Contains(candidate.Category),
-                history.CompletedTemplates.ContainsKey(candidate.TemplateId));
-            var reward = RewardCalculator.Calculate(
-                candidate.Type, candidate.Difficulty, candidate.SecondaryCategory is not null, novelty);
-
-            var topics = candidate.InterestIds.Select(graph.NameOf).ToList();
-            var text = await narration.NarrateAsync(candidate, topics, cancellationToken);
-
-            var quest = UserQuest.Offer(
-                userId, item, reward, source, offerDate, slotOffset + i, context.UtcNow, expiresAtUtc, text);
+            var quest = await ToQuestAsync(result.Items[i], input, source, offerDate, slotOffset + i, context.UtcNow,
+                expiresAtUtc, cancellationToken);
             await quests.AddAsync(quest, cancellationToken);
             offers.Add(quest);
         }
@@ -159,10 +172,60 @@ public sealed class QuestOfferService(
         if (result.IsEmpty)
             logger.LogInformation(
                 "No quest could be recommended for {UserId}. Candidates={Candidates} Filtered={@Filtered}",
-                userId, result.CandidateCount, result.FilteredOut);
+                profile.UserId, result.CandidateCount, result.FilteredOut);
 
         return offers;
     }
+
+    private async Task<EngineInput> LoadInputAsync(UserProfile profile, DateTime nowUtc, CancellationToken cancellationToken)
+    {
+        var userId = profile.UserId;
+        var candidates = await catalog.GetOfferableCandidatesAsync(cancellationToken);
+        var graph = await catalog.GetTasteGraphAsync(cancellationToken);
+        var progress = await progressRepository.GetByUserIdAsync(userId, cancellationToken);
+        var completedTemplates = await quests.GetCompletedTemplatesAsync(userId, cancellationToken);
+        var openTemplates = await quests.GetOpenTemplateIdsAsync(userId, nowUtc, cancellationToken);
+        var recent = await quests.GetHistoryItemsAsync(userId, nowUtc.AddDays(-Options.HistoryWindowDays), cancellationToken);
+        var loved = await quests.GetLovedTemplateIdsAsync(userId, cancellationToken);
+
+        var completedCategories = progress?.Categories.Where(c => c.CompletedCount > 0).Select(c => c.Category) ?? [];
+        var history = new RecommendationHistory(recent, openTemplates, completedTemplates, completedCategories, loved);
+
+        var recommendationProfile = new RecommendationProfile(
+            profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
+            profile.Goals.ToHashSet(), profile.InterestWeights(), profile.City is not null, profile.MaxPhysicalEffort);
+
+        return new EngineInput(userId, candidates, graph, history, recommendationProfile,
+            await weights.GetForUserAsync(userId, cancellationToken));
+    }
+
+    private async Task<UserQuest> ToQuestAsync(
+        RecommendedQuest item, EngineInput input, QuestSource source, DateOnly offerDate, int slot,
+        DateTime nowUtc, DateTime expiresAtUtc, CancellationToken cancellationToken)
+    {
+        var candidate = item.Candidate;
+        var novelty = RewardCalculator.NoveltyMultiplier(
+            input.History.CompletedCategories.Contains(candidate.Category),
+            input.History.CompletedTemplates.ContainsKey(candidate.TemplateId));
+        var reward = RewardCalculator.Calculate(
+            candidate.Type, candidate.Difficulty, candidate.SecondaryCategory is not null, novelty);
+
+        var topics = candidate.InterestIds.Select(input.Graph.NameOf).ToList();
+        var text = await narration.NarrateAsync(candidate, topics, cancellationToken);
+
+        var quest = UserQuest.Offer(input.UserId, item, reward, source, offerDate, slot, nowUtc, expiresAtUtc, text);
+        if (input.Weights is { ExperimentId: { } experimentId, Variant: { } variant })
+            quest.AssignExperiment(experimentId, variant);
+        return quest;
+    }
+
+    private sealed record EngineInput(
+        Guid UserId,
+        IReadOnlyList<QuestCandidate> Candidates,
+        TasteGraph Graph,
+        RecommendationHistory History,
+        RecommendationProfile Profile,
+        UserWeights Weights);
 
     private (DateTime NowUtc, DateTime LocalNow, DateOnly Today, TimeZoneInfo TimeZone) Now(UserProfile profile)
     {

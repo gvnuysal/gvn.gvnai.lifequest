@@ -91,6 +91,25 @@
     </section>
 
     @if (q.status === 'Offered' || q.status === 'Accepted') {
+      <div class="secondary-actions">
+        @if (q.status === 'Offered') {
+          <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="saveForLater()">
+            <lq-icon name="heart" [size]="16" /> Sonra yaparım
+          </button>
+        } @else {
+          <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="openPlan()">
+            <lq-icon name="clock" [size]="16" /> {{ q.plannedAt ? 'Planı değiştir' : 'Planla' }}
+          </button>
+          @if (q.plannedAt) {
+            <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="downloadCalendar()">
+              <lq-icon name="plus" [size]="16" /> Takvime ekle
+            </button>
+          }
+        }
+      </div>
+      @if (q.plannedAt) {
+        <p class="planned muted"><lq-icon name="clock" [size]="16" /> {{ plannedLabel() }} için planladın</p>
+      }
       <div class="actions">
         <button lq-button variant="secondary" [disabled]="busy()" (click)="skipReason.set(null); skipOpen.set(true)">
           {{ q.status === 'Offered' ? 'Geç' : 'Bırak' }}
@@ -106,6 +125,21 @@
         }
       </div>
     }
+
+    <lq-sheet title="Ne zaman yapacaksın?" [(open)]="planOpen">
+      <div class="stack">
+        <p class="muted">Kendi takvimine eklemen için bir zaman seç. Hatırlatma göndermeyiz; dosyayı takvimine eklersen takvimin hatırlatır.</p>
+        <div class="field">
+          <label for="plan-at">Tarih ve saat</label>
+          <input id="plan-at" class="input" type="datetime-local" [min]="planMin()" [max]="planMax()"
+                 [value]="planValue()" (input)="planValue.set($any($event.target).value)" />
+        </div>
+        <button lq-button [block]="true" [disabled]="!planValue() || busy()" [loading]="busy()" (click)="savePlan()">Planı kaydet</button>
+        @if (quest()?.plannedAt) {
+          <button lq-button variant="ghost" [block]="true" [disabled]="busy()" (click)="clearPlan()">Planı kaldır</button>
+        }
+      </div>
+    </lq-sheet>
 
     <lq-sheet title="Neden geçiyorsun?" [(open)]="skipOpen">
       <div class="stack">

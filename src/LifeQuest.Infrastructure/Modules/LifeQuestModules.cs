@@ -1,3 +1,7 @@
+using LifeQuest.Application.Experiments;
+using LifeQuest.Application.Profiles;
+using LifeQuest.Domain.Community;
+using LifeQuest.Domain.Experiments;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Recommendations;
@@ -132,6 +136,10 @@ public sealed class AdminModule : IModule
         services.AddScoped<IRecommendationSettingsRepository, RecommendationSettingsRepository>();
         services.AddScoped<IRecommendationWeightsProvider, RecommendationWeightsProvider>();
         services.AddScoped<IAccountStateCache, AccountStateCache>();
+        services.AddScoped<IExperimentRepository, ExperimentRepository>();
+        services.AddScoped<IExperimentMetricsReader, ExperimentMetricsReader>();
+        services.AddScoped<IQuestIdeaRepository, QuestIdeaRepository>();
+        services.AddScoped<IUserDataExporter, UserDataExporter>();
     }
 
     public void Configure(IApplicationBuilder app) { }
@@ -144,6 +152,7 @@ public sealed class QuestModule : IModule
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IUserQuestRepository, UserQuestRepository>();
+        services.AddScoped<ISavedQuestRepository, SavedQuestRepository>();
         services.AddScoped<ExpireStaleQuestsJob>();
         services.AddScoped<DailyQuestGenerationJob>();
     }

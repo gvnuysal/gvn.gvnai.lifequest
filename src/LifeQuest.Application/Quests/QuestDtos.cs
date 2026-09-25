@@ -31,7 +31,8 @@ public sealed record QuestDto(
     int? Rating,
     FeedbackPreference? Preference,
     bool IsExploration,
-    string Explanation);
+    string Explanation,
+    DateTime? PlannedAt);
 
 /// <summary>"Neden bunu önerdim?" detayı: skor bileşenleri ve gerekçe kodları.</summary>
 public sealed record QuestDetailDto(QuestDto Quest, ScoreBreakdown Score, IReadOnlyList<string> ReasonCodes);
@@ -55,7 +56,7 @@ public static class QuestMappings
         q.MinMinutes, q.MaxMinutes, q.Cost, q.Effort,
         new QuestRewardDto(q.Reward.LifeXp, q.Reward.PrimaryCategoryXp, q.Reward.SecondaryCategoryXp),
         q.Status, q.Source, q.OfferedAt, q.ExpiresAt, q.AcceptedAt, q.CompletedAt, q.SkipReason,
-        q.Rating, q.Preference, q.IsExploration, q.Explanation);
+        q.Rating, q.Preference, q.IsExploration, q.Explanation, q.PlannedAt);
 
     public static IReadOnlyList<QuestDto> ToDtos(this IEnumerable<UserQuest> quests)
         => quests.OrderBy(q => q.Slot).Select(ToDto).ToList();

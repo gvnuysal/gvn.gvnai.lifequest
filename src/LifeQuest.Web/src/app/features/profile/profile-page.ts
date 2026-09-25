@@ -7,6 +7,7 @@ import { CatalogApi, ProfileApi } from '../../core/api/api-clients';
 import { CostBand, DiscoveryRadius, LifeCategory, NotificationPreference, PhysicalEffort, Profile } from '../../core/api/models';
 import { AuthStore } from '../../core/auth/auth.store';
 import { firstErrorMessage } from '../../core/http/api-error';
+import { saveResponse } from '../../core/http/download';
 import {
   CATEGORIES,
   CATEGORY_ORDER,
@@ -43,6 +44,7 @@ export class ProfilePage {
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
+  protected readonly exporting = signal(false);
 
   protected readonly profile = this.profiles.profile;
   protected readonly catalog = toSignal(inject(CatalogApi).interests().pipe(catchError(() => of([]))), { initialValue: [] });
@@ -200,5 +202,21 @@ export class ProfilePage {
     this.city.set(profile.city ?? '');
     this.maxEffort.set(profile.maxPhysicalEffort === 'None' ? 'Light' : profile.maxPhysicalEffort);
     this.notifications.set(profile.notificationPreference);
+  }
+
+  /** KVKK veri taşınabilirliği: yetkili istekle alınan JSON dosyası indirilir. */
+  protected exportData(): void {
+    this.exporting.set(true);
+    this.profileApi.exportData().subscribe({
+      next: (response) => {
+        this.exporting.set(false);
+        saveResponse(response, 'lifequest-verilerim.json');
+        this.toast.success('Verilerin indirildi.');
+      },
+      error: (err: unknown) => {
+        this.exporting.set(false);
+        this.toast.error(firstErrorMessage(err));
+      },
+    });
   }
 }

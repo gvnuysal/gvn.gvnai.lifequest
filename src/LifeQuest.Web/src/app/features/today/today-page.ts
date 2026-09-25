@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { ProgressApi, QuestsApi, SummariesApi } from '../../core/api/api-clients';
+import { ProgressApi, QuestsApi, SavedApi, SummariesApi } from '../../core/api/api-clients';
 import { Progress, Quest, QuestList, WeeklySummary } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, greeting } from '../../core/labels/format';
@@ -52,6 +52,13 @@ import { EmptyState, Skeleton } from '../../ui/states';
           <lq-icon name="chevron-right" [size]="18" />
         </a>
       }
+      @if (savedCount() > 0) {
+        <a class="active-strip saved-strip" routerLink="/kaydedilenler">
+          <lq-icon name="heart" [size]="18" />
+          <span>"Sonra yaparım" listende <strong>{{ savedCount() }}</strong> deneyim var</span>
+          <lq-icon name="chevron-right" [size]="18" />
+        </a>
+      }
 
       <section class="stack">
         <h2 class="section-title">Bugünün önerileri</h2>
@@ -98,6 +105,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
       background: var(--primary-soft); color: var(--primary-text); font-weight: 700; text-decoration: none !important;
     }
     .active-strip span { flex: 1; }
+    .saved-strip { background: var(--surface-2); color: var(--ink-2); }
     .summary {
       display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: var(--radius-lg);
       background: linear-gradient(135deg, var(--xp-soft), var(--surface)); border: 1px solid color-mix(in srgb, var(--xp) 30%, var(--line));
@@ -131,6 +139,8 @@ export class TodayPage {
   protected readonly progress = signal<Progress | null>(null);
   protected readonly summary = signal<WeeklySummary | null>(null);
   private readonly summaries = inject(SummariesApi);
+  private readonly saved = inject(SavedApi);
+  protected readonly savedCount = signal(0);
 
   protected readonly activeCount = computed(() => this.active().length);
   protected readonly dateLabel = computed(() =>
@@ -141,6 +151,7 @@ export class TodayPage {
     this.load();
     // Özet ikincil bilgidir: yüklenemezse sessizce gösterilmez.
     this.summaries.latest().subscribe({ next: (s) => this.summary.set(s ?? null), error: () => undefined });
+    this.saved.list().subscribe({ next: (list) => this.savedCount.set(list.length), error: () => undefined });
   }
 
   protected dismissSummary(id: string): void {

@@ -32,6 +32,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage),
       },
       {
+        path: 'kaydedilenler',
+        title: 'Sonra yaparım · LifeQuest',
+        loadComponent: () => import('./features/saved/saved-page').then((m) => m.SavedPage),
+      },
+      {
+        path: 'fikir',
+        title: 'Bir deneyim öner · LifeQuest',
+        loadComponent: () => import('./features/ideas/ideas-page').then((m) => m.IdeasPage),
+      },
+      {
         path: 'oner',
         title: 'Boş vaktim var · LifeQuest',
         loadComponent: () => import('./features/suggest/suggest-page').then((m) => m.SuggestPage),
@@ -80,6 +90,21 @@ export const routes: Routes = [
             path: 'katalog/:id',
             title: 'Template · Yönetim',
             loadComponent: () => import('./features/admin/admin-template-page').then((m) => m.AdminTemplatePage),
+          },
+          {
+            path: 'fikirler',
+            title: 'Topluluk fikirleri · Yönetim',
+            loadComponent: () => import('./features/admin/admin-ideas-page').then((m) => m.AdminIdeasPage),
+          },
+          {
+            path: 'deneyler',
+            title: 'Deneyler · Yönetim',
+            loadComponent: () => import('./features/admin/admin-experiments-page').then((m) => m.AdminExperimentsPage),
+          },
+          {
+            path: 'deneyler/:id',
+            title: 'Deney · Yönetim',
+            loadComponent: () => import('./features/admin/admin-experiment-page').then((m) => m.AdminExperimentPage),
           },
           {
             path: 'oneri-ayarlari',

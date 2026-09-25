@@ -55,6 +55,9 @@ public static class RecommendationWeightCatalog
             "Keşif adayının ilgi skoru bunun altında olmalı.", w => w.ExplorationMaxInterest, (w, v) => w with { ExplorationMaxInterest = v }),
         Weight(nameof(RecommendationWeights.ExplorationMinNovelty), "Keşif · asgari yenilik", WeightGroup.Exploration,
             "Keşif adayının yenilik skoru bunun üstünde olmalı.", w => w.ExplorationMinNovelty, (w, v) => w with { ExplorationMinNovelty = v }),
+        Weight(nameof(RecommendationWeights.LovedRepeatNovelty), "Sevdiğini tekrarla", WeightGroup.Novelty,
+            "5 puan verilen bir deneyim cooldown'dan sonra bu yenilik skoruyla yeniden önerilebilir (0,2 = kapalı).",
+            w => w.LovedRepeatNovelty, (w, v) => w with { LovedRepeatNovelty = v }),
 
         Days(nameof(RecommendationWeights.RecentWindowDays), "Yakın geçmiş penceresi",
             "Tekrar ve çeşitlilik hesabında bakılan gün sayısı.", w => w.RecentWindowDays, (w, v) => w with { RecentWindowDays = v }, 1, 30),

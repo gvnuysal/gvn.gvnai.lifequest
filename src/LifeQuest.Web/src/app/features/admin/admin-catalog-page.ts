@@ -35,6 +35,9 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
             <button type="button" class="stat-link" (click)="setStatus('NeedsReview')">
               <span class="value" [class.warn]="h.needsReview > 0">{{ h.needsReview }}</span><span class="label">İnceleme bekliyor</span>
             </button>
+            <a class="stat-link" routerLink="/yonetim/fikirler">
+              <span class="value" [class.warn]="h.pendingIdeas > 0">{{ h.pendingIdeas }}</span><span class="label">Bekleyen fikir</span>
+            </a>
             <div><span class="value">{{ percent(h.freeShare) }}</span><span class="label">Ücretsiz</span></div>
             <div><span class="value">{{ percent(h.cityIndependentShare) }}</span><span class="label">Şehirden bağımsız</span></div>
           </div>
@@ -117,9 +120,9 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
     .small { font-size: var(--fs-sm); }
     .health { padding: var(--space-4); display: flex; flex-direction: column; gap: 12px; }
     .health__stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    @media (min-width: 560px) { .health__stats { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 560px) { .health__stats { grid-template-columns: repeat(5, 1fr); } }
     .health__stats > * { display: flex; flex-direction: column; gap: 2px; text-align: left; }
-    .stat-link { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; }
+    .stat-link { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; text-decoration: none; }
     .value { font-size: var(--fs-xl); font-weight: 900; font-variant-numeric: tabular-nums; }
     .value.warn { color: var(--xp-ink); }
     .label { font-size: var(--fs-xs); font-weight: 700; color: var(--ink-3); }

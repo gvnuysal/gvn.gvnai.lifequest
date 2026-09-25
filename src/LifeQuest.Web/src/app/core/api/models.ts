@@ -7,7 +7,7 @@ export type DiscoveryRadius = 'Chill' | 'Explore' | 'SurpriseMe';
 export type QuestType = 'Daily' | 'Weekly' | 'Adventure' | 'Epic';
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Heroic';
 export type QuestStatus = 'Offered' | 'Accepted' | 'Completed' | 'Skipped' | 'Expired';
-export type QuestSource = 'Daily' | 'OnDemand';
+export type QuestSource = 'Daily' | 'OnDemand' | 'Saved';
 export type SkipReason = 'NotInterested' | 'TooExpensive' | 'NoTime' | 'TooFar' | 'NotToday' | 'Other';
 export type FeedbackPreference = 'MoreLikeThis' | 'LessLikeThis';
 export type InterestSource = 'Explicit' | 'Learned';
@@ -147,6 +147,7 @@ export interface Quest {
   preference: FeedbackPreference | null;
   isExploration: boolean;
   explanation: string;
+  plannedAt: string | null;
 }
 
 export interface ScoreBreakdown {
@@ -291,8 +292,15 @@ export type AdminAction =
   | 'TemplateActivated'
   | 'TemplateDeactivated'
   | 'WeightsUpdated'
-  | 'WeightsReset';
-export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings';
+  | 'WeightsReset'
+  | 'ExperimentCreated'
+  | 'ExperimentStarted'
+  | 'ExperimentStopped'
+  | 'ExperimentAdopted'
+  | 'ExperimentDiscarded'
+  | 'IdeaRejected'
+  | 'IdeaAccepted';
+export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings' | 'Experiment' | 'QuestIdea';
 export type WeightGroup = 'Interest' | 'Novelty' | 'Score' | 'Penalty' | 'TasteGraph' | 'Exploration' | 'Windows';
 
 export interface AdminUser {
@@ -372,6 +380,7 @@ export interface CatalogHealth {
   offerable: number;
   needsReview: number;
   blocked: number;
+  pendingIdeas: number;
   freeShare: number;
   cityIndependentShare: number;
   categories: { category: LifeCategory; templates: number; daily: number }[];
@@ -409,4 +418,103 @@ export interface AuditEntry {
   targetLabel: string;
   reason: string | null;
   details: string | null;
+}
+
+// ── Sonra yaparım, fikirler, deneyler ───────────────────────────────────────
+
+export interface SavedQuest {
+  templateId: string;
+  title: string;
+  description: string;
+  category: LifeCategory;
+  type: QuestType;
+  minMinutes: number;
+  maxMinutes: number;
+  cost: CostBand;
+  effort: PhysicalEffort;
+  savedAt: string;
+  isAvailable: boolean;
+}
+
+export type IdeaStatus = 'Pending' | 'Accepted' | 'Rejected';
+
+export interface IdeaRequest {
+  title: string;
+  description: string;
+  category: LifeCategory;
+  minutes: number;
+  cost: CostBand;
+  isOutdoor: boolean;
+}
+
+export interface MyIdea extends IdeaRequest {
+  id: string;
+  status: IdeaStatus;
+  reviewNote: string | null;
+  submittedAt: string;
+  reviewedAt: string | null;
+}
+
+export interface AdminIdea extends IdeaRequest {
+  id: string;
+  status: IdeaStatus;
+  flags: string[];
+  reviewNote: string | null;
+  reviewedBy: string | null;
+  templateId: string | null;
+  submittedAt: string;
+  reviewedAt: string | null;
+}
+
+export type ExperimentStatus = 'Draft' | 'Running' | 'Stopped';
+export type ExperimentOutcome = 'None' | 'Adopted' | 'Discarded';
+export type ExperimentVerdict = 'InsufficientData' | 'NoDifference' | 'TreatmentBetter' | 'TreatmentWorse';
+export type ExperimentAction = 'start' | 'stop' | 'adopt' | 'discard';
+
+export interface Experiment {
+  id: string;
+  name: string;
+  hypothesis: string;
+  status: ExperimentStatus;
+  outcome: ExperimentOutcome;
+  treatmentShare: number;
+  overrides: { key: string; label: string; controlValue: number; treatmentValue: number }[];
+  createdAt: string;
+  createdBy: string;
+  startedAt: string | null;
+  endedAt: string | null;
+}
+
+export interface VariantResult {
+  users: number;
+  offered: number;
+  accepted: number;
+  completed: number;
+  meaningful: number;
+  northStar: number;
+  northStarStandardError: number;
+  acceptanceRate: number;
+  completionRate: number;
+  explorationAcceptanceRate: number;
+  notInterestedRate: number;
+  averageRating: number | null;
+}
+
+export interface ExperimentDetail {
+  experiment: Experiment;
+  results: {
+    weeks: number;
+    control: VariantResult;
+    treatment: VariantResult;
+    northStar: { difference: number; ciLow: number; ciHigh: number; relativeLift: number | null };
+    verdict: ExperimentVerdict;
+    minUsersPerVariant: number;
+  } | null;
+}
+
+export interface CreateExperimentRequest {
+  name: string;
+  hypothesis: string;
+  treatmentOverrides: Record<string, number>;
+  treatmentShare: number;
 }

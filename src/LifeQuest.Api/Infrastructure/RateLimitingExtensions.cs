@@ -7,6 +7,7 @@ internal static class RateLimitingExtensions
 {
     public const string AuthPolicy = "auth";
     public const string SuggestionPolicy = "suggestions";
+    public const string ExportPolicy = "export";
 
     /// <summary>Hesap ele geçirme / spam denemelerine karşı: auth uçları IP başına, öneri uçları kullanıcı başına.</summary>
     public static IServiceCollection AddLifeQuestRateLimiting(this IServiceCollection services, IConfiguration configuration)
@@ -24,6 +25,11 @@ internal static class RateLimitingExtensions
             options.AddPolicy(SuggestionPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+
+            // Veri dışa aktarma pahalı bir sorgu: kullanıcı başına saatte 3.
+            options.AddPolicy(ExportPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 3, Window = TimeSpan.FromHours(1) }));
         });
 
         return services;

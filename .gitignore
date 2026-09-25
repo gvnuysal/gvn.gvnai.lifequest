@@ -523,3 +523,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Gvn.GvnFramework yerel NuGet kaynağı repoda tutulur (bkz. nuget.config)
+!packages/gvnframework/
+!packages/gvnframework/*.nupkg
+!.env.example

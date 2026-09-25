@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Quest } from '../core/api/models';
-import { formatDuration, formatRemaining } from '../core/labels/format';
+import { formatDate, formatDuration, formatRemaining } from '../core/labels/format';
 import { CATEGORIES, COST_LABELS, QUEST_TYPE_LABELS, STATUS_LABELS } from '../core/labels/labels';
 import { CategoryIcon } from './category-badge';
 import { Icon } from './icon';
@@ -36,7 +36,9 @@ import { Icon } from './icon';
       <div class="meta">
         <span><lq-icon name="clock" [size]="15" /> {{ duration() }}</span>
         <span><lq-icon name="coins" [size]="15" /> {{ cost() }}</span>
-        @if (quest().status === 'Accepted') {
+        @if (quest().status === 'Accepted' && quest().plannedAt) {
+          <span class="remaining"><lq-icon name="flag" [size]="15" /> {{ planned() }}</span>
+        } @else if (quest().status === 'Accepted') {
           <span class="remaining"><lq-icon name="hourglass" [size]="15" /> {{ remaining() }}</span>
         } @else if (quest().status !== 'Offered') {
           <span class="status" [attr.data-status]="quest().status">{{ statusLabel() }}</span>
@@ -101,6 +103,11 @@ import { Icon } from './icon';
   `,
 })
 export class QuestCard {
+  protected readonly planned = computed(() => {
+    const at = this.quest().plannedAt;
+    return at ? formatDate(at, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  });
+
   readonly quest = input.required<Quest>();
   readonly showExplanation = input(true);
 

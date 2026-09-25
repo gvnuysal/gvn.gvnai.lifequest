@@ -117,7 +117,8 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
             FeedbackFit(c, history),
             Repetition(c, history, context),
             Friction(c, profile, history, context),
-            c.RiskScore);
+            c.RiskScore,
+            history.LovedTemplates.Contains(c.TemplateId) && history.CompletedTemplates.ContainsKey(c.TemplateId));
     }
 
     internal InterestMatch InterestScore(QuestCandidate c, RecommendationProfile profile, TasteGraph graph)
@@ -143,12 +144,19 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         return best;
     }
 
-    private static double Novelty(QuestCandidate c, RecommendationHistory history)
+    /// <summary>
+    /// Yeni kategori 1.0, bilinen kategoride yeni template 0.6, daha önce yapılmış template 0.2. Çok sevilen
+    /// (5 puan / "daha fazla") bir deneyim cooldown'dan sonra "tekrar yaşanmaya değer" sayılır ve daha az cezalanır.
+    /// </summary>
+    private double Novelty(QuestCandidate c, RecommendationHistory history)
     {
         if (!history.CompletedCategories.Contains(c.Category))
             return 1.0;
 
-        return history.CompletedTemplates.ContainsKey(c.TemplateId) ? 0.2 : 0.6;
+        if (!history.CompletedTemplates.ContainsKey(c.TemplateId))
+            return 0.6;
+
+        return history.LovedTemplates.Contains(c.TemplateId) ? Math.Max(0.2, weights.LovedRepeatNovelty) : 0.2;
     }
 
     private static double Context(QuestCandidate c, RecommendationContext context)
@@ -355,6 +363,9 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         if (s.IsExploration)
             reasons.Add(new(ReasonCode.ExplorationPick, $"{profile.Radius.DisplayName()} modunu seçtiğin"));
 
+        if (s.Scored.LovedBefore)
+            reasons.Add(new(ReasonCode.LovedBefore, "daha önce çok sevdiğin bir deneyim olduğu"));
+
         var interest = s.Scored.Interest;
         if (interest.ViaInterestId is { } via && interest.MatchedInterestId is { } target)
             reasons.Add(new(ReasonCode.AdjacentInterest,
@@ -393,7 +404,8 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         double FeedbackFit,
         double Repetition,
         double Friction,
-        double Risk);
+        double Risk,
+        bool LovedBefore);
 
     private sealed record Selection(ScoredCandidate Scored, ScoreBreakdown Breakdown, bool IsExploration);
 }

@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/logs
+**/TestResults
+.git
+.github
+.idea
+.vs
+docs
+tests
+tools
+*.md

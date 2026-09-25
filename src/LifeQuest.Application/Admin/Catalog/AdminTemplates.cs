@@ -7,6 +7,7 @@ using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Community;
 
 namespace LifeQuest.Application.Admin.Catalog;
 
@@ -213,6 +214,7 @@ public sealed record CatalogHealthDto(
     int Offerable,
     int NeedsReview,
     int Blocked,
+    int PendingIdeas,
     double FreeShare,
     double CityIndependentShare,
     IReadOnlyList<CategoryHealthDto> Categories,
@@ -221,7 +223,8 @@ public sealed record CatalogHealthDto(
 /// <summary>Önerilebilir katalogun editoryal dengesi (kategori başına sayı, ücretsiz ve şehirden bağımsız pay).</summary>
 public sealed record GetCatalogHealthQuery : IQuery<CatalogHealthDto>;
 
-internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository templates) : IQueryHandler<GetCatalogHealthQuery, CatalogHealthDto>
+internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository templates, IQuestIdeaRepository ideas)
+    : IQueryHandler<GetCatalogHealthQuery, CatalogHealthDto>
 {
     public async Task<Result<CatalogHealthDto>> Handle(GetCatalogHealthQuery query, CancellationToken cancellationToken)
     {
@@ -232,6 +235,7 @@ internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository temp
             specs.Count,
             await templates.CountBySafetyAsync(SafetyLevel.NeedsReview, cancellationToken),
             await templates.CountBySafetyAsync(SafetyLevel.Blocked, cancellationToken),
+            await ideas.CountByStatusAsync(IdeaStatus.Pending, cancellationToken),
             Math.Round(specs.Count(s => s.Cost == CostBand.Free) / (double)total, 3),
             Math.Round(specs.Count(s => !s.RequiresCity) / (double)total, 3),
             LifeCategories.All
@@ -243,7 +247,8 @@ internal sealed class GetCatalogHealthQueryHandler(IQuestTemplateRepository temp
 
 // ── Komutlar ──────────────────────────────────────────────────────────────────
 
-public sealed record CreateTemplateCommand(TemplateInput Template) : ICommand<AdminTemplateDto>;
+/// <param name="SourceIdeaId">Template bir topluluk fikrinden oluşturuluyorsa fikir; oluşturulunca kabul edilmiş sayılır.</param>
+public sealed record CreateTemplateCommand(TemplateInput Template, Guid? SourceIdeaId = null) : ICommand<AdminTemplateDto>;
 
 public sealed class CreateTemplateCommandValidator : AbstractValidator<CreateTemplateCommand>
 {
@@ -252,9 +257,11 @@ public sealed class CreateTemplateCommandValidator : AbstractValidator<CreateTem
 
 internal sealed class CreateTemplateCommandHandler(
     IQuestTemplateRepository templates,
+    IQuestIdeaRepository ideas,
     IQuestCatalog catalog,
     AdminAuditWriter audit,
-    IUnitOfWork unitOfWork) : ICommandHandler<CreateTemplateCommand, AdminTemplateDto>
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<CreateTemplateCommand, AdminTemplateDto>
 {
     public async Task<Result<AdminTemplateDto>> Handle(CreateTemplateCommand command, CancellationToken cancellationToken)
     {
@@ -264,11 +271,29 @@ internal sealed class CreateTemplateCommandHandler(
         if (await InterestCheck.FindUnknownAsync(catalog, spec.InterestIds, cancellationToken) is { } unknown)
             return Result<AdminTemplateDto>.Fail(unknown);
 
+        QuestIdea? idea = null;
+        if (command.SourceIdeaId is { } ideaId)
+        {
+            idea = await ideas.GetByIdAsync(ideaId, cancellationToken);
+            if (idea is null)
+                return Result<AdminTemplateDto>.Fail(IdeaErrors.NotFound);
+            if (idea.Status != IdeaStatus.Pending)
+                return Result<AdminTemplateDto>.Fail(IdeaErrors.AlreadyReviewed);
+        }
+
         var violations = CatalogSafetyRules.ValidateTemplate(spec);
         var template = QuestTemplate.Create(spec, AdminTemplateMapping.SafetyFor(violations, SafetyLevel.Safe), EditorialSource.Admin);
         await templates.AddAsync(template, cancellationToken);
         await audit.RecordAsync(AdminAction.TemplateCreated, AdminTargetType.QuestTemplate, template.Id, template.Code,
-            null, new { template.Safety, violations }, cancellationToken);
+            null, new { template.Safety, violations, sourceIdeaId = command.SourceIdeaId }, cancellationToken);
+
+        if (idea is not null)
+        {
+            var actor = await audit.GetActorAsync(cancellationToken);
+            idea.Accept(template.Id, actor.Email, "Fikrin kataloğa eklendi, teşekkürler!", clock.GetUtcNow().UtcDateTime);
+            await audit.RecordAsync(AdminAction.IdeaAccepted, AdminTargetType.QuestIdea, idea.Id, idea.Title, null,
+                new { templateId = template.Id, template.Code }, cancellationToken);
+        }
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await catalog.InvalidateAsync(cancellationToken);
 

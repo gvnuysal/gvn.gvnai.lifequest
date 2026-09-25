@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { AdminApi, CatalogApi } from '../../core/api/api-clients';
 import {
+  AdminIdea,
   AdminTemplate,
   CostBand,
   DayPart,
@@ -52,6 +53,12 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
       } @else if (ready()) {
         <header class="stack">
           <h1>{{ template() ? template()!.title : 'Yeni template' }}</h1>
+          @if (sourceIdea(); as idea) {
+            <p class="from-idea small">
+              Bu template bir topluluk fikrinden oluşturuluyor. Kaydedince fikir "kataloğa eklendi" olarak işaretlenir.
+              @if (idea.flags.length) { <br />Otomatik tarama: {{ idea.flags.join(' · ') }} }
+            </p>
+          }
           @if (template(); as t) {
             <div class="row wrap">
               <span [class]="'pill pill--' + safetyMeta(t.safety).tone">{{ safetyMeta(t.safety).label }}</span>
@@ -268,11 +275,16 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
     .toggle input { width: 20px; height: 20px; accent-color: var(--primary); }
     .check { padding: 12px 14px; border-radius: var(--radius-md); background: var(--xp-soft); color: var(--xp-ink); font-size: var(--fs-sm); display: flex; flex-direction: column; gap: 6px; }
     .check--ok { background: var(--success-soft); color: var(--success); }
+    .from-idea { padding: 10px 12px; border-radius: var(--radius-md); background: var(--info-soft); color: var(--ink-2); font-weight: 700; }
   `,
 })
 export class AdminTemplatePage implements OnInit {
   /** Rota parametresi; "yeni" rotasında tanımsızdır. */
   readonly id = input<string>();
+
+  /** Topluluk fikrinden oluşturma: ?fikir={id}. Form fikirle ön doldurulur, kayıtta fikir kabul edilir. */
+  readonly fikir = input<string>();
+  protected readonly sourceIdea = signal<AdminIdea | null>(null);
 
   private readonly api = inject(AdminApi);
   private readonly catalogApi = inject(CatalogApi);
@@ -337,10 +349,16 @@ export class AdminTemplatePage implements OnInit {
 
   ngOnInit(): void {
     const id = this.id();
-    forkJoin({ interests: this.catalogApi.interests(), template: id ? this.api.template(id) : of(null) }).subscribe({
-      next: ({ interests, template }) => {
+    const ideaId = id ? undefined : this.fikir();
+    forkJoin({
+      interests: this.catalogApi.interests(),
+      template: id ? this.api.template(id) : of(null),
+      idea: ideaId ? this.api.idea(ideaId) : of(null),
+    }).subscribe({
+      next: ({ interests, template, idea }) => {
         this.interests.set(interests);
         if (template) this.fill(template);
+        if (idea) this.fillFromIdea(idea);
         this.ready.set(true);
       },
       error: (err: unknown) => this.loadError.set(firstErrorMessage(err)),
@@ -408,7 +426,7 @@ export class AdminTemplatePage implements OnInit {
     this.saveError.set(null);
     const request = current
       ? this.api.updateTemplate(current.id, current.version, this.input())
-      : this.api.createTemplate(this.input());
+      : this.api.createTemplate(this.input(), this.sourceIdea()?.status === 'Pending' ? this.sourceIdea()!.id : null);
 
     request.subscribe({
       next: (saved) => {
@@ -497,6 +515,23 @@ export class AdminTemplatePage implements OnInit {
     this.fieldErrors.set({});
   }
 
+  private fillFromIdea(idea: AdminIdea): void {
+    this.sourceIdea.set(idea);
+    const type: QuestType = idea.minutes <= 30 ? 'Daily' : idea.minutes <= 240 ? 'Weekly' : 'Adventure';
+    this.form.patchValue({
+      code: slugify(idea.title),
+      title: idea.title,
+      description: idea.description,
+      category: idea.category,
+      type,
+      minMinutes: Math.max(5, Math.round((idea.minutes * 0.75) / 5) * 5),
+      maxMinutes: idea.minutes,
+      cost: idea.cost,
+      isOutdoor: idea.isOutdoor,
+      dayParts: idea.isOutdoor ? ['Morning', 'Afternoon'] : ['Morning', 'Afternoon', 'Evening'],
+    });
+  }
+
   private setInterests(ids: string[]): void {
     this.selectedIds.set(ids);
     this.form.controls.interestIds.setValue(ids);
@@ -522,4 +557,19 @@ export class AdminTemplatePage implements OnInit {
     this.fieldErrors.set(fields);
     this.saveError.set(general[0] ?? (Object.keys(fields).length ? 'Formdaki hataları düzelt.' : null));
   }
+}
+
+/** Türkçe başlıktan template kodu önerir: "Mahalle Kütüphanesi Turu" → "mahalle-kutuphanesi-turu". */
+export function slugify(title: string): string {
+  const map: Record<string, string> = { ç: 'c', ğ: 'g', ı: 'i', i: 'i', ö: 'o', ş: 's', ü: 'u' };
+  const slug = title
+    .toLocaleLowerCase('tr-TR')
+    .replace(/[çğıiöşü]/g, (ch) => map[ch] ?? ch)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50)
+    .replace(/-+$/g, '');
+  return slug.length >= 3 ? `topluluk-${slug}`.slice(0, 64) : `topluluk-${Date.now()}`;
 }

@@ -25,6 +25,11 @@ public interface IUserQuestRepository : IRepository<UserQuest>
     /// <summary>Tüm zamanlarda tamamlanan template'ler ve son tamamlanma anı (cooldown + novelty).</summary>
     Task<IReadOnlyDictionary<Guid, DateTime>> GetCompletedTemplatesAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Çok sevilen template'ler: en az bir kez 5 puan veya "daha fazla" almış, hiç düşük puan / "daha az" almamış.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetLovedTemplateIdsAsync(Guid userId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<UserQuest>> GetCompletedBetweenAsync(
         Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default);
 

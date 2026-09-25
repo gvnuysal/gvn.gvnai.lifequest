@@ -27,8 +27,9 @@ public sealed class AdminCatalogController(ISender sender) : ApiControllerBase
 
     /// <summary>Yeni template. Editoryal kurallara uymuyorsa NeedsReview olarak kaydedilir ve önerilmez.</summary>
     [HttpPost("templates")]
-    public async Task<IActionResult> Create(TemplateInput template, CancellationToken cancellationToken)
-        => HandleResult(await sender.Send(new CreateTemplateCommand(template), cancellationToken));
+    public async Task<IActionResult> Create(
+        TemplateInput template, [FromQuery] Guid? sourceIdeaId, CancellationToken cancellationToken)
+        => HandleResult(await sender.Send(new CreateTemplateCommand(template, sourceIdeaId), cancellationToken));
 
     [HttpPut("templates/{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateRequest request, CancellationToken cancellationToken)

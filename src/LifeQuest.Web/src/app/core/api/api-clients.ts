@@ -2,6 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
   Achievement,
+  AdminIdea,
+  CreateExperimentRequest,
+  Experiment,
+  ExperimentAction,
+  ExperimentDetail,
+  IdeaRequest,
+  IdeaStatus,
+  MyIdea,
+  SavedQuest,
   AdminAction,
   AdminTemplate,
   AdminTemplateListItem,
@@ -95,6 +104,11 @@ export class ProfileApi {
   deleteAccount(password: string) {
     return this.http.delete<void>(`${API}/profile`, { body: { password } });
   }
+
+  /** KVKK veri taşınabilirliği: tüm veriler JSON dosyası olarak. */
+  exportData() {
+    return this.http.get(`${API}/profile/export`, { responseType: 'blob', observe: 'response' });
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -137,6 +151,53 @@ export class QuestsApi {
 
   feedback(id: string, rating: number | null, preference: FeedbackPreference | null) {
     return this.http.post<QuestFeedbackResult>(`${API}/quests/${id}/feedback`, { rating, preference });
+  }
+
+  save(id: string) {
+    return this.http.post<SavedQuest>(`${API}/quests/${id}/save`, null);
+  }
+
+  /** Yerel saat ("2026-10-03T10:00"); null planı kaldırır. */
+  plan(id: string, plannedAtLocal: string | null) {
+    return this.http.put<Quest>(`${API}/quests/${id}/plan`, { plannedAtLocal });
+  }
+
+  calendar(id: string) {
+    return this.http.get(`${API}/quests/${id}/calendar.ics`, { responseType: 'blob', observe: 'response' });
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class SavedApi {
+  private readonly http = inject(HttpClient);
+
+  list() {
+    return this.http.get<SavedQuest[]>(`${API}/saved`);
+  }
+
+  remove(templateId: string) {
+    return this.http.delete<void>(`${API}/saved/${templateId}`);
+  }
+
+  start(templateId: string) {
+    return this.http.post<Quest>(`${API}/saved/${templateId}/start`, null);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class IdeasApi {
+  private readonly http = inject(HttpClient);
+
+  submit(idea: IdeaRequest) {
+    return this.http.post<MyIdea>(`${API}/ideas`, idea);
+  }
+
+  mine() {
+    return this.http.get<MyIdea[]>(`${API}/ideas/mine`);
+  }
+
+  withdraw(id: string) {
+    return this.http.delete<void>(`${API}/ideas/${id}`);
   }
 }
 
@@ -221,8 +282,10 @@ export class AdminApi {
     return this.http.get<AdminTemplate>(`${API}/admin/templates/${id}`);
   }
 
-  createTemplate(template: TemplateInput) {
-    return this.http.post<AdminTemplate>(`${API}/admin/templates`, template);
+  createTemplate(template: TemplateInput, sourceIdeaId?: string | null) {
+    return this.http.post<AdminTemplate>(`${API}/admin/templates`, template, {
+      params: sourceIdeaId ? { sourceIdeaId } : {},
+    });
   }
 
   updateTemplate(id: string, version: number, template: TemplateInput) {
@@ -256,6 +319,38 @@ export class AdminApi {
 
   resetWeights(revision: number, keys: string[] | null, reason: string | null) {
     return this.http.post<RecommendationWeights>(`${API}/admin/recommendation-weights/reset`, { revision, keys, reason });
+  }
+
+  // Deneyler
+  experiments() {
+    return this.http.get<Experiment[]>(`${API}/admin/experiments`);
+  }
+
+  experiment(id: string) {
+    return this.http.get<ExperimentDetail>(`${API}/admin/experiments/${id}`);
+  }
+
+  createExperiment(request: CreateExperimentRequest) {
+    return this.http.post<Experiment>(`${API}/admin/experiments`, request);
+  }
+
+  changeExperiment(id: string, action: ExperimentAction, reason: string | null) {
+    return this.http.post<Experiment>(`${API}/admin/experiments/${id}/${action}`, { reason });
+  }
+
+  // Topluluk fikirleri
+  ideas(status: IdeaStatus | null, pageNumber: number) {
+    const params: Record<string, string | number> = { pageNumber, pageSize: 20 };
+    if (status) params['status'] = status;
+    return this.http.get<PagedResult<AdminIdea>>(`${API}/admin/ideas`, { params });
+  }
+
+  idea(id: string) {
+    return this.http.get<AdminIdea>(`${API}/admin/ideas/${id}`);
+  }
+
+  rejectIdea(id: string, note: string) {
+    return this.http.post<AdminIdea>(`${API}/admin/ideas/${id}/reject`, { note });
   }
 
   // Denetim

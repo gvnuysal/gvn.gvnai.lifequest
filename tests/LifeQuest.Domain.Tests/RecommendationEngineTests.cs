@@ -283,6 +283,29 @@ public sealed class RecommendationEngineTests
     }
 
     [Fact]
+    public void A_loved_experience_comes_back_after_its_cooldown_with_a_reason()
+    {
+        var loved = Candidate("loved-film", LifeCategory.Culture, [Art], cooldownDays: 14);
+        var ordinary = Candidate("ordinary-film", LifeCategory.Culture, [Art], cooldownDays: 14);
+        var items = new[] { Completed(loved, 20, rating: 5), Completed(ordinary, 20, rating: 3) };
+
+        var withLove = _engine.Recommend([loved, ordinary], Profile(new() { [Art] = 0.8 }),
+            History(items, loved: [loved.TemplateId]), Graph, Context(count: 2));
+        var lovedItem = withLove.Items.Single(i => i.Candidate.Code == "loved-film");
+        var ordinaryItem = withLove.Items.Single(i => i.Candidate.Code == "ordinary-film");
+
+        Assert.Equal(new RecommendationWeights().LovedRepeatNovelty, lovedItem.Score.Novelty);
+        Assert.Equal(0.2, ordinaryItem.Score.Novelty);
+        Assert.Equal("loved-film", withLove.Items[0].Candidate.Code);
+        Assert.Contains(lovedItem.Reasons, r => r.Code == ReasonCode.LovedBefore);
+
+        // Cooldown sevilen deneyimde de geçerlidir.
+        var tooSoon = _engine.Recommend([loved], Profile(new() { [Art] = 0.8 }),
+            History([Completed(loved, 3, rating: 5)], loved: [loved.TemplateId]), Graph, Context(count: 1));
+        Assert.Empty(tooSoon.Items);
+    }
+
+    [Fact]
     public void Same_input_and_seed_produce_same_recommendations()
     {
         var candidates = Enumerable.Range(0, 10)

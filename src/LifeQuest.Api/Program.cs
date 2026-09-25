@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using System.Text.Json.Serialization;
 using Gvn.GvnFramework.AspNetCore.Extensions;
@@ -68,6 +69,20 @@ builder.Services.AddHealthChecks().AddDbContextCheck<LifeQuestDbContext>("databa
 var app = builder.Build();
 
 await app.Services.InitializeLifeQuestDatabaseAsync();
+
+// Ters proxy (nginx) arkasında: gerçek istemci IP'si rate limit için X-Forwarded-For'dan okunur.
+// Yalnızca API doğrudan internete açık olmadığında (compose "app" profili) etkinleştirilmelidir.
+if (configuration.GetValue("ReverseProxy:Enabled", false))
+{
+    var forwarded = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        ForwardLimit = 1
+    };
+    forwarded.KnownIPNetworks.Clear();
+    forwarded.KnownProxies.Clear();
+    app.UseForwardedHeaders(forwarded);
+}
 
 app.UseGvnCorrelationId();
 app.UseMiddleware<CorrelationIdLogContextMiddleware>();

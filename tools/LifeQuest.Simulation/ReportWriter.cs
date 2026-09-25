@@ -114,6 +114,12 @@ internal static partial class Report
         foreach (var ((p, before), (_, after)) in d.Tuning.PersonasBefore.Zip(d.Personas))
             md.AppendLine($"| {p.Name} | {p.Radius} | {Pct(before.Precision)} → {Pct(after.Precision)} | {before.NorthStar:0.00} → {after.NorthStar:0.00} | {Pct(before.HiddenDiscovery)} → {Pct(after.HiddenDiscovery)} |");
         md.AppendLine();
+        md.AppendLine("### Sevdiğini tekrarla");
+        md.AppendLine();
+        md.AppendLine($"5 puan (veya \"daha fazla\") verilen template cooldown bittikten sonra 0,2 yerine bu yenilik skoruyla yeniden önerilebilir. " +
+                      $"0,2 özelliğin kapalı olması demektir. Üretim değeri **{d.Tuning.ProductionLovedNovelty:0.0}**.");
+        md.AppendLine();
+        Table(md, d.Tuning.LovedSweep);
         md.AppendLine("### Erişilebilirlik: hareket kısıtı olan persona");
         md.AppendLine();
         md.AppendLine("| Senaryo | Kapasitesini aşan öneri | İsabet | North-star / hafta |");

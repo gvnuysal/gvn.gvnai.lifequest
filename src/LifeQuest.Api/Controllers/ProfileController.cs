@@ -4,6 +4,8 @@ using LifeQuest.Application.Profiles;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using LifeQuest.Api.Infrastructure;
 
 namespace LifeQuest.Api.Controllers;
 
@@ -31,4 +33,15 @@ public sealed class ProfileController(ISender sender) : ApiControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteAccount(DeleteAccountCommand command, CancellationToken cancellationToken)
         => HandleResult(await sender.Send(command, cancellationToken));
+
+    /// <summary>KVKK/GDPR veri taşınabilirliği: tüm verilerini JSON dosyası olarak indirir (saatte 3 istek).</summary>
+    [HttpGet("export")]
+    [EnableRateLimiting(RateLimitingExtensions.ExportPolicy)]
+    public async Task<IActionResult> Export(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new ExportMyDataQuery(), cancellationToken);
+        return result.Succeeded
+            ? File(result.Data!.Content, "application/json", result.Data.FileName)
+            : HandleResult(result);
+    }
 }

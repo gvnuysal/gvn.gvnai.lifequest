@@ -52,14 +52,23 @@ public enum AdminAction
     TemplateActivated = 13,
     TemplateDeactivated = 14,
     WeightsUpdated = 20,
-    WeightsReset = 21
+    WeightsReset = 21,
+    ExperimentCreated = 30,
+    ExperimentStarted = 31,
+    ExperimentStopped = 32,
+    ExperimentAdopted = 33,
+    ExperimentDiscarded = 34,
+    IdeaRejected = 40,
+    IdeaAccepted = 41
 }
 
 public enum AdminTargetType
 {
     User = 1,
     QuestTemplate = 2,
-    RecommendationSettings = 3
+    RecommendationSettings = 3,
+    Experiment = 4,
+    QuestIdea = 5
 }
 
 public static class EmailMask

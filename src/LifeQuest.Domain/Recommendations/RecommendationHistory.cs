@@ -17,16 +17,21 @@ public sealed class RecommendationHistory
     /// <summary>Tüm zamanlarda en az bir kez tamamlanmış kategoriler.</summary>
     public IReadOnlySet<LifeCategory> CompletedCategories { get; }
 
+    /// <summary>Tüm zamanlarda 5 puan veya "daha fazla" geri bildirimi almış template'ler.</summary>
+    public IReadOnlySet<Guid> LovedTemplates { get; }
+
     public RecommendationHistory(
         IEnumerable<QuestHistoryItem> recentItems,
         IEnumerable<Guid> activeTemplateIds,
         IReadOnlyDictionary<Guid, DateTime> completedTemplates,
-        IEnumerable<LifeCategory> completedCategories)
+        IEnumerable<LifeCategory> completedCategories,
+        IEnumerable<Guid>? lovedTemplates = null)
     {
         Items = recentItems.ToList();
         ActiveTemplateIds = activeTemplateIds.ToHashSet();
         CompletedTemplates = completedTemplates;
         CompletedCategories = completedCategories.ToHashSet();
+        LovedTemplates = (lovedTemplates ?? []).ToHashSet();
     }
 
     public IEnumerable<QuestHistoryItem> Since(DateTime utc) => Items.Where(i => i.LastActivityAt >= utc);
