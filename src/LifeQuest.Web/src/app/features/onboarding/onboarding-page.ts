@@ -26,6 +26,7 @@ import { InterestPicker } from '../../ui/interest-picker';
 import { OptionCard } from '../../ui/option-card';
 import { Skeleton } from '../../ui/states';
 import { HOME_PATH } from '../../core/routing/app-paths';
+import { consumeDestination } from '../../core/routing/pending-destination';
 
 const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütçe', 'Keşif modu'] as const;
 
@@ -297,7 +298,7 @@ export class OnboardingPage {
       .subscribe({
         next: (profile) => {
           this.profiles.set(profile);
-          void this.router.navigate([HOME_PATH]);
+          void this.router.navigateByUrl(consumeDestination() ?? HOME_PATH);
         },
         error: (err: unknown) => {
           this.toast.error(firstErrorMessage(err));

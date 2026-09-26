@@ -185,6 +185,42 @@ export interface QuestDetail {
   reasonCodes: string[];
   /** Kullanıcının şehrinde bu göreve bağlı mekân ve yaklaşan etkinlikler (yalnızca açık görevlerde). */
   nearbyPlaces: NearbyPlace[];
+  party: Party | null;
+}
+
+export type PartyStatus = 'Open' | 'Completed';
+
+export interface PartyMember {
+  displayName: string;
+  isHost: boolean;
+  isYou: boolean;
+  completed: boolean;
+  dropped: boolean;
+  bonusXp: number;
+}
+
+export interface Party {
+  inviteCode: string;
+  questTitle: string;
+  category: LifeCategory;
+  status: PartyStatus;
+  expiresAt: string;
+  maxMembers: number;
+  isJoinable: boolean;
+  members: PartyMember[];
+}
+
+export interface PartyInvite {
+  inviteCode: string;
+  questTitle: string;
+  category: LifeCategory;
+  hostName: string;
+  memberCount: number;
+  maxMembers: number;
+  expiresAt: string;
+  isMember: boolean;
+  isJoinable: boolean;
+  myQuestId: string | null;
 }
 
 export type OutdoorWeather = 'Unknown' | 'Good' | 'Poor';
@@ -233,6 +269,8 @@ export interface QuestCompletion {
   lifeLevel: number;
   leveledUp: boolean;
   newAchievements: Achievement[];
+  /** Quest Party bu tamamlamayla bittiyse kazanılan "birlikte" XP'si. */
+  partyBonusXp: number;
 }
 
 export interface QuestFeedbackResult {

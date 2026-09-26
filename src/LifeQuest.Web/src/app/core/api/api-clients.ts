@@ -10,6 +10,8 @@ import {
   ExperimentPreset,
   AdminPlace,
   AdminPlaceRequest,
+  Party,
+  PartyInvite,
   PushSettings,
   PushSubscriptionRequest,
   IdeaRequest,
@@ -253,6 +255,28 @@ export class SummariesApi {
 
   markRead(id: string) {
     return this.http.post<void>(`${API}/summaries/${id}/read`, null);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class PartiesApi {
+  private readonly http = inject(HttpClient);
+
+  /** Kabul edilmiş görev için davet; zaten varsa aynı parti döner. */
+  create(questId: string) {
+    return this.http.post<Party>(`${API}/quests/${questId}/party`, null);
+  }
+
+  invite(code: string) {
+    return this.http.get<PartyInvite>(`${API}/parties/${encodeURIComponent(code)}`);
+  }
+
+  join(code: string) {
+    return this.http.post<PartyInvite>(`${API}/parties/${encodeURIComponent(code)}/join`, null);
+  }
+
+  leave(code: string) {
+    return this.http.delete<void>(`${API}/parties/${encodeURIComponent(code)}/members/me`);
   }
 }
 

@@ -50,7 +50,9 @@ public sealed class UnlockedAchievement : Entity
 
 public enum XpSourceType
 {
-    Quest = 1
+    Quest = 1,
+    /// <summary>Quest Party "birlikte" bonusu; kaynak üyenin kendi görevidir (görev başına bir kez).</summary>
+    PartyBonus = 2
 }
 
 /// <summary>

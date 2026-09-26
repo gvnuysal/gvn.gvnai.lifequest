@@ -74,6 +74,23 @@ public sealed class PlayerProgress : AggregateRoot
         return new RewardOutcome(transaction, previousLevel, LifeLevel, EvaluateAchievements(nowUtc));
     }
 
+    /// <summary>Quest Party bonusu: Life XP ve görevin kategorisine eklenir, tamamlama sayısını artırmaz.</summary>
+    public XpTransaction ApplyPartyBonus(Guid userQuestId, string questTitle, LifeCategory category, int xp, DateTime nowUtc)
+    {
+        LifeXp += xp;
+        var previousLevel = LifeLevel;
+        LifeLevel = LevelCurve.LevelForXp(LifeXp, LevelCurve.LifeBase);
+        if (LifeLevel > previousLevel)
+            AddDomainEvent(new LifeLevelUpEvent(UserId, LifeLevel));
+
+        var primary = CategoryOf(category);
+        if (primary.AddXp(xp, countsAsCompletion: false))
+            AddDomainEvent(new CategoryLevelUpEvent(UserId, primary.Category, primary.Level));
+
+        return new XpTransaction(UserId, XpSourceType.PartyBonus, userQuestId, $"Birlikte: {questTitle}",
+            xp, category, xp, null, 0, nowUtc);
+    }
+
     public IReadOnlyList<AchievementDefinition> RegisterFeedback(DateTime nowUtc)
     {
         FeedbackCount++;

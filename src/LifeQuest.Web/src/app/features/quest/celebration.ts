@@ -28,6 +28,9 @@ export interface FeedbackSubmission {
       <h2 id="celebration-title">{{ completion().alreadyCompleted ? 'Bu quest zaten tamamlanmış' : 'Harika, tamamladın!' }}</h2>
       @if (!completion().alreadyCompleted) {
         <p class="xp">+{{ shownXp() }} <span>XP</span></p>
+        @if (completion().partyBonusXp) {
+          <p class="level-up"><lq-icon name="users" [size]="18" /> Parti tamamlandı: +{{ completion().partyBonusXp }} "birlikte" XP!</p>
+        }
         @if (completion().leveledUp) {
           <p class="level-up"><lq-icon name="star" [size]="18" [strokeWidth]="2.6" /> Seviye {{ completion().lifeLevel }}'e ulaştın!</p>
         }

@@ -40,6 +40,7 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
     public DbSet<Experiment> Experiments => Set<Experiment>();
     public DbSet<QuestIdea> QuestIdeas => Set<QuestIdea>();
     public DbSet<SavedQuest> SavedQuests => Set<SavedQuest>();
+    public DbSet<LifeQuest.Domain.Social.QuestParty> QuestParties => Set<LifeQuest.Domain.Social.QuestParty>();
     public DbSet<LifeQuest.Domain.RealWorld.LocalPlace> LocalPlaces => Set<LifeQuest.Domain.RealWorld.LocalPlace>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,6 +92,7 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
         StoreAsString<ExperimentVariant>(configurationBuilder);
         StoreAsString<IdeaStatus>(configurationBuilder);
         StoreAsString<LifeQuest.Domain.RealWorld.LocalPlaceKind>(configurationBuilder);
+        StoreAsString<LifeQuest.Domain.Social.PartyStatus>(configurationBuilder);
     }
 
     private static void StoreAsString<TEnum>(ModelConfigurationBuilder builder) where TEnum : struct, Enum

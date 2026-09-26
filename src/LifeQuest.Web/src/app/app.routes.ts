@@ -37,6 +37,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage),
       },
       {
+        path: 'party/:code',
+        title: 'Quest Party · LifeQuest',
+        loadComponent: () => import('./features/party/party-page').then((m) => m.PartyPage),
+      },
+      {
         path: 'saved',
         title: 'Sonra yaparım · LifeQuest',
         loadComponent: () => import('./features/saved/saved-page').then((m) => m.SavedPage),

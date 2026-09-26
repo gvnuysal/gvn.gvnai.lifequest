@@ -120,7 +120,8 @@ public sealed class QuestOfferService(
     /// "Sonra yaparım" listesinden başlatma: tek template motorun uygunluk filtrelerinden (cooldown, efor, açık
     /// görev…) geçirilir ve skor dökümüyle birlikte kabul edilmiş bir quest olarak oluşturulur.
     /// </summary>
-    public async Task<Result<UserQuest>> StartTemplateAsync(Guid userId, Guid templateId, CancellationToken cancellationToken)
+    public async Task<Result<UserQuest>> StartTemplateAsync(
+        Guid userId, Guid templateId, CancellationToken cancellationToken, QuestSource source = QuestSource.Saved)
     {
         var profile = await profiles.GetByUserIdAsync(userId, cancellationToken);
         if (profile is null)
@@ -144,13 +145,13 @@ public sealed class QuestOfferService(
         if (result.IsEmpty)
             return Result<UserQuest>.Fail(QuestErrors.NotOfferableNow(result.FilteredOut.Keys.FirstOrDefault() ?? string.Empty));
 
-        var quest = await ToQuestAsync(result.Items[0], input, QuestSource.Saved, today, SavedSlot, nowUtc, nowUtc.AddHours(1), cancellationToken);
+        var quest = await ToQuestAsync(result.Items[0], input, source, today, SavedSlot, nowUtc, nowUtc.AddHours(1), cancellationToken);
         var accepted = quest.Accept(nowUtc);
         if (!accepted.Succeeded)
             return Result<UserQuest>.Fail(accepted.Errors);
 
         await quests.AddAsync(quest, cancellationToken);
-        metrics.Offered(QuestSource.Saved, 1);
+        metrics.Offered(source, 1);
         metrics.Accepted(quest.Category);
         return Result<UserQuest>.Ok(quest);
     }

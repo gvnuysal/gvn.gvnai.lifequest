@@ -64,6 +64,10 @@
       }
     </section>
 
+    @if (q.status === 'Accepted' || detail()?.party) {
+      <lq-party-card [quest]="q" [party]="detail()?.party ?? null" (created)="partyCreated($event)" />
+    }
+
     @if (detail()?.nearbyPlaces?.length) {
       <section class="nearby surface" aria-labelledby="nearby-title">
         <h2 id="nearby-title" class="nearby__title"><lq-icon name="map-pin" [size]="18" /> Şehrinde</h2>

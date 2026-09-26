@@ -33,7 +33,10 @@ public enum QuestSource
     OnDemand = 2,
 
     /// <summary>Kullanıcının "sonra yaparım" listesinden başlattığı quest.</summary>
-    Saved = 3
+    Saved = 3,
+
+    /// <summary>Quest Party davetiyle katılınan quest.</summary>
+    Party = 4
 }
 
 public enum FeedbackPreference

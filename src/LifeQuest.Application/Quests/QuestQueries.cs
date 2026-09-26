@@ -35,6 +35,7 @@ internal sealed class GetQuestQueryHandler(
     IUserQuestRepository quests,
     IUserProfileRepository profiles,
     ILocalPlaceRepository places,
+    Domain.Social.IQuestPartyRepository parties,
     IUserContext user,
     TimeProvider clock)
     : IQueryHandler<GetQuestQuery, QuestDetailDto>
@@ -52,7 +53,9 @@ internal sealed class GetQuestQueryHandler(
                 .Select(NearbyPlaceDto.From)
                 .ToList();
 
-        return Result<QuestDetailDto>.Ok(new QuestDetailDto(quest.ToDto(), quest.Score, quest.ReasonCodes, nearby));
+        var party = await parties.GetByUserQuestAsync(quest.Id, cancellationToken);
+        return Result<QuestDetailDto>.Ok(new QuestDetailDto(quest.ToDto(), quest.Score, quest.ReasonCodes, nearby,
+            party is null ? null : Social.PartyMapping.ToDto(party, user.UserId, clock.GetUtcNow().UtcDateTime)));
     }
 }
 

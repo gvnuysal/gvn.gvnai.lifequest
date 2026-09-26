@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<DailyReminderService>();
         services.AddScoped<QuestNarrationService>();
         services.AddScoped<RealWorld.RealWorldContextService>();
+        services.AddScoped<Social.PartyService>();
         services.AddScoped<Admin.AdminAuditWriter>();
 
         // AI Quest Master portu: gerçek bir LLM adaptörü Infrastructure'da kaydedilirse onu kullanır.

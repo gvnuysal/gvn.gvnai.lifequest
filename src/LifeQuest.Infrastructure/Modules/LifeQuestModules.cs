@@ -119,6 +119,7 @@ public sealed class NotificationModule : IModule
 
         // Gerçek dünya bağlamı: hava durumu (Open-Meteo) ve yöneticinin girdiği mekân/etkinlikler.
         services.AddScoped<ILocalPlaceRepository, LocalPlaceRepository>();
+        services.AddScoped<LifeQuest.Domain.Social.IQuestPartyRepository, QuestPartyRepository>();
         services.AddOptions<WeatherOptions>().BindConfiguration(WeatherOptions.SectionName);
         services.AddHttpClient<IWeatherProvider, OpenMeteoWeatherProvider>(client => client.Timeout = TimeSpan.FromSeconds(4));
         services.AddHttpClient<IPushSender, WebPushSender>(client => client.Timeout = TimeSpan.FromSeconds(15));

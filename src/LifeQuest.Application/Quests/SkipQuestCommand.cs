@@ -22,6 +22,7 @@ internal sealed class SkipQuestCommandHandler(
     IUserContext user,
     IUnitOfWork unitOfWork,
     LifeQuestMetrics metrics,
+    Social.PartyService parties,
     TimeProvider clock) : ICommandHandler<SkipQuestCommand, QuestDto>
 {
     public async Task<Result<QuestDto>> Handle(SkipQuestCommand command, CancellationToken cancellationToken)
@@ -43,8 +44,11 @@ internal sealed class SkipQuestCommandHandler(
             profile?.AdjustInterests(quest.InterestIds, InterestLearning.NotInterestedDelta, now);
         }
 
+        var settlement = wasOpen ? await parties.OnQuestResolvedAsync(quest, now, cancellationToken) : null;
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
         if (wasOpen) metrics.Skipped(command.Reason);
+        await parties.NotifyAsync(settlement, cancellationToken);
 
         return Result<QuestDto>.Ok(quest.ToDto());
     }
