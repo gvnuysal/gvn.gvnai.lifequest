@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static LifeQuest.Api.IntegrationTests.LifeQuestApiFactory;
 
@@ -97,6 +98,32 @@ public sealed class LocalizationApiTests(LifeQuestApiFactory factory)
 
         var xp = await client.GetFromJsonAsync<JsonElement>("/api/v1/progress", Json);
         Assert.Contains(xp.GetProperty("categories").EnumerateArray(), c => c.GetProperty("displayName").GetString() == "Movement");
+    }
+
+    [Fact]
+    public async Task Catalog_sync_backfills_english_for_quests_given_before_localization()
+    {
+        var client = await EnglishUserAsync();
+        var english = LifeQuest.Infrastructure.Persistence.Seed.CatalogSeedTranslations.Templates.Values.Select(t => t.Title).ToHashSet();
+        var ids = (await client.GetFromJsonAsync<JsonElement>("/api/v1/quests/today", Json))
+            .GetProperty("quests").EnumerateArray().Select(q => q.GetProperty("id").GetGuid()).ToList();
+
+        // Yerelleştirme öncesi kopya: yalnızca Türkçe.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<LifeQuest.Infrastructure.Persistence.LifeQuestDbContext>();
+            await db.UserQuests.Where(q => ids.Contains(q.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(q => q.TitleEn, (string?)null).SetProperty(q => q.DescriptionEn, (string?)null));
+        }
+
+        var before = await client.GetFromJsonAsync<JsonElement>($"/api/v1/quests/{ids[0]}", Json);
+        Assert.DoesNotContain(before.GetProperty("quest").GetProperty("title").GetString()!, english);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<LifeQuest.Infrastructure.Persistence.Seed.CatalogSeeder>().SeedAsync();
+
+        var after = await client.GetFromJsonAsync<JsonElement>($"/api/v1/quests/{ids[0]}", Json);
+        Assert.Contains(after.GetProperty("quest").GetProperty("title").GetString()!, english);
     }
 
     [Fact]

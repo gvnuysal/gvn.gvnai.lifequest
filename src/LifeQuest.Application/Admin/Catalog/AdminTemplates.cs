@@ -33,12 +33,15 @@ public sealed record TemplateInput(
     double RiskScore,
     IReadOnlyList<Guid> InterestIds,
     PhysicalEffort Effort,
-    bool IsStarter)
+    bool IsStarter,
+    string? TitleEn = null,
+    string? DescriptionEn = null)
 {
     public QuestTemplateSpec ToSpec() => new(
         Code.Trim(), Title.Trim(), Description.Trim(), Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
         Cost, DayParts.Aggregate(DayPart.None, (all, p) => all | p), RequiresCity, IsOutdoor, CooldownDays,
-        Math.Round(RiskScore, 2), InterestIds.Distinct().ToList(), Effort, IsStarter);
+        Math.Round(RiskScore, 2), InterestIds.Distinct().ToList(), Effort, IsStarter,
+        string.IsNullOrWhiteSpace(TitleEn) ? null : TitleEn.Trim(), string.IsNullOrWhiteSpace(DescriptionEn) ? null : DescriptionEn.Trim());
 }
 
 /// <summary>
@@ -53,6 +56,9 @@ public sealed class TemplateInputValidator : AbstractValidator<TemplateInput>
             .WithMessage(_ => Text.Of("Kod 3-64 karakter; küçük harf, rakam ve tire içermelidir.", "The code must be 3-64 characters of lowercase letters, digits and hyphens."));
         RuleFor(x => x.Title).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(1000);
+        // İngilizce isteğe bağlı: boşsa İngilizce kullanıcı Türkçe metni görür.
+        RuleFor(x => x.TitleEn).MaximumLength(150);
+        RuleFor(x => x.DescriptionEn).MaximumLength(1000);
         RuleFor(x => x.Type).IsInEnum();
         RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Category).IsInEnum();
@@ -96,7 +102,9 @@ public sealed record AdminTemplateDto(
     bool IsActive,
     EditorialSource Source,
     int Version,
-    IReadOnlyList<string> Violations);
+    IReadOnlyList<string> Violations,
+    string? TitleEn = null,
+    string? DescriptionEn = null);
 
 public sealed record AdminTemplateListItem(
     Guid Id,
@@ -120,11 +128,12 @@ internal static class AdminTemplateMapping
     public static AdminTemplateDto ToAdminDto(this QuestTemplate t) => new(
         t.Id, t.Code, t.Title, t.Description, t.Type, t.Difficulty, t.Category, t.SecondaryCategory, t.MinMinutes, t.MaxMinutes,
         t.Cost, Split(t.DayParts), t.RequiresCity, t.IsOutdoor, t.CooldownDays, t.RiskScore, t.InterestIds, t.Effort,
-        t.IsStarter, t.Safety, t.IsActive, t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()));
+        t.IsStarter, t.Safety, t.IsActive, t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()),
+        t.TitleEn, t.DescriptionEn);
 
     public static AdminTemplateListItem ToListItem(this QuestTemplate t) => new(
-        t.Id, t.Code, t.Title, t.Category, t.Type, t.Cost, t.Safety, t.IsActive, t.Source, t.Version,
-        CatalogSafetyRules.ValidateTemplate(t.ToSpec()).Count);
+        t.Id, t.Code, LocalizedText.WithFallback(t.Title, t.TitleEn).Current, t.Category, t.Type, t.Cost, t.Safety, t.IsActive,
+        t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()).Count);
 
     /// <summary>Blocked admin kararıdır ve korunur; diğer durumlarda kurallar Safe / NeedsReview'u belirler.</summary>
     public static SafetyLevel SafetyFor(IReadOnlyList<string> violations, SafetyLevel current)
@@ -231,7 +240,7 @@ internal sealed class GetCatalogHealthQueryHandler(
     public async Task<Result<CatalogHealthDto>> Handle(GetCatalogHealthQuery query, CancellationToken cancellationToken)
     {
         var specs = await templates.GetOfferableSpecsAsync(cancellationToken);
-        var interests = (await catalog.GetInterestsAsync(cancellationToken)).ToDictionary(i => i.Id, i => i.Name);
+        var interests = (await catalog.GetInterestsAsync(cancellationToken)).ToDictionary(i => i.Id, i => i.DisplayName());
         var total = Math.Max(1, specs.Count);
 
         return Result<CatalogHealthDto>.Ok(new CatalogHealthDto(

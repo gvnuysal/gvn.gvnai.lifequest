@@ -451,6 +451,9 @@ export interface TemplateInput {
   interestIds: string[];
   effort: PhysicalEffort;
   isStarter: boolean;
+  /** İngilizce başlık/açıklama; boşsa İngilizce kullanıcı Türkçeyi görür. */
+  titleEn?: string | null;
+  descriptionEn?: string | null;
 }
 
 export interface AdminTemplate extends TemplateInput {

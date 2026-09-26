@@ -129,6 +129,7 @@ export const format = section(
     hoursLeft: (n: number) => `${n} saat kaldı`,
     daysLeft: (n: number) => `${n} gün kaldı`,
     greetings: { night: 'İyi geceler', morning: 'Günaydın', day: 'İyi günler', evening: 'İyi akşamlar' },
+    percent: (n: number) => `%${n}`,
   },
   {
     min: 'min',
@@ -138,5 +139,6 @@ export const format = section(
     hoursLeft: (n: number) => `${n} ${n === 1 ? 'hour' : 'hours'} left`,
     daysLeft: (n: number) => `${n} ${n === 1 ? 'day' : 'days'} left`,
     greetings: { night: 'Good night', morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening' },
+    percent: (n: number) => `${n}%`,
   },
 );

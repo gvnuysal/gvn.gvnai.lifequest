@@ -10,6 +10,16 @@ import { quest } from './sections/quest';
 import { celebration, party } from './sections/party';
 import { ideas, progress, saved } from './sections/pages';
 import { profile, reminder } from './sections/profile';
+import { adminLabels } from './sections/admin-labels';
+import { admin } from './sections/admin';
+import { adminUsers } from './sections/admin-users';
+import { adminCatalog } from './sections/admin-catalog';
+import { adminIdeas } from './sections/admin-ideas';
+import { adminTemplate } from './sections/admin-template';
+import { adminExperiments } from './sections/admin-experiments';
+import { adminExperiment } from './sections/admin-experiment';
+import { adminAudit, adminWeights } from './sections/admin-misc';
+import { adminPlaces } from './sections/admin-places';
 import { currentLang } from './lang';
 
 /** Türkçe sözlük: tüm bölümler. Tipi İngilizce sözlüğün sözleşmesidir. */
@@ -34,6 +44,17 @@ export const TR = {
   ideas: ideas.tr,
   profile: profile.tr,
   reminder: reminder.tr,
+  adminLabels: adminLabels.tr,
+  admin: admin.tr,
+  adminUsers: adminUsers.tr,
+  adminCatalog: adminCatalog.tr,
+  adminIdeas: adminIdeas.tr,
+  adminTemplate: adminTemplate.tr,
+  adminExperiments: adminExperiments.tr,
+  adminExperiment: adminExperiment.tr,
+  adminWeights: adminWeights.tr,
+  adminAudit: adminAudit.tr,
+  adminPlaces: adminPlaces.tr,
 };
 
 export type Dictionary = typeof TR;
@@ -59,6 +80,17 @@ export const EN: Dictionary = {
   ideas: ideas.en,
   profile: profile.en,
   reminder: reminder.en,
+  adminLabels: adminLabels.en,
+  admin: admin.en,
+  adminUsers: adminUsers.en,
+  adminCatalog: adminCatalog.en,
+  adminIdeas: adminIdeas.en,
+  adminTemplate: adminTemplate.en,
+  adminExperiments: adminExperiments.en,
+  adminExperiment: adminExperiment.en,
+  adminWeights: adminWeights.en,
+  adminAudit: adminAudit.en,
+  adminPlaces: adminPlaces.en,
 };
 
 /**

@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApi } from '../../core/api/api-clients';
@@ -20,24 +21,21 @@ import { WEIGHT_GROUPS } from './admin-labels';
   template: `
     <section class="section">
       <header class="stack">
-        <h1>Öneri ayarları</h1>
-        <p class="muted">
-          Değişiklikler kaydedildiği an yeni önerilerde kullanılır. Bugün için üretilmiş günlük öneriler değişmez;
-          yeni ağırlıklar yarının önerilerinde ve bağlamsal önerilerde hemen geçerli olur.
-        </p>
+        <h1>{{ t().adminWeights.title }}</h1>
+        <p class="muted">{{ t().adminWeights.lead }}</p>
         <p class="tip small">
-          Büyük değişiklikleri önce offline simülasyonla dene:
+          {{ t().adminWeights.tip }}
           <code>dotnet run --project tools/LifeQuest.Simulation</code>
         </p>
         @if (weights(); as w) {
           @if (w.updatedAt) {
-            <p class="muted small">Son değişiklik: {{ date(w.updatedAt) }} · {{ w.updatedBy }}</p>
+            <p class="muted small">{{ t().adminWeights.lastChange(date(w.updatedAt), w.updatedBy ?? '') }}</p>
           }
         }
       </header>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Ayarlar yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminWeights.loadFailed" [message]="error()" />
       } @else if (weights()) {
         @for (group of groups(); track group.value) {
           <section class="surface card" [attr.aria-labelledby]="'g-' + group.value">
@@ -50,8 +48,8 @@ import { WEIGHT_GROUPS } from './admin-labels';
                 <div class="weight__head">
                   <label [for]="field.key">{{ field.label }}</label>
                   <div class="row">
-                    @if (field.isOverridden && !isChanged(field)) { <span class="pill pill--brand">Özel</span> }
-                    @if (isChanged(field)) { <span class="pill pill--warning">Kaydedilmedi</span> }
+                    @if (field.isOverridden && !isChanged(field)) { <span class="pill pill--brand">{{ t().adminWeights.custom }}</span> }
+                    @if (isChanged(field)) { <span class="pill pill--warning">{{ t().adminWeights.unsaved }}</span> }
                   </div>
                 </div>
                 <div class="weight__controls">
@@ -61,9 +59,9 @@ import { WEIGHT_GROUPS } from './admin-labels';
                          [ngModel]="valueOf(field)" (ngModelChange)="set(field, $event)" />
                 </div>
                 <p class="muted small">
-                  {{ field.description }} · Varsayılan {{ format(field, field.defaultValue) }} · {{ field.min }}–{{ field.max }}
+                  {{ field.description }} · {{ t().adminWeights.defaultValue(format(field, field.defaultValue)) }} · {{ field.min }}–{{ field.max }}
                   @if (valueOf(field) !== field.defaultValue) {
-                    · <button type="button" class="link" (click)="set(field, field.defaultValue)">varsayılana al</button>
+                    · <button type="button" class="link" (click)="set(field, field.defaultValue)">{{ t().adminWeights.toDefault }}</button>
                   }
                 </p>
                 @if (fieldErrors()[field.key]; as e) { <span class="field__error">{{ e }}</span> }
@@ -72,22 +70,22 @@ import { WEIGHT_GROUPS } from './admin-labels';
           </section>
         }
 
-        <section class="surface card save" aria-label="Kaydet">
+        <section class="surface card save" [attr.aria-label]="t().adminWeights.saveAria">
           <div class="field">
-            <label for="reason">Gerekçe</label>
-            <textarea id="reason" class="input" rows="2" maxlength="500" placeholder="Neden değiştiriyorsun? Denetim kaydına yazılır."
+            <label for="reason">{{ t().adminWeights.reason }}</label>
+            <textarea id="reason" class="input" rows="2" maxlength="500" [placeholder]="t().adminWeights.reasonPlaceholder"
                       [(ngModel)]="reason"></textarea>
           </div>
           @if (saveError()) { <p class="field__error" role="alert">{{ saveError() }}</p> }
           <div class="actions">
             <button lq-button [loading]="busy()" [disabled]="!changedCount() || !reason.trim()" (click)="save()">
-              {{ changedCount() ? changedCount() + ' değişikliği kaydet' : 'Değişiklik yok' }}
+              {{ changedCount() ? t().adminWeights.saveChanges(changedCount()) : t().adminWeights.noChanges }}
             </button>
             @if (changedCount()) {
-              <button lq-button variant="soft" (click)="discard()">Vazgeç</button>
+              <button lq-button variant="soft" (click)="discard()">{{ t().adminWeights.discard }}</button>
             }
             @if (overriddenCount() && !changedCount()) {
-              <button lq-button variant="soft" [loading]="busy()" (click)="resetAll()">Tümünü varsayılana döndür</button>
+              <button lq-button variant="soft" [loading]="busy()" (click)="resetAll()">{{ t().adminWeights.resetAll }}</button>
             }
           </div>
         </section>
@@ -116,6 +114,7 @@ import { WEIGHT_GROUPS } from './admin-labels';
   `,
 })
 export class AdminWeightsPage {
+  protected readonly t = t;
   private readonly api = inject(AdminApi);
   private readonly toast = inject(ToastService);
 
@@ -163,7 +162,7 @@ export class AdminWeightsPage {
   }
 
   protected format(field: WeightField, value: number): string {
-    return field.isInteger ? `${value} gün` : value.toFixed(2);
+    return field.isInteger ? t().adminWeights.days(value) : value.toFixed(2);
   }
 
   protected date(value: string): string {
@@ -179,13 +178,13 @@ export class AdminWeightsPage {
   protected save(): void {
     const w = this.weights();
     if (!w || !this.changedCount()) return;
-    this.run(this.api.updateWeights(w.revision, this.changes(), this.reason.trim()), 'Ağırlıklar kaydedildi; yeni öneriler bu değerleri kullanacak.');
+    this.run(this.api.updateWeights(w.revision, this.changes(), this.reason.trim()), t().adminWeights.saved);
   }
 
   protected resetAll(): void {
     const w = this.weights();
     if (!w) return;
-    this.run(this.api.resetWeights(w.revision, null, this.reason.trim() || null), 'Tüm ağırlıklar varsayılana döndü.');
+    this.run(this.api.resetWeights(w.revision, null, this.reason.trim() || null), t().adminWeights.reset);
   }
 
   private run(request: ReturnType<AdminApi['weights']>, message: string): void {
@@ -205,7 +204,7 @@ export class AdminWeightsPage {
         const errors = parseApiErrors(err);
         this.fieldErrors.set(Object.fromEntries(
           errors.filter((e) => e.code.startsWith('Values.')).map((e) => [e.code.slice('Values.'.length), e.message])));
-        this.saveError.set(errors.find((e) => !e.code.startsWith('Values.'))?.message ?? (errors.length ? 'Sınır dışı değerleri düzelt.' : null));
+        this.saveError.set(errors.find((e) => !e.code.startsWith('Values.'))?.message ?? (errors.length ? t().adminWeights.outOfRange : null));
       },
     });
   }

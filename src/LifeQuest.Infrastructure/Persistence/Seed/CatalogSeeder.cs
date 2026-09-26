@@ -27,6 +27,34 @@ internal sealed class CatalogSeeder(LifeQuestDbContext db, ILogger<CatalogSeeder
             logger.LogInformation(
                 "Catalog synced: {Relations} relations added, {Added} templates added, {Updated} updated, {Flagged} flagged for review",
                 addedRelations, added, updated, flagged);
+
+        var backfilled = await BackfillQuestCopiesAsync(cancellationToken);
+        if (backfilled > 0)
+            logger.LogInformation("English copies backfilled for {Count} user quests", backfilled);
+    }
+
+    /// <summary>
+    /// Yerelleştirmeden önce verilmiş quest kopyalarına template'in İngilizcesini ekler. Yalnızca Türkçe metni
+    /// template ile birebir aynı olan kopyalar doldurulur (anlatımla değişmiş kopyalar Türkçeye düşmeye devam eder).
+    /// Gerekçe cümlesi geriye dönük kurulamaz; onlar Türkçe kalır.
+    /// </summary>
+    private async Task<int> BackfillQuestCopiesAsync(CancellationToken cancellationToken)
+    {
+        var templates = db.QuestTemplates.IgnoreQueryFilters();
+
+        var titles = await db.UserQuests.IgnoreQueryFilters()
+            .Where(q => q.TitleEn == null
+                        && templates.Any(t => t.Id == q.TemplateId && t.Title == q.Title && t.TitleEn != null))
+            .ExecuteUpdateAsync(s => s.SetProperty(q => q.TitleEn,
+                q => templates.Where(t => t.Id == q.TemplateId).Select(t => t.TitleEn).FirstOrDefault()), cancellationToken);
+
+        var descriptions = await db.UserQuests.IgnoreQueryFilters()
+            .Where(q => q.DescriptionEn == null
+                        && templates.Any(t => t.Id == q.TemplateId && t.Description == q.Description && t.DescriptionEn != null))
+            .ExecuteUpdateAsync(s => s.SetProperty(q => q.DescriptionEn,
+                q => templates.Where(t => t.Id == q.TemplateId).Select(t => t.DescriptionEn).FirstOrDefault()), cancellationToken);
+
+        return Math.Max(titles, descriptions);
     }
 
     public static QuestTemplateSpec ToSpec(CatalogSeedData.TemplateSeed seed, IReadOnlyDictionary<string, Guid> interestIds)

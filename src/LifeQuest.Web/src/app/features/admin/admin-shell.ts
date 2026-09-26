@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { APP_PATHS } from '../../core/routing/app-paths';
@@ -10,11 +11,11 @@ import { APP_PATHS } from '../../core/routing/app-paths';
   template: `
     <div class="page">
       <header class="stack">
-        <span class="eyebrow">Yönetim paneli</span>
-        <nav class="tabs" aria-label="Yönetim bölümleri">
+        <span class="eyebrow">{{ t().admin.panel }}</span>
+        <nav class="tabs" [attr.aria-label]="t().admin.sectionsAria">
           @for (tab of tabs; track tab.path) {
             <a [routerLink]="tab.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: tab.exact }"
-               ariaCurrentWhenActive="page">{{ tab.label }}</a>
+               ariaCurrentWhenActive="page">{{ t().admin.tabs[tab.key] }}</a>
           }
         </nav>
       </header>
@@ -50,14 +51,15 @@ import { APP_PATHS } from '../../core/routing/app-paths';
   `,
 })
 export class AdminShell {
+  protected readonly t = t;
   protected readonly tabs = [
-    { path: APP_PATHS.admin.root, label: 'Metrikler', exact: true },
-    { path: APP_PATHS.admin.users, label: 'Kullanıcılar', exact: false },
-    { path: APP_PATHS.admin.catalog, label: 'Katalog', exact: false },
-    { path: APP_PATHS.admin.ideas, label: 'Fikirler', exact: false },
-    { path: APP_PATHS.admin.experiments, label: 'Deneyler', exact: false },
-    { path: APP_PATHS.admin.places, label: 'Mekânlar', exact: false },
-    { path: APP_PATHS.admin.recommendationSettings, label: 'Öneri ayarları', exact: false },
-    { path: APP_PATHS.admin.auditLog, label: 'Denetim kaydı', exact: false },
+    { path: APP_PATHS.admin.root, key: 'metrics' as const, exact: true },
+    { path: APP_PATHS.admin.users, key: 'users' as const, exact: false },
+    { path: APP_PATHS.admin.catalog, key: 'catalog' as const, exact: false },
+    { path: APP_PATHS.admin.ideas, key: 'ideas' as const, exact: false },
+    { path: APP_PATHS.admin.experiments, key: 'experiments' as const, exact: false },
+    { path: APP_PATHS.admin.places, key: 'places' as const, exact: false },
+    { path: APP_PATHS.admin.recommendationSettings, key: 'weights' as const, exact: false },
+    { path: APP_PATHS.admin.auditLog, key: 'audit' as const, exact: false },
   ];
 }
