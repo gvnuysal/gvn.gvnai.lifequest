@@ -3,6 +3,7 @@ using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Community;
 
@@ -88,18 +89,18 @@ public enum IdeaStatus
 
 public static class IdeaErrors
 {
-    public static readonly Error NotFound = Error.NotFound("IDEA_NOT_FOUND", "Fikir bulunamadı.");
+    public static Error NotFound => Error.NotFound("IDEA_NOT_FOUND", Text.Of("Fikir bulunamadı.", "Idea not found."));
 
-    public static readonly Error AlreadyReviewed = Error.Conflict("IDEA_ALREADY_REVIEWED", "Bu fikir zaten değerlendirildi.");
+    public static Error AlreadyReviewed => Error.Conflict("IDEA_ALREADY_REVIEWED", Text.Of("Bu fikir zaten değerlendirildi.", "This idea has already been reviewed."));
 
-    public static readonly Error TooManyPending = Error.Conflict("IDEA_TOO_MANY_PENDING",
-        $"Değerlendirme bekleyen en fazla {QuestIdea.MaxPendingPerUser} fikrin olabilir. Önceki fikirlerin incelenince yenisini gönderebilirsin.");
+    public static Error TooManyPending => Error.Conflict("IDEA_TOO_MANY_PENDING",
+        Text.Of($"Değerlendirme bekleyen en fazla {QuestIdea.MaxPendingPerUser} fikrin olabilir. Önceki fikirlerin incelenince yenisini gönderebilirsin.", $"You can have at most {QuestIdea.MaxPendingPerUser} ideas waiting for review. You can send a new one once earlier ideas are reviewed."));
 
-    public static readonly Error DailyLimit = Error.Conflict("IDEA_DAILY_LIMIT",
-        $"Bir günde en fazla {QuestIdea.MaxPerDay} fikir gönderebilirsin.");
+    public static Error DailyLimit => Error.Conflict("IDEA_DAILY_LIMIT",
+        Text.Of($"Bir günde en fazla {QuestIdea.MaxPerDay} fikir gönderebilirsin.", $"You can send at most {QuestIdea.MaxPerDay} ideas a day."));
 
-    public static readonly Error NoLinksOrContacts = Error.Validation("Description",
-        "Fikirde bağlantı, e-posta veya telefon numarası olmamalı. Deneyimi kendi cümlelerinle anlat.");
+    public static Error NoLinksOrContacts => Error.Validation("Description",
+        Text.Of("Fikirde bağlantı, e-posta veya telefon numarası olmamalı. Deneyimi kendi cümlelerinle anlat.", "Ideas must not contain links, emails or phone numbers. Describe the experience in your own words."));
 }
 
 public interface IQuestIdeaRepository : IRepository<QuestIdea>

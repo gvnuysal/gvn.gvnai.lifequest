@@ -1,6 +1,7 @@
 using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Domain.Entities;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Catalog;
 
@@ -58,7 +59,7 @@ public sealed class InterestRelation : Entity
         Guid fromInterestId, Guid toInterestId, InterestRelationType type,
         double weight, double confidence, RelationSource source)
     {
-        Guard.True(fromInterestId != toInterestId, "Bir ilgi alanı kendisiyle ilişkilendirilemez.");
+        Guard.True(fromInterestId != toInterestId, Text.Of("Bir ilgi alanı kendisiyle ilişkilendirilemez.", "An interest can't be related to itself."));
 
         return new InterestRelation
         {

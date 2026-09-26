@@ -1,6 +1,7 @@
 using FluentValidation;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Profiles;
 
@@ -9,7 +10,7 @@ internal static class ProfileValidationRules
     public static void ValidInterests<T>(this IRuleBuilder<T, IReadOnlyList<InterestSelectionRequest>> rule)
         => rule
             .NotNull()
-            .Must(i => i.Count is >= 1 and <= 20).WithMessage("1 ile 20 arasında ilgi alanı seçmelisin.")
+            .Must(i => i.Count is >= 1 and <= 20).WithMessage(_ => Text.Of("1 ile 20 arasında ilgi alanı seçmelisin.", "Pick between 1 and 20 interests."))
             .ForEach(item => item.ChildRules(i =>
             {
                 i.RuleFor(x => x.Code).NotEmpty().MaximumLength(64);
@@ -29,5 +30,5 @@ internal static class ProfileValidationRules
     public static void ValidTimeZone<T>(this IRuleBuilder<T, string?> rule)
         => rule
             .Must(tz => tz is null || TimeZones.IsValid(tz))
-            .WithMessage("Geçersiz saat dilimi. IANA formatı kullanın (ör. Europe/Istanbul).");
+            .WithMessage(_ => Text.Of("Geçersiz saat dilimi. IANA formatı kullanın (ör. Europe/Istanbul).", "Invalid time zone. Use the IANA format (e.g. Europe/Istanbul)."));
 }

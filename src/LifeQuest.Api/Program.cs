@@ -91,6 +91,17 @@ if (configuration.GetValue("ReverseProxy:Enabled", false))
     app.UseForwardedHeaders(forwarded);
 }
 
+// Dil: Accept-Language (web her istekte gönderir) → tr / en; yoksa tr. Hata ve doğrulama mesajları bu dilde üretilir.
+app.UseRequestLocalization(options =>
+{
+    options.SetDefaultCulture("tr-TR")
+        .AddSupportedCultures("tr-TR", "tr", "en-US", "en")
+        .AddSupportedUICultures("tr-TR", "tr", "en-US", "en");
+    options.FallBackToParentCultures = true;
+    options.FallBackToParentUICultures = true;
+    options.RequestCultureProviders = [new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider()];
+});
+
 app.UseGvnCorrelationId();
 app.UseMiddleware<CorrelationIdLogContextMiddleware>();
 app.UseSerilogRequestLogging();

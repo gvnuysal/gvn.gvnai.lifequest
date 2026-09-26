@@ -6,6 +6,7 @@ using Gvn.GvnFramework.Domain.Entities;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Social;
 
@@ -179,15 +180,15 @@ public sealed record PartySettlement(QuestParty Party, IReadOnlyList<PartyMember
 
 public static class PartyErrors
 {
-    public static readonly Error NotFound = Error.NotFound("PARTY_NOT_FOUND", "Davet bulunamadı. Bağlantıyı kontrol et.");
-    public static readonly Error QuestNotActive =
-        Error.Conflict("PARTY_QUEST_NOT_ACTIVE", "Parti yalnızca kabul ettiğin, süresi dolmamış bir görev için açılabilir.");
-    public static readonly Error AlreadyMember = Error.Conflict("PARTY_ALREADY_MEMBER", "Bu partidesin.");
-    public static readonly Error Closed = Error.Conflict("PARTY_CLOSED", "Bu parti artık katılıma açık değil.");
-    public static readonly Error Full = Error.Conflict("PARTY_FULL", $"Parti dolu (en fazla {QuestParty.MaxMembers} kişi).");
-    public static readonly Error NotMember = Error.NotFound("PARTY_NOT_MEMBER", "Bu partinin üyesi değilsin.");
-    public static readonly Error AlreadyCompleted = Error.Conflict("PARTY_ALREADY_COMPLETED", "Görevi tamamladıktan sonra partiden ayrılamazsın.");
-    public static readonly Error AlreadyHasParty = Error.Conflict("PARTY_EXISTS", "Bu görev zaten bir partide.");
+    public static Error NotFound => Error.NotFound("PARTY_NOT_FOUND", Text.Of("Davet bulunamadı. Bağlantıyı kontrol et.", "Invite not found. Check the link."));
+    public static Error QuestNotActive =>
+        Error.Conflict("PARTY_QUEST_NOT_ACTIVE", Text.Of("Parti yalnızca kabul ettiğin, süresi dolmamış bir görev için açılabilir.", "A party can only be opened for a quest you've accepted that hasn't expired."));
+    public static Error AlreadyMember => Error.Conflict("PARTY_ALREADY_MEMBER", Text.Of("Bu partidesin.", "You're already in this party."));
+    public static Error Closed => Error.Conflict("PARTY_CLOSED", Text.Of("Bu parti artık katılıma açık değil.", "This party is no longer open to join."));
+    public static Error Full => Error.Conflict("PARTY_FULL", Text.Of($"Parti dolu (en fazla {QuestParty.MaxMembers} kişi).", $"The party is full (at most {QuestParty.MaxMembers} people)."));
+    public static Error NotMember => Error.NotFound("PARTY_NOT_MEMBER", Text.Of("Bu partinin üyesi değilsin.", "You're not a member of this party."));
+    public static Error AlreadyCompleted => Error.Conflict("PARTY_ALREADY_COMPLETED", Text.Of("Görevi tamamladıktan sonra partiden ayrılamazsın.", "You can't leave the party after completing the quest."));
+    public static Error AlreadyHasParty => Error.Conflict("PARTY_EXISTS", Text.Of("Bu görev zaten bir partide.", "This quest is already in a party."));
 }
 
 public interface IQuestPartyRepository : IRepository<QuestParty>

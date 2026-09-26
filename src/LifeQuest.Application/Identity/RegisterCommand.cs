@@ -8,10 +8,13 @@ using LifeQuest.Domain.Identity;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using Microsoft.Extensions.Options;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Identity;
 
-public sealed record RegisterCommand([property: Sensitive(MaskMode.Partial)] string Email, string Password, string DisplayName, int BirthYear)
+/// <param name="Language">"tr" / "en"; verilmezse isteğin dili (Accept-Language).</param>
+public sealed record RegisterCommand(
+    [property: Sensitive(MaskMode.Partial)] string Email, string Password, string DisplayName, int BirthYear, string? Language = null)
     : ICommand<AuthTokensDto>;
 
 public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
@@ -22,6 +25,9 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
         RuleFor(x => x.Password).StrongPassword();
         RuleFor(x => x.DisplayName).NotEmpty().Length(2, 50);
         RuleFor(x => x.BirthYear).InclusiveBetween(1900, clock.GetUtcNow().Year);
+        RuleFor(x => x.Language).Must(Domain.Localization.Language.IsSupported)
+            .When(x => x.Language is not null)
+            .WithMessage(_ => Text.Of("Desteklenen diller: tr, en.", "Supported languages: tr, en."));
     }
 }
 
@@ -32,7 +38,7 @@ public static class PasswordRules
             .NotEmpty()
             .Length(8, 128)
             .Must(p => p is not null && p.Any(char.IsLetter) && p.Any(char.IsDigit))
-            .WithMessage("Şifre en az bir harf ve bir rakam içermelidir.");
+            .WithMessage(_ => Text.Of("Şifre en az bir harf ve bir rakam içermelidir.", "The password must contain at least one letter and one digit."));
 }
 
 internal sealed class RegisterCommandHandler(
@@ -53,7 +59,7 @@ internal sealed class RegisterCommandHandler(
 
         var registration = UserAccount.Register(
             email, passwordHasher.Hash(command.Password), command.DisplayName, command.BirthYear,
-            clock.GetUtcNow().UtcDateTime);
+            clock.GetUtcNow().UtcDateTime, command.Language ?? Domain.Localization.Language.Current);
 
         if (!registration.Succeeded)
             return Result<AuthTokensDto>.Fail(registration.Errors);

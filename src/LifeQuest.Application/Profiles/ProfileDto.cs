@@ -22,7 +22,8 @@ public sealed record ProfileDto(
     PhysicalEffort MaxPhysicalEffort,
     NotificationPreference NotificationPreference,
     int? DailyReminderHour,
-    IReadOnlyList<ProfileInterestDto> Interests);
+    IReadOnlyList<ProfileInterestDto> Interests,
+    string Language = "tr");
 
 public sealed record ProfileInterestDto(string Code, string Name, LifeCategory Category, double Weight, InterestSource Source);
 
@@ -54,7 +55,8 @@ public sealed class ProfileService(IUserAccountRepository accounts, IQuestCatalo
             account.Id, account.DisplayName, account.Email, profile.OnboardingCompleted,
             profile.DiscoveryRadius, profile.Budget, profile.WeeklyAvailableMinutes,
             profile.Goals.ToList(), profile.City, profile.TimeZoneId,
-            profile.MaxPhysicalEffort, profile.NotificationPreference, profile.DailyReminderHour, interestDtos));
+            profile.MaxPhysicalEffort, profile.NotificationPreference, profile.DailyReminderHour, interestDtos,
+            account.Language));
     }
 
     /// <summary>İlgi alanı kodlarını katalog id'lerine çevirir; bilinmeyen kod varsa hata döner.</summary>

@@ -2,6 +2,7 @@ using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Common;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Catalog;
 
@@ -71,7 +72,7 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
     /// <returns>Değişiklik olduysa <c>true</c>.</returns>
     public bool ApplyEditorial(QuestTemplateSpec spec)
     {
-        Guard.True(spec.Code == Code, "Template kodu değiştirilemez.");
+        Guard.True(spec.Code == Code, Text.Of("Template kodu değiştirilemez.", "The template code can't be changed."));
         var sameInterests = spec.InterestIds.Distinct().OrderBy(i => i).SequenceEqual(InterestIds.OrderBy(i => i));
         if (sameInterests && ToSpec() with { InterestIds = spec.InterestIds } == spec)
             return false;
@@ -105,9 +106,9 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     private void Apply(QuestTemplateSpec spec)
     {
-        Guard.True(spec.MinMinutes > 0 && spec.MinMinutes <= spec.MaxMinutes, "Süre aralığı geçersiz.");
-        Guard.True(spec.SecondaryCategory != spec.Category, "İkincil kategori birincil kategoriyle aynı olamaz.");
-        Guard.True(spec.DayParts != DayPart.None, "En az bir gün dilimi seçilmelidir.");
+        Guard.True(spec.MinMinutes > 0 && spec.MinMinutes <= spec.MaxMinutes, Text.Of("Süre aralığı geçersiz.", "The duration range is invalid."));
+        Guard.True(spec.SecondaryCategory != spec.Category, Text.Of("İkincil kategori birincil kategoriyle aynı olamaz.", "The secondary category can't be the same as the primary."));
+        Guard.True(spec.DayParts != DayPart.None, Text.Of("En az bir gün dilimi seçilmelidir.", "Pick at least one part of the day."));
 
         Title = Guard.NotNullOrWhiteSpace(spec.Title, nameof(spec.Title));
         Description = Guard.NotNullOrWhiteSpace(spec.Description, nameof(spec.Description));

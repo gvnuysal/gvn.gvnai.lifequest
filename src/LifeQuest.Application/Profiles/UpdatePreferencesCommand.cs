@@ -22,7 +22,8 @@ public sealed record UpdatePreferencesCommand(
     PhysicalEffort? MaxPhysicalEffort = null,
     NotificationPreference? NotificationPreference = null,
     int? DailyReminderHour = null,
-    bool? ClearDailyReminder = null) : ICommand<ProfileDto>;
+    bool? ClearDailyReminder = null,
+    string? Language = null) : ICommand<ProfileDto>;
 
 public sealed class UpdatePreferencesCommandValidator : AbstractValidator<UpdatePreferencesCommand>
 {
@@ -39,11 +40,15 @@ public sealed class UpdatePreferencesCommandValidator : AbstractValidator<Update
         RuleFor(x => x.DailyReminderHour)
             .InclusiveBetween(DailyReminder.EarliestHour, DailyReminder.LatestHour)
             .When(x => x.DailyReminderHour is not null);
+        RuleFor(x => x.Language).Must(Domain.Localization.Language.IsSupported)
+            .When(x => x.Language is not null)
+            .WithMessage(_ => Domain.Localization.Text.Of("Desteklenen diller: tr, en.", "Supported languages: tr, en."));
     }
 }
 
 internal sealed class UpdatePreferencesCommandHandler(
     IUserProfileRepository profiles,
+    Domain.Identity.IUserAccountRepository accounts,
     ProfileService profileService,
     IUserContext user,
     IUnitOfWork unitOfWork) : ICommandHandler<UpdatePreferencesCommand, ProfileDto>
@@ -62,6 +67,14 @@ internal sealed class UpdatePreferencesCommandHandler(
 
         if (!result.Succeeded)
             return Result<ProfileDto>.Fail(result.Errors);
+
+        if (command.Language is { } language &&
+            await accounts.GetByIdAsync(user.UserId, cancellationToken) is { } account)
+        {
+            var changed = account.SetLanguage(language);
+            if (!changed.Succeeded)
+                return Result<ProfileDto>.Fail(changed.Errors);
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return await profileService.ToDtoAsync(profile, cancellationToken);

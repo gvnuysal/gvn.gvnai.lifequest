@@ -8,6 +8,7 @@ using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Quests;
 
@@ -122,7 +123,7 @@ internal sealed class StartSavedQuestCommandHandler(
 internal static class SavedMapping
 {
     public static SavedQuestDto ToDto(SavedQuest entry, QuestTemplate? t) => t is null
-        ? new SavedQuestDto(entry.TemplateId, "Kaldırılmış deneyim", "Bu deneyim artık katalogda yok.", LifeCategory.Explorer,
+        ? new SavedQuestDto(entry.TemplateId, Text.Of("Kaldırılmış deneyim", "Removed experience"), Text.Of("Bu deneyim artık katalogda yok.", "This experience is no longer in the catalog."), LifeCategory.Explorer,
             QuestType.Daily, 0, 0, CostBand.Free, PhysicalEffort.None, entry.SavedAt, false)
         : new SavedQuestDto(entry.TemplateId, t.Title, t.Description, t.Category, t.Type, t.MinMinutes, t.MaxMinutes, t.Cost,
             t.Effort, entry.SavedAt, t.IsOfferable);
@@ -170,7 +171,7 @@ internal sealed class GetQuestCalendarQueryHandler(IUserQuestRepository quests, 
     : IQueryHandler<GetQuestCalendarQuery, CalendarFile>
 {
     private static readonly Error NotPlanned =
-        Error.Conflict("QUEST_NOT_PLANNED", "Takvime eklemek için önce bir zaman planla.");
+        Error.Conflict("QUEST_NOT_PLANNED", Text.Of("Takvime eklemek için önce bir zaman planla.", "Plan a time first to add it to your calendar."));
 
     public async Task<Result<CalendarFile>> Handle(GetQuestCalendarQuery query, CancellationToken cancellationToken)
     {
@@ -189,5 +190,5 @@ internal sealed class GetQuestCalendarQueryHandler(IUserQuestRepository quests, 
 public sealed class PlanQuestCommandValidator : AbstractValidator<PlanQuestCommand>
 {
     public PlanQuestCommandValidator()
-        => RuleFor(x => x.PlannedAtLocal).Must(d => d is null || d.Value.Year is > 2000 and < 3000).WithMessage("Geçersiz tarih.");
+        => RuleFor(x => x.PlannedAtLocal).Must(d => d is null || d.Value.Year is > 2000 and < 3000).WithMessage(_ => Text.Of("Geçersiz tarih.", "Invalid date."));
 }

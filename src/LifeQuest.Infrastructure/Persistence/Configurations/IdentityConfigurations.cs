@@ -13,6 +13,7 @@ internal sealed class UserAccountConfiguration : IEntityTypeConfiguration<UserAc
         builder.Property(x => x.Email).HasMaxLength(254).IsRequired();
         builder.Property(x => x.PasswordHash).HasMaxLength(200).IsRequired();
         builder.Property(x => x.DisplayName).HasMaxLength(50).IsRequired();
+        builder.Property(x => x.Language).HasMaxLength(8).IsRequired().HasDefaultValue("tr");
         builder.Property(x => x.Role).HasMaxLength(32).IsRequired();
         builder.Property(x => x.SuspensionReason).HasMaxLength(500);
         builder.HasIndex(x => x.Email).IsUnique();

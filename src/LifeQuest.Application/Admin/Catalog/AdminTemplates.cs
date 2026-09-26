@@ -8,6 +8,7 @@ using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Community;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Admin.Catalog;
 
@@ -49,24 +50,24 @@ public sealed class TemplateInputValidator : AbstractValidator<TemplateInput>
     public TemplateInputValidator()
     {
         RuleFor(x => x.Code).NotEmpty().Matches("^[a-z0-9-]{3,64}$")
-            .WithMessage("Kod 3-64 karakter; küçük harf, rakam ve tire içermelidir.");
+            .WithMessage(_ => Text.Of("Kod 3-64 karakter; küçük harf, rakam ve tire içermelidir.", "The code must be 3-64 characters of lowercase letters, digits and hyphens."));
         RuleFor(x => x.Title).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(1000);
         RuleFor(x => x.Type).IsInEnum();
         RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Category).IsInEnum();
         RuleFor(x => x.SecondaryCategory).IsInEnum()
-            .NotEqual(x => x.Category).WithMessage("İkincil kategori birincil kategoriyle aynı olamaz.");
+            .NotEqual(x => x.Category).WithMessage(_ => Text.Of("İkincil kategori birincil kategoriyle aynı olamaz.", "The secondary category can't be the same as the primary."));
         RuleFor(x => x.MinMinutes).InclusiveBetween(1, 10080);
         RuleFor(x => x.MaxMinutes).InclusiveBetween(1, 10080)
-            .GreaterThanOrEqualTo(x => x.MinMinutes).WithMessage("En uzun süre en kısa süreden küçük olamaz.");
+            .GreaterThanOrEqualTo(x => x.MinMinutes).WithMessage(_ => Text.Of("En uzun süre en kısa süreden küçük olamaz.", "The longest duration can't be shorter than the shortest."));
         RuleFor(x => x.Cost).IsInEnum();
-        RuleFor(x => x.DayParts).NotEmpty().WithMessage("En az bir gün dilimi seçilmelidir.");
+        RuleFor(x => x.DayParts).NotEmpty().WithMessage(_ => Text.Of("En az bir gün dilimi seçilmelidir.", "Pick at least one part of the day."));
         RuleForEach(x => x.DayParts).Must(p => p is DayPart.Morning or DayPart.Afternoon or DayPart.Evening or DayPart.Night)
-            .WithMessage("Geçersiz gün dilimi.");
+            .WithMessage(_ => Text.Of("Geçersiz gün dilimi.", "Invalid part of the day."));
         RuleFor(x => x.CooldownDays).InclusiveBetween(0, 365);
         RuleFor(x => x.RiskScore).InclusiveBetween(0, 1);
-        RuleFor(x => x.InterestIds).NotEmpty().WithMessage("En az bir ilgi alanı seçilmelidir.");
+        RuleFor(x => x.InterestIds).NotEmpty().WithMessage(_ => Text.Of("En az bir ilgi alanı seçilmelidir.", "Pick at least one interest."));
         RuleFor(x => x.Effort).IsInEnum();
     }
 }
@@ -294,7 +295,7 @@ internal sealed class CreateTemplateCommandHandler(
         if (idea is not null)
         {
             var actor = await audit.GetActorAsync(cancellationToken);
-            idea.Accept(template.Id, actor.Email, "Fikrin kataloğa eklendi, teşekkürler!", clock.GetUtcNow().UtcDateTime);
+            idea.Accept(template.Id, actor.Email, Text.Of("Fikrin kataloğa eklendi, teşekkürler!", "Your idea was added to the catalog, thank you!"), clock.GetUtcNow().UtcDateTime);
             await audit.RecordAsync(AdminAction.IdeaAccepted, AdminTargetType.QuestIdea, idea.Id, idea.Title, null,
                 new { templateId = template.Id, template.Code }, cancellationToken);
         }
