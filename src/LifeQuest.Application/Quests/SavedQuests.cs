@@ -125,7 +125,8 @@ internal static class SavedMapping
     public static SavedQuestDto ToDto(SavedQuest entry, QuestTemplate? t) => t is null
         ? new SavedQuestDto(entry.TemplateId, Text.Of("Kaldırılmış deneyim", "Removed experience"), Text.Of("Bu deneyim artık katalogda yok.", "This experience is no longer in the catalog."), LifeCategory.Explorer,
             QuestType.Daily, 0, 0, CostBand.Free, PhysicalEffort.None, entry.SavedAt, false)
-        : new SavedQuestDto(entry.TemplateId, t.Title, t.Description, t.Category, t.Type, t.MinMinutes, t.MaxMinutes, t.Cost,
+        : new SavedQuestDto(entry.TemplateId,
+            LocalizedText.WithFallback(t.Title, t.TitleEn).Current, LocalizedText.WithFallback(t.Description, t.DescriptionEn).Current, t.Category, t.Type, t.MinMinutes, t.MaxMinutes, t.Cost,
             t.Effort, entry.SavedAt, t.IsOfferable);
 }
 
@@ -182,7 +183,7 @@ internal sealed class GetQuestCalendarQueryHandler(IUserQuestRepository quests, 
             return Result<CalendarFile>.Fail(NotPlanned);
 
         var content = IcsCalendar.Build(new CalendarEvent(
-            quest.Id, quest.Title, quest.Description, start, TimeSpan.FromMinutes(quest.MaxMinutes), clock.GetUtcNow().UtcDateTime));
+            quest.Id, quest.LocalizedTitle.Current, quest.LocalizedDescription.Current, start, TimeSpan.FromMinutes(quest.MaxMinutes), clock.GetUtcNow().UtcDateTime));
         return Result<CalendarFile>.Ok(new CalendarFile($"lifequest-{start:yyyyMMdd-HHmm}.ics", content));
     }
 }

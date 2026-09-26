@@ -21,8 +21,13 @@ internal sealed class GetLatestSummaryQueryHandler(IWeeklySummaryRepository summ
     public async Task<Result<WeeklySummaryDto?>> Handle(GetLatestSummaryQuery query, CancellationToken cancellationToken)
     {
         var summary = await summaries.GetLatestUnreadAsync(user.UserId, cancellationToken);
-        return Result<WeeklySummaryDto?>.Ok(summary is null ? null : new WeeklySummaryDto(
-            summary.Id, summary.WeekStart, summary.Title, summary.Message, summary.CompletedCount, summary.XpEarned,
+        if (summary is null)
+            return Result<WeeklySummaryDto?>.Ok(null);
+
+        // Metin saklanan istatistiklerden isteğin dilinde kurulur.
+        var (title, message) = summary.Text;
+        return Result<WeeklySummaryDto?>.Ok(new WeeklySummaryDto(
+            summary.Id, summary.WeekStart, title.Current, message.Current, summary.CompletedCount, summary.XpEarned,
             summary.NewCategories, summary.TopCategory, summary.CreatedAt));
     }
 }

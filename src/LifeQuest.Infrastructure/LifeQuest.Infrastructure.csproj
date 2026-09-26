@@ -22,6 +22,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="LifeQuest.Catalog.Tests" />
     <InternalsVisibleTo Include="LifeQuest.Simulation" />
+    <InternalsVisibleTo Include="LifeQuest.Api.IntegrationTests" />
   </ItemGroup>
 
 </Project>

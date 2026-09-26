@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Localization;
 using FluentValidation;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
@@ -45,7 +46,7 @@ internal static class LocalPlaceMapping
         return places.Select(p => new LocalPlaceDto(
                 p.Id, p.Kind, p.City, p.Name, p.Address, p.Url, p.Note, p.StartsAt, p.EndsAt, p.IsActive,
                 p.Kind == LocalPlaceKind.Event && p.EndsAt < nowUtc,
-                p.TemplateIds.Where(byId.ContainsKey).Select(id => new PlaceTemplateDto(id, byId[id].Code, byId[id].Title)).ToList(),
+                p.TemplateIds.Where(byId.ContainsKey).Select(id => new PlaceTemplateDto(id, byId[id].Code, LocalizedText.WithFallback(byId[id].Title, byId[id].TitleEn).Current)).ToList(),
                 p.CreatedByEmail, p.CreatedAt))
             .ToList();
     }

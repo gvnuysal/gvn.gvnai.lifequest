@@ -16,6 +16,7 @@ public sealed class WeeklySummaryService(
     IUserProfileRepository profiles,
     IUserQuestRepository quests,
     IWeeklySummaryRepository summaries,
+    Domain.Identity.IUserAccountRepository accounts,
     PushNotifier notifier,
     IUnitOfWork unitOfWork,
     TimeProvider clock)
@@ -51,7 +52,9 @@ public sealed class WeeklySummaryService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Push izni veren kullanıcıya özet ayrıca bildirim olarak gider; izin yoksa yalnızca uygulama içinde görünür.
-        if (await notifier.SendToUserAsync(userId, new PushNotification(summary.Title, summary.Message, "/today", "weekly-summary"),
+        var language = await accounts.GetLanguageAsync(userId, cancellationToken);
+        var (title, message) = summary.Text;
+        if (await notifier.SendToUserAsync(userId, new PushNotification(title.In(language), message.In(language), "/today", "weekly-summary"),
                 cancellationToken) > 0)
             await unitOfWork.SaveChangesAsync(cancellationToken);
         return true;

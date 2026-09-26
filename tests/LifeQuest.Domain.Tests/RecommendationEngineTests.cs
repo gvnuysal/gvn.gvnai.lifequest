@@ -59,8 +59,9 @@ public sealed class RecommendationEngineTests
         var exhibitionItem = result.Items.Single(i => i.Candidate.Code == "photo-exhibition");
         Assert.Equal(1.0, exhibitionItem.Score.Novelty);
         Assert.Contains(exhibitionItem.Reasons, r => r.Code == ReasonCode.Diversification);
-        Assert.StartsWith("Son aktivitelerinde Keşif ağırlığı olduğu", exhibitionItem.Explanation);
-        Assert.EndsWith("bu kez bir Kültür quest'i önerdik.", exhibitionItem.Explanation);
+        Assert.StartsWith("Son aktivitelerinde Keşif ağırlığı olduğu", exhibitionItem.Explanation.Tr);
+        Assert.EndsWith("bu kez bir Kültür quest'i önerdik.", exhibitionItem.Explanation.Tr);
+        Assert.Equal("Since your recent activity leaned towards Exploration and you haven't completed a Culture quest yet, here's a Culture quest for a change.", exhibitionItem.Explanation.En);
     }
 
     [Fact]
@@ -174,8 +175,8 @@ public sealed class RecommendationEngineTests
         var item = Assert.Single(result.Items);
         Assert.Equal(Math.Round(0.9 * 0.9 * 0.8 * 0.6, 4), item.Score.Interest);
         var reason = Assert.Single(item.Reasons, r => r.Code == ReasonCode.AdjacentInterest);
-        Assert.Contains("Kahve", reason.Text);
-        Assert.Contains("Kafe Kültürü", reason.Text);
+        Assert.Contains("Kahve", reason.Text.Tr);
+        Assert.Contains("Kafe Kültürü", reason.Text.Tr);
     }
 
     [Fact]

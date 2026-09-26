@@ -47,7 +47,7 @@ public sealed class ProfileService(IUserAccountRepository accounts, IQuestCatalo
             .Select(i =>
             {
                 var info = interests[i.InterestId];
-                return new ProfileInterestDto(info.Code, info.Name, info.Category, i.Weight, i.Source);
+                return new ProfileInterestDto(info.Code, info.DisplayName(), info.Category, i.Weight, i.Source);
             })
             .ToList();
 

@@ -2,7 +2,7 @@ namespace LifeQuest.Domain.Recommendations;
 
 public sealed record InterestEdge(Guid FromInterestId, Guid ToInterestId, double Weight, double Confidence);
 
-public sealed record InterestInfo(Guid Id, string Code, string Name);
+public sealed record InterestInfo(Guid Id, string Code, string Name, string? NameEn = null);
 
 /// <summary>
 /// İlgi alanları arasındaki komşuluk. Benzer öğe tavsiyesinin ötesine geçip komşu ilgi alanlarına
@@ -30,8 +30,10 @@ public sealed class TasteGraph
     public IReadOnlyList<(Guid Neighbor, double Strength)> Neighbors(Guid interestId)
         => _adjacency.TryGetValue(interestId, out var list) ? list : [];
 
-    public string NameOf(Guid interestId)
-        => _interests.TryGetValue(interestId, out var info) ? info.Name : "bu alan";
+    public Localization.LocalizedText NameOf(Guid interestId)
+        => _interests.TryGetValue(interestId, out var info)
+            ? Localization.LocalizedText.WithFallback(info.Name, info.NameEn)
+            : new("bu alan", "this area");
 
     private void Add(Guid from, Guid to, double strength)
     {

@@ -24,12 +24,13 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
     {
         var account = await db.UserAccounts.AsNoTracking()
             .Where(a => a.Id == userId)
-            .Select(a => new { a.Id, a.Email, a.DisplayName, a.BirthYear, a.Role, a.CreatedAt, a.LastLoginAt })
+            .Select(a => new { a.Id, a.Email, a.DisplayName, a.BirthYear, a.Role, a.Language, a.CreatedAt, a.LastLoginAt })
             .FirstOrDefaultAsync(cancellationToken);
         if (account is null)
             return null;
 
-        var interestNames = await db.Interests.AsNoTracking().ToDictionaryAsync(i => i.Id, i => i.Name, cancellationToken);
+        var interestNames = await db.Interests.AsNoTracking()
+            .ToDictionaryAsync(i => i.Id, i => Domain.Localization.LocalizedText.WithFallback(i.Name, i.NameEn).Current, cancellationToken);
 
         var profile = await db.UserProfiles.AsNoTracking().Include(p => p.Interests)
             .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
@@ -51,8 +52,9 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
         var export = new
         {
             exportedAt = nowUtc,
-            format = "LifeQuest veri dışa aktarımı v1",
-            note = "Şifre özeti ve oturum anahtarları güvenlik nedeniyle dahil edilmez.",
+            format = Domain.Localization.Text.Of("LifeQuest veri dışa aktarımı v1", "LifeQuest data export v1"),
+            note = Domain.Localization.Text.Of("Şifre özeti ve oturum anahtarları güvenlik nedeniyle dahil edilmez.",
+                "Password hash and session keys are excluded for security."),
             account,
             profile = profile is null ? null : new
             {
@@ -84,15 +86,15 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
             },
             quests = quests.Select(q => new
             {
-                q.Id, q.Title, q.Description, q.Type, q.Difficulty, q.Category, q.SecondaryCategory, q.MinMinutes, q.MaxMinutes,
+                q.Id, q.Title, q.Description, q.TitleEn, q.DescriptionEn, q.Type, q.Difficulty, q.Category, q.SecondaryCategory, q.MinMinutes, q.MaxMinutes,
                 q.Cost, q.Effort, reward = new { q.Reward.LifeXp, q.Reward.PrimaryCategoryXp, q.Reward.SecondaryCategoryXp },
                 q.Source, q.Status, q.OfferedAt, q.ExpiresAt, q.AcceptedAt, q.CompletedAt, q.SkippedAt, q.ExpiredAt, q.SkipReason,
-                q.PlannedAt, q.Rating, q.Preference, q.FeedbackAt, q.IsExploration, q.Explanation, q.ReasonCodes,
+                q.PlannedAt, q.Rating, q.Preference, q.FeedbackAt, q.IsExploration, q.Explanation, q.ExplanationEn, q.ReasonCodes,
                 score = q.Score
             }),
             xpTransactions = xp.Select(x => new
             {
-                x.CreatedAt, x.Description, x.LifeXp, x.PrimaryCategory, x.PrimaryCategoryXp, x.SecondaryCategory, x.SecondaryCategoryXp
+                x.CreatedAt, x.Description, x.DescriptionEn, x.LifeXp, x.PrimaryCategory, x.PrimaryCategoryXp, x.SecondaryCategory, x.SecondaryCategoryXp
             }),
             weeklySummaries = summaries.Select(s => new
             {

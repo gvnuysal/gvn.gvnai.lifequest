@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Localization;
 using System.Globalization;
 using System.Text;
 
@@ -19,7 +20,7 @@ public static class IcsCalendar
         {
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//LifeQuest//Quest//TR",
+            $"PRODID:-//LifeQuest//Quest//{Language.Current.ToUpperInvariant()}",
             "CALSCALE:GREGORIAN",
             "METHOD:PUBLISH",
             "BEGIN:VEVENT",
@@ -28,7 +29,7 @@ public static class IcsCalendar
             $"DTSTART:{Utc(e.StartUtc)}",
             $"DURATION:{Duration(e.Duration)}",
             $"SUMMARY:{Escape(e.Title)}",
-            $"DESCRIPTION:{Escape(e.Description + "\n\nLifeQuest ile planlandı.")}",
+            $"DESCRIPTION:{Escape(e.Description + "\n\n" + Text.Of("LifeQuest ile planlandı.", "Planned with LifeQuest."))}",
             "TRANSP:OPAQUE",
             "END:VEVENT",
             "END:VCALENDAR"

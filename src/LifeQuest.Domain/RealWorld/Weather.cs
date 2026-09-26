@@ -1,3 +1,5 @@
+using LifeQuest.Domain.Localization;
+
 namespace LifeQuest.Domain.RealWorld;
 
 /// <summary>Açık hava görevleri için havanın uygunluğu. Bilinmiyorsa öneriler hava durumundan etkilenmez.</summary>
@@ -44,18 +46,18 @@ public static class WeatherAssessment
             return new WeatherVerdict(OutdoorWeather.Unknown, null);
 
         if (hours.Any(h => IsStorm(h.WeatherCode)))
-            return new WeatherVerdict(OutdoorWeather.Poor, "fırtına bekleniyor");
+            return new WeatherVerdict(OutdoorWeather.Poor, Text.Of("fırtına bekleniyor", "a storm is expected"));
         if (hours.Any(h => h.PrecipitationProbability >= RainProbabilityThreshold || IsWet(h.WeatherCode)))
-            return new WeatherVerdict(OutdoorWeather.Poor, hours.Any(h => IsSnow(h.WeatherCode)) ? "kar bekleniyor" : "yağmur bekleniyor");
+            return new WeatherVerdict(OutdoorWeather.Poor, hours.Any(h => IsSnow(h.WeatherCode)) ? Text.Of("kar bekleniyor", "snow is expected") : Text.Of("yağmur bekleniyor", "rain is expected"));
         if (hours.Max(h => h.WindKmh) > WindThresholdKmh)
-            return new WeatherVerdict(OutdoorWeather.Poor, "kuvvetli rüzgâr bekleniyor");
+            return new WeatherVerdict(OutdoorWeather.Poor, Text.Of("kuvvetli rüzgâr bekleniyor", "strong wind is expected"));
 
         var max = hours.Max(h => h.TemperatureC);
         var min = hours.Min(h => h.TemperatureC);
         if (max > HotThresholdC)
-            return new WeatherVerdict(OutdoorWeather.Poor, "aşırı sıcak bekleniyor");
+            return new WeatherVerdict(OutdoorWeather.Poor, Text.Of("aşırı sıcak bekleniyor", "extreme heat is expected"));
         if (min < ColdThresholdC)
-            return new WeatherVerdict(OutdoorWeather.Poor, "hava çok soğuk");
+            return new WeatherVerdict(OutdoorWeather.Poor, Text.Of("hava çok soğuk", "it's very cold"));
 
         return new WeatherVerdict(OutdoorWeather.Good, null);
     }
@@ -70,18 +72,18 @@ public static class WeatherAssessment
 
     public static string Describe(int code) => code switch
     {
-        0 => "Açık",
-        1 or 2 => "Parçalı bulutlu",
-        3 => "Kapalı",
-        45 or 48 => "Sisli",
-        51 or 53 or 55 or 56 or 57 => "Çiseleme",
-        61 or 63 or 66 => "Yağmurlu",
-        65 or 67 => "Kuvvetli yağmur",
-        71 or 73 or 75 or 77 => "Karlı",
-        80 or 81 or 82 => "Sağanak",
-        85 or 86 => "Kar sağanağı",
-        95 or 96 or 99 => "Gök gürültülü fırtına",
-        _ => "Değişken"
+        0 => Text.Of("Açık", "Clear"),
+        1 or 2 => Text.Of("Parçalı bulutlu", "Partly cloudy"),
+        3 => Text.Of("Kapalı", "Overcast"),
+        45 or 48 => Text.Of("Sisli", "Foggy"),
+        51 or 53 or 55 or 56 or 57 => Text.Of("Çiseleme", "Drizzle"),
+        61 or 63 or 66 => Text.Of("Yağmurlu", "Rainy"),
+        65 or 67 => Text.Of("Kuvvetli yağmur", "Heavy rain"),
+        71 or 73 or 75 or 77 => Text.Of("Karlı", "Snowy"),
+        80 or 81 or 82 => Text.Of("Sağanak", "Showers"),
+        85 or 86 => Text.Of("Kar sağanağı", "Snow showers"),
+        95 or 96 or 99 => Text.Of("Gök gürültülü fırtına", "Thunderstorm"),
+        _ => Text.Of("Değişken", "Variable")
     };
 
     private static bool IsStorm(int code) => code is 95 or 96 or 99;

@@ -1,3 +1,5 @@
+using LifeQuest.Domain.Localization;
+
 namespace LifeQuest.Domain.Notifications;
 
 /// <summary>
@@ -18,12 +20,12 @@ public static class DailyReminder
     public static (string Title, string Body) Compose(int activeQuests, int openOffers)
     {
         if (activeQuests > 0)
-            return ("Bugün bir adım?", activeQuests == 1
-                ? "Aktif bir görevin var. Bugün tamamlamaya ne dersin?"
-                : $"{activeQuests} aktif görevin var. Birini bugün bitirmeye ne dersin?");
+            return (Text.Of("Bugün bir adım?", "A step today?"), activeQuests == 1
+                ? Text.Of("Aktif bir görevin var. Bugün tamamlamaya ne dersin?", "You have an active quest. How about finishing it today?")
+                : Text.Of($"{activeQuests} aktif görevin var. Birini bugün bitirmeye ne dersin?", $"You have {activeQuests} active quests. How about finishing one today?"));
 
         return openOffers > 0
-            ? ("Bugünün görevleri hazır", $"Senin için {openOffers} öneri var. Hangisini seçeceksin?")
-            : ("Bugünün görevleri hazır", "Yeni öneriler için LifeQuest'e göz at.");
+            ? (Text.Of("Bugünün görevleri hazır", "Today's quests are ready"), Text.Of($"Senin için {openOffers} öneri var. Hangisini seçeceksin?", $"There are {openOffers} suggestions for you. Which one will you pick?"))
+            : (Text.Of("Bugünün görevleri hazır", "Today's quests are ready"), Text.Of("Yeni öneriler için LifeQuest'e göz at.", "Check LifeQuest for new suggestions."));
     }
 }

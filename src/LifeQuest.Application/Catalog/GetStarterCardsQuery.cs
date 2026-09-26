@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Localization;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
 using LifeQuest.Application.Abstractions;
@@ -24,7 +25,8 @@ internal sealed class GetStarterCardsQueryHandler(IQuestCatalog catalog)
             .SelectMany(g => g.OrderBy(c => c.Code, StringComparer.Ordinal).Select((card, index) => (card, index)))
             .OrderBy(x => x.index).ThenBy(x => x.card.Category)
             .Select(x => new StarterCardDto(
-                x.card.Code, x.card.Title, x.card.Description, x.card.Category, x.card.Cost, x.card.MinMinutes, x.card.MaxMinutes))
+                x.card.Code, LocalizedText.WithFallback(x.card.Title, x.card.TitleEn).Current,
+                LocalizedText.WithFallback(x.card.Description, x.card.DescriptionEn).Current, x.card.Category, x.card.Cost, x.card.MinMinutes, x.card.MaxMinutes))
             .ToList();
 
         return Result<IReadOnlyList<StarterCardDto>>.Ok(interleaved);

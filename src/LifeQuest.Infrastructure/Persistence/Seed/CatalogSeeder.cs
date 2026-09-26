@@ -30,18 +30,29 @@ internal sealed class CatalogSeeder(LifeQuestDbContext db, ILogger<CatalogSeeder
     }
 
     public static QuestTemplateSpec ToSpec(CatalogSeedData.TemplateSeed seed, IReadOnlyDictionary<string, Guid> interestIds)
-        => new(
+    {
+        var english = CatalogSeedTranslations.Templates.TryGetValue(seed.Code, out var en) ? en : default;
+        return new(
             seed.Code, seed.Title, seed.Description, seed.Type, seed.Difficulty, seed.Category, seed.Secondary,
             seed.MinMinutes, seed.MaxMinutes, seed.Cost, seed.DayParts, seed.RequiresCity, seed.IsOutdoor,
             seed.CooldownDays, seed.Risk, seed.Interests.Select(code => interestIds[code]).ToList(),
-            seed.Effort, seed.Starter);
+            seed.Effort, seed.Starter, english.Title, english.Description);
+    }
 
     private async Task<Dictionary<string, Guid>> SeedInterestsAsync(CancellationToken cancellationToken)
     {
         var interests = await db.Interests.ToDictionaryAsync(i => i.Code, cancellationToken);
-        foreach (var seed in CatalogSeedData.Interests.Where(s => !interests.ContainsKey(s.Code)))
+        foreach (var seed in CatalogSeedData.Interests)
         {
-            var interest = Interest.Create(seed.Code, seed.Name, seed.Category);
+            var nameEn = CatalogSeedTranslations.InterestNames.GetValueOrDefault(seed.Code);
+            if (interests.TryGetValue(seed.Code, out var existing))
+            {
+                // Yalnızca İngilizce ad eksikse eklenir; mevcut Türkçe ada dokunulmaz.
+                if (existing.NameEn is null) existing.SetEnglishName(nameEn);
+                continue;
+            }
+
+            var interest = Interest.Create(seed.Code, seed.Name, seed.Category, nameEn);
             db.Interests.Add(interest);
             interests[seed.Code] = interest;
         }
@@ -97,9 +108,14 @@ internal sealed class CatalogSeeder(LifeQuestDbContext db, ILogger<CatalogSeeder
                 continue;
             }
 
-            // Admin'in düzenlediği veya güvenlik kararını verdiği template artık seed ile senkronlanmaz.
+            // Admin'in düzenlediği veya güvenlik kararını verdiği template artık seed ile senkronlanmaz;
+            // yalnızca henüz İngilizcesi yoksa seed'deki çeviri eklenir.
             if (template.Source == EditorialSource.Admin)
+            {
+                if (template.FillMissingEnglish(spec.TitleEn, spec.DescriptionEn))
+                    updated++;
                 continue;
+            }
 
             // Editoryal olarak engellenmiş (Blocked) bir template seed ile yeniden açılmaz.
             if (template.Safety != SafetyLevel.Blocked && template.Safety != safety)

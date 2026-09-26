@@ -16,7 +16,7 @@ public sealed class QuestPartyTests
     {
         var candidate = Candidate("walk", LifeCategory.Fitness, [Guid.NewGuid()], QuestType.Weekly) with { TemplateId = Template };
         var reward = RewardCalculator.Calculate(QuestType.Weekly, Difficulty.Medium, false, 1m);
-        var quest = UserQuest.Offer(userId ?? Guid.NewGuid(), new RecommendedQuest(candidate, ScoreBreakdown.Empty, false, [], "test"),
+        var quest = UserQuest.Offer(userId ?? Guid.NewGuid(), new RecommendedQuest(candidate, ScoreBreakdown.Empty, false, [], Localization.LocalizedText.Same("test")),
             reward, QuestSource.Daily, DateOnly.FromDateTime(UtcNow), 0, UtcNow, UtcNow.AddHours(8));
         quest.Accept(UtcNow);
         return quest;
@@ -90,7 +90,7 @@ public sealed class QuestPartyTests
     {
         var progress = PlayerProgress.CreateFor(Guid.NewGuid());
         var questId = Guid.NewGuid();
-        var transaction = progress.ApplyPartyBonus(questId, "Yürüyüş", LifeCategory.Fitness, 25, UtcNow);
+        var transaction = progress.ApplyPartyBonus(questId, new Localization.LocalizedText("Yürüyüş", "Walk"), LifeCategory.Fitness, 25, UtcNow);
 
         Assert.Equal(25, progress.LifeXp);
         Assert.Equal(0, progress.TotalCompleted);

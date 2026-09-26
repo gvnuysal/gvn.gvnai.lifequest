@@ -10,18 +10,31 @@ public sealed class Interest : Entity
 {
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
+    public string? NameEn { get; private set; }
     public LifeCategory Category { get; private set; }
     public bool IsActive { get; private set; } = true;
 
     private Interest() { }
 
-    public static Interest Create(string code, string name, LifeCategory category)
+    public static Interest Create(string code, string name, LifeCategory category, string? nameEn = null)
         => new()
         {
             Code = Guard.NotNullOrWhiteSpace(code, nameof(code)),
             Name = Guard.NotNullOrWhiteSpace(name, nameof(name)),
+            NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
             Category = category
         };
+
+    public LocalizedText LocalizedName => LocalizedText.WithFallback(Name, NameEn);
+
+    /// <returns>Değiştiyse <c>true</c>.</returns>
+    public bool SetEnglishName(string? nameEn)
+    {
+        var value = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
+        if (value == NameEn) return false;
+        NameEn = value;
+        return true;
+    }
 }
 
 public enum InterestRelationType

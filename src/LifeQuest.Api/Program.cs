@@ -20,6 +20,11 @@ using LifeQuest.Infrastructure;
 using LifeQuest.Infrastructure.Persistence;
 using Serilog;
 
+// İstek dışı kod (arka plan işleri, açılış) makinenin kültüründen bağımsız olarak Türkçe çalışır; kullanıcıya
+// giden metinler Language.Use(hesap dili) ile, istekler Accept-Language ile yerelleşir.
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 

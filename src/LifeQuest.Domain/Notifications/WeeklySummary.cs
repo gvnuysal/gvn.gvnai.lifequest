@@ -15,6 +15,9 @@ public sealed class WeeklySummary : Entity
     public int XpEarned { get; private set; }
     public List<LifeCategory> NewCategories { get; private set; } = [];
     public LifeCategory? TopCategory { get; private set; }
+    public int OpenAcceptedCount { get; private set; }
+
+    /// <summary>Oluşturulduğu andaki Türkçe metin (geriye dönük). Gösterim <see cref="Text"/> ile istatistiklerden, istenen dilde kurulur.</summary>
     public string Title { get; private set; } = default!;
     public string Message { get; private set; } = default!;
     public DateTime CreatedAt { get; private set; }
@@ -33,13 +36,17 @@ public sealed class WeeklySummary : Entity
             XpEarned = stats.XpEarned,
             NewCategories = stats.NewCategories.ToList(),
             TopCategory = stats.TopCategory,
-            Title = title,
-            Message = message,
+            OpenAcceptedCount = stats.OpenAcceptedCount,
+            Title = title.Tr,
+            Message = message.Tr,
             CreatedAt = nowUtc
         };
     }
 
     public void MarkRead(DateTime nowUtc) => ReadAt ??= nowUtc;
+
+    public (Localization.LocalizedText Title, Localization.LocalizedText Message) Text
+        => WeeklySummaryComposer.Compose(new WeeklyStats(CompletedCount, XpEarned, NewCategories, TopCategory, OpenAcceptedCount));
 }
 
 public sealed record WeeklyStats(

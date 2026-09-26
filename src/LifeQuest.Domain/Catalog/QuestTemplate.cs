@@ -17,6 +17,10 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
     public string Code { get; private set; } = default!;
     public string Title { get; private set; } = default!;
     public string Description { get; private set; } = default!;
+
+    /// <summary>İngilizce başlık ve açıklama; boşsa İngilizce kullanıcı Türkçesini görür.</summary>
+    public string? TitleEn { get; private set; }
+    public string? DescriptionEn { get; private set; }
     public QuestType Type { get; private set; }
     public Difficulty Difficulty { get; private set; }
     public LifeCategory Category { get; private set; }
@@ -102,7 +106,20 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     public QuestTemplateSpec ToSpec() => new(
         Code, Title, Description, Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
-        Cost, DayParts, RequiresCity, IsOutdoor, CooldownDays, RiskScore, InterestIds, Effort, IsStarter);
+        Cost, DayParts, RequiresCity, IsOutdoor, CooldownDays, RiskScore, InterestIds, Effort, IsStarter, TitleEn, DescriptionEn);
+
+    /// <summary>
+    /// Yöneticinin düzenlediği (seed senkronundan çıkmış) template'e seed'deki İngilizce çeviriyi yalnızca boşsa ekler;
+    /// yöneticinin Türkçe metnine dokunmaz.
+    /// </summary>
+    public bool FillMissingEnglish(string? titleEn, string? descriptionEn)
+    {
+        if (!string.IsNullOrWhiteSpace(TitleEn) || string.IsNullOrWhiteSpace(titleEn) || string.IsNullOrWhiteSpace(descriptionEn))
+            return false;
+        TitleEn = titleEn.Trim();
+        DescriptionEn = descriptionEn.Trim();
+        return true;
+    }
 
     private void Apply(QuestTemplateSpec spec)
     {
@@ -112,6 +129,8 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
         Title = Guard.NotNullOrWhiteSpace(spec.Title, nameof(spec.Title));
         Description = Guard.NotNullOrWhiteSpace(spec.Description, nameof(spec.Description));
+        TitleEn = string.IsNullOrWhiteSpace(spec.TitleEn) ? null : spec.TitleEn.Trim();
+        DescriptionEn = string.IsNullOrWhiteSpace(spec.DescriptionEn) ? null : spec.DescriptionEn.Trim();
         Type = spec.Type;
         Difficulty = spec.Difficulty;
         Category = spec.Category;

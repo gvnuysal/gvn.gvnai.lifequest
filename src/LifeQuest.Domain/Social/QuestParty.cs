@@ -33,6 +33,9 @@ public sealed class QuestParty : AggregateRoot
 
     public Guid TemplateId { get; private set; }
     public string QuestTitle { get; private set; } = default!;
+    public string? QuestTitleEn { get; private set; }
+
+    public LocalizedText LocalizedQuestTitle => LocalizedText.WithFallback(QuestTitle, QuestTitleEn);
     public LifeCategory Category { get; private set; }
     public string InviteCode { get; private set; } = default!;
     public Guid HostUserId { get; private set; }
@@ -54,6 +57,7 @@ public sealed class QuestParty : AggregateRoot
         {
             TemplateId = hostQuest.TemplateId,
             QuestTitle = hostQuest.Title,
+            QuestTitleEn = hostQuest.TitleEn,
             Category = hostQuest.Category,
             InviteCode = NewInviteCode(),
             HostUserId = hostQuest.UserId,

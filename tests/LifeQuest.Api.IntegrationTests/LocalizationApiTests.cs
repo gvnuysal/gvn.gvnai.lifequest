@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using static LifeQuest.Api.IntegrationTests.LifeQuestApiFactory;
 
 namespace LifeQuest.Api.IntegrationTests;
@@ -53,5 +54,75 @@ public sealed class LocalizationApiTests(LifeQuestApiFactory factory)
 
         Assert.Equal(HttpStatusCode.BadRequest,
             (await client.PatchAsJsonAsync("/api/v1/profile/preferences", new { language = "de" }, Json)).StatusCode);
+    }
+
+    private async Task<HttpClient> EnglishUserAsync()
+    {
+        var client = Client("en");
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register",
+            new { email = $"en-{Guid.NewGuid():N}@example.com", password = Password, displayName = "Alex", birthYear = 1990 });
+        register.EnsureSuccessStatusCode();
+        Authorize(client, await register.Content.ReadFromJsonAsync<JsonElement>(Json));
+        await CompleteOnboardingAsync(client);
+        return client;
+    }
+
+    [Fact]
+    public async Task Quests_interests_and_achievements_come_back_in_english_and_switch_with_the_header()
+    {
+        var client = await EnglishUserAsync();
+        var english = LifeQuest.Infrastructure.Persistence.Seed.CatalogSeedTranslations.Templates.Values.Select(t => t.Title).ToHashSet();
+
+        var today = await client.GetFromJsonAsync<JsonElement>("/api/v1/quests/today", Json);
+        var quests = today.GetProperty("quests").EnumerateArray().ToList();
+        Assert.All(quests, q =>
+        {
+            Assert.Contains(q.GetProperty("title").GetString()!, english);
+            Assert.Matches("^(Suggested because|Since|One of the best)", q.GetProperty("explanation").GetString());
+        });
+
+        var interests = await client.GetFromJsonAsync<JsonElement>("/api/v1/catalog/interests", Json);
+        Assert.Contains(interests.EnumerateArray(), i => i.GetProperty("name").GetString() == "Café Culture");
+
+        // Aynı görev Türkçe istekte Türkçe döner: iki dil de saklanır.
+        var id = quests[0].GetProperty("id").GetGuid();
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/quests/{id}");
+        request.Headers.AcceptLanguage.ParseAdd("tr");
+        var turkish = await (await client.SendAsync(request)).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.DoesNotContain(turkish.GetProperty("quest").GetProperty("title").GetString()!, english);
+
+        await client.PostAsync($"/api/v1/quests/{id}/accept", null);
+        var completion = await (await client.PostAsync($"/api/v1/quests/{id}/complete", null)).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Contains(completion.GetProperty("newAchievements").EnumerateArray(), a => a.GetProperty("title").GetString() == "First Step");
+
+        var xp = await client.GetFromJsonAsync<JsonElement>("/api/v1/progress", Json);
+        Assert.Contains(xp.GetProperty("categories").EnumerateArray(), c => c.GetProperty("displayName").GetString() == "Movement");
+    }
+
+    [Fact]
+    public async Task Background_push_uses_the_account_language()
+    {
+        var (timeZoneId, localHour) = Enumerable.Range(-12, 27)
+            .Select(offset => ($"Etc/GMT{(offset <= 0 ? "+" : "-")}{Math.Abs(offset)}", offset))
+            .Select(z => (z.Item1, TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(z.Item1)).Hour))
+            .First(z => z.Hour is >= 8 and <= 21);
+        if (DateTime.UtcNow.Minute == 59)
+            await Task.Delay(TimeSpan.FromSeconds(61));
+
+        var client = await EnglishUserAsync();
+        var endpoint = $"https://push.example.com/en/{Guid.NewGuid():N}";
+        await client.PatchAsJsonAsync("/api/v1/profile/preferences", new { timeZoneId, dailyReminderHour = localHour }, Json);
+        await client.PutAsJsonAsync("/api/v1/push/subscription", new
+        {
+            endpoint,
+            keys = new { p256dh = "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM", auth = "tBHItJI5svbpez7KI4CCXg" }
+        });
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<LifeQuest.Application.Notifications.DailyReminderService>()
+                .SendDueAsync(CancellationToken.None);
+
+        var push = Assert.Single(factory.Push.Sent, s => s.Endpoint == endpoint);
+        Assert.Contains(push.Notification.Title, new[] { "A step today?", "Today's quests are ready" });
     }
 }
