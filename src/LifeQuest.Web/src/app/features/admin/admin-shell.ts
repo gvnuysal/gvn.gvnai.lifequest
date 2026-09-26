@@ -56,6 +56,7 @@ export class AdminShell {
     { path: APP_PATHS.admin.catalog, label: 'Katalog', exact: false },
     { path: APP_PATHS.admin.ideas, label: 'Fikirler', exact: false },
     { path: APP_PATHS.admin.experiments, label: 'Deneyler', exact: false },
+    { path: APP_PATHS.admin.places, label: 'Mekânlar', exact: false },
     { path: APP_PATHS.admin.recommendationSettings, label: 'Öneri ayarları', exact: false },
     { path: APP_PATHS.admin.auditLog, label: 'Denetim kaydı', exact: false },
   ];

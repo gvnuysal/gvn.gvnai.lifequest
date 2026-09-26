@@ -3,6 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { ProfileStore } from '../state/profile.store';
 import { AuthStore } from './auth.store';
 import { APP_PATHS, HOME_PATH } from '../routing/app-paths';
+import { rememberDestination } from '../routing/pending-destination';
 
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthStore);
@@ -15,10 +16,13 @@ export const guestGuard: CanActivateFn = () =>
   inject(AuthStore).isAuthenticated() ? inject(Router).createUrlTree([HOME_PATH]) : true;
 
 /** Uygulama kabuğu: onboarding tamamlanmadan öneri alınamaz. */
-export const onboardedGuard: CanActivateFn = async () => {
+export const onboardedGuard: CanActivateFn = async (_route, state) => {
   const router = inject(Router);
   const profile = await inject(ProfileStore).ensureLoaded();
-  return profile?.onboardingCompleted ? true : router.createUrlTree([APP_PATHS.onboarding]);
+  if (profile?.onboardingCompleted) return true;
+  // Davet bağlantısı gibi bir adresle gelen yeni kullanıcı onboarding'den sonra oraya döner.
+  if (state.url !== HOME_PATH && state.url !== '/') rememberDestination(state.url);
+  return router.createUrlTree([APP_PATHS.onboarding]);
 };
 
 /** Onboarding ekranı: zaten tamamlandıysa ana ekrana. */

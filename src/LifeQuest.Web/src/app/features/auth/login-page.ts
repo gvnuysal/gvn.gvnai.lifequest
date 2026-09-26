@@ -27,7 +27,7 @@ import { APP_PATHS, HOME_PATH } from '../../core/routing/app-paths';
         }
         <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Giriş yap</button>
       </form>
-      <p footer class="switch">Hesabın yok mu? <a [routerLink]="paths.register">Kayıt ol</a></p>
+      <p footer class="switch">Hesabın yok mu? <a [routerLink]="paths.register" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">Kayıt ol</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,

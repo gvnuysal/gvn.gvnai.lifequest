@@ -34,11 +34,11 @@ public sealed class CatalogSeedTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Catalog_is_balanced_accessible_and_has_one_hundred_templates()
+    public void Catalog_is_balanced_accessible_and_has_one_hundred_forty_two_templates()
     {
         var violations = CatalogSafetyRules.ValidateCatalog(Specs);
         Assert.True(violations.Count == 0, string.Join(Environment.NewLine, violations));
-        Assert.Equal(100, Specs.Count);
+        Assert.Equal(142, Specs.Count);
 
         output.WriteLine($"Ücretsiz: %{Specs.Count(s => s.Cost == CostBand.Free) * 100 / Specs.Count}");
         output.WriteLine($"Şehirden bağımsız: %{Specs.Count(s => !s.RequiresCity) * 100 / Specs.Count}");
@@ -60,6 +60,20 @@ public sealed class CatalogSeedTests(ITestOutputHelper output)
 
         var used = CatalogSeedData.Templates.SelectMany(t => t.Interests).ToHashSet();
         Assert.Empty(codes.Except(used));
+    }
+
+    [Fact]
+    public void Every_interest_has_enough_quests_including_a_short_one()
+    {
+        var names = CatalogSeedData.Interests.ToDictionary(i => InterestIds[i.Code], i => i.Name);
+        var violations = CatalogSafetyRules.ValidateInterestCoverage(Specs, names);
+        Assert.True(violations.Count == 0, string.Join(Environment.NewLine, violations));
+
+        foreach (var interest in CatalogSeedData.Interests.OrderBy(i => i.Code))
+        {
+            var tagged = Specs.Where(s => s.InterestIds.Contains(InterestIds[interest.Code])).ToList();
+            output.WriteLine($"{interest.Code}: {tagged.Count} görev, {tagged.Count(t => t.MaxMinutes <= 60)} kısa, {tagged.Count(t => t.Cost == CostBand.Free)} ücretsiz");
+        }
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-using Gvn.GvnFramework.EntityFramewokCore.Repositories;
+using Gvn.GvnFramework.EntityFrameworkCore.Repositories;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Domain.Recommendations;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +54,13 @@ internal sealed class UserQuestRepository : EfRepository<UserQuest, LifeQuestDbC
                 x.CompletedAt ?? x.SkippedAt ?? x.ExpiredAt ?? x.AcceptedAt,
                 x.SkipReason, x.Rating, x.Preference))
             .ToListAsync(cancellationToken);
+
+    public Task<UserQuest?> GetOpenForTemplateAsync(Guid userId, Guid templateId, DateTime nowUtc, CancellationToken cancellationToken = default)
+        => DbSet
+            .Where(x => x.UserId == userId && x.TemplateId == templateId &&
+                        (x.Status == QuestStatus.Offered || x.Status == QuestStatus.Accepted) && x.ExpiresAt > nowUtc)
+            .OrderBy(x => x.Status == QuestStatus.Accepted ? 0 : 1)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Guid>> GetOpenTemplateIdsAsync(
         Guid userId, DateTime nowUtc, CancellationToken cancellationToken = default)

@@ -24,6 +24,7 @@ internal sealed class CompleteQuestCommandHandler(
     IUserContext user,
     IUnitOfWork unitOfWork,
     LifeQuestMetrics metrics,
+    Social.PartyService parties,
     TimeProvider clock) : ICommandHandler<CompleteQuestCommand, QuestCompletionDto>
 {
     public async Task<Result<QuestCompletionDto>> Handle(CompleteQuestCommand command, CancellationToken cancellationToken)
@@ -53,11 +54,16 @@ internal sealed class CompleteQuestCommandHandler(
         var profile = await profiles.GetByUserIdAsync(userId, cancellationToken);
         profile?.AdjustInterests(quest.InterestIds, InterestLearning.CompletionDelta, now);
 
+        // Quest Party: parti bu tamamlamayla bittiyse "birlikte" bonusu aynı işlemde yazılır.
+        var settlement = await parties.OnQuestResolvedAsync(quest, now, cancellationToken);
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
         metrics.Completed(quest.Category, quest.Reward.LifeXp);
+        await parties.NotifyAsync(settlement, cancellationToken);
 
+        var partyBonus = settlement?.Completers.FirstOrDefault(m => m.UserId == userId)?.BonusXp ?? 0;
         return Result<QuestCompletionDto>.Ok(new QuestCompletionDto(
             quest.ToDto(), AlreadyCompleted: false, progress.LifeXp, progress.LifeLevel, outcome.LeveledUp,
-            outcome.NewAchievements.Select(a => a.ToDto(now)).ToList()));
+            outcome.NewAchievements.Select(a => a.ToDto(now)).ToList(), partyBonus));
     }
 }

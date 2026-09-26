@@ -20,6 +20,10 @@ public static class ProfileErrors
     public static readonly Error InvalidTimeZone =
         Error.Validation("INVALID_TIME_ZONE", "Geçersiz saat dilimi. IANA formatı kullanın (ör. Europe/Istanbul).");
 
+    public static readonly Error InvalidReminderHour =
+        Error.Validation("INVALID_REMINDER_HOUR",
+            $"Hatırlatma saati {Notifications.DailyReminder.EarliestHour}:00 ile {Notifications.DailyReminder.LatestHour}:00 arasında olmalı.");
+
     public static Error UnknownInterests(IEnumerable<string> codes) =>
         Error.Validation("UNKNOWN_INTERESTS", $"Bilinmeyen ilgi alanları: {string.Join(", ", codes)}");
 }

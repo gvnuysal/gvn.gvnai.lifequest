@@ -65,6 +65,11 @@ public sealed class QuestsController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> Plan(Guid id, PlanRequest request, CancellationToken cancellationToken)
         => HandleResult(await sender.Send(new PlanQuestCommand(id, request.PlannedAtLocal), cancellationToken));
 
+    /// <summary>Kabul edilmiş görev için Quest Party davet bağlantısı; zaten varsa aynı partiyi döner.</summary>
+    [HttpPost("{id:guid}/party")]
+    public async Task<IActionResult> Party(Guid id, CancellationToken cancellationToken)
+        => HandleResult(await sender.Send(new LifeQuest.Application.Social.CreatePartyCommand(id), cancellationToken));
+
     /// <summary>Planlanmış quest için iCalendar (.ics) dosyası; konum bilgisi içermez.</summary>
     [HttpGet("{id:guid}/calendar.ics")]
     public async Task<IActionResult> Calendar(Guid id, CancellationToken cancellationToken)

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth/auth.store';
@@ -6,6 +6,7 @@ import { fieldErrors, firstErrorMessage } from '../../core/http/api-error';
 import { Button } from '../../ui/button';
 import { AuthLayout } from './auth-layout';
 import { APP_PATHS } from '../../core/routing/app-paths';
+import { rememberDestination } from '../../core/routing/pending-destination';
 
 const currentYear = new Date().getFullYear();
 
@@ -54,12 +55,14 @@ function strongPassword(control: AbstractControl<string>): ValidationErrors | nu
         }
         <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Hesap oluştur</button>
       </form>
-      <p footer class="switch">Zaten hesabın var mı? <a [routerLink]="paths.login">Giriş yap</a></p>
+      <p footer class="switch">Zaten hesabın var mı? <a [routerLink]="paths.login" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">Giriş yap</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,
 })
 export class RegisterPage {
+  /** Davet bağlantısından gelindiyse kayıt ve onboarding sonrası dönülecek adres. */
+  readonly returnUrl = input<string>();
   protected readonly paths = APP_PATHS;
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
@@ -89,7 +92,10 @@ export class RegisterPage {
     this.busy.set(true);
     this.error.set(null);
     this.auth.register(this.form.getRawValue()).subscribe({
-      next: () => void this.router.navigate([APP_PATHS.onboarding]),
+      next: () => {
+        rememberDestination(this.returnUrl());
+        void this.router.navigate([APP_PATHS.onboarding]);
+      },
       error: (err: unknown) => {
         const fields = fieldErrors(err);
         this.serverErrors.set(fields);

@@ -30,10 +30,11 @@ import { Segmented, SegmentOption } from '../../ui/segmented';
 import { Sheet } from '../../ui/sheet';
 import { Skeleton } from '../../ui/states';
 import { APP_PATHS } from '../../core/routing/app-paths';
+import { ReminderCard } from './reminder-card';
 
 @Component({
   selector: 'lq-profile-page',
-  imports: [FormsModule, RouterLink, Button, CategoryBadge, Chip, Icon, InterestPicker, Segmented, Sheet, Skeleton],
+  imports: [FormsModule, RouterLink, Button, CategoryBadge, Chip, Icon, InterestPicker, ReminderCard, Segmented, Sheet, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',

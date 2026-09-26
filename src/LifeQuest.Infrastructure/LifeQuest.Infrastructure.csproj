@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="Gvn.GvnFramework.EntityFramewokCore" />
+    <PackageReference Include="Gvn.GvnFramework.EntityFrameworkCore" />
     <PackageReference Include="Gvn.GvnFramework.Caching" />
     <PackageReference Include="Gvn.GvnFramework.BackgroundJobs" />
     <PackageReference Include="Gvn.GvnFramework.Modularity" />
-    <PackageReference Include="Gvn.GvnFramework.DepedencyInjection" />
+    <PackageReference Include="Gvn.GvnFramework.DependencyInjection" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Lib.Net.Http.WebPush" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

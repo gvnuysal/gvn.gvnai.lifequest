@@ -49,6 +49,8 @@ public static class QuestErrors
         "requires_city" => "Bu deneyim için profilinde şehir bilgisi gerekiyor.",
         "effort_limit" => "Bu deneyim seçtiğin efor sınırının üstünde.",
         "rejected_by_user" => "Bu deneyim için yakın zamanda \"ilgimi çekmedi\" demiştin.",
+        "outdoor_at_night" => "Bu açık hava deneyimi gece için uygun değil; gündüz başlatabilirsin.",
+        "bad_weather" => "Hava şu an bu açık hava deneyimi için uygun değil; hava düzelince başlatabilirsin.",
         _ => "Bu deneyim şu an sana sunulamıyor."
     });
 

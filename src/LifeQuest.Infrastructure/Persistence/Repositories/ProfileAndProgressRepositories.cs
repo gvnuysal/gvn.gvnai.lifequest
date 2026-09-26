@@ -1,4 +1,4 @@
-using Gvn.GvnFramework.EntityFramewokCore.Repositories;
+using Gvn.GvnFramework.EntityFrameworkCore.Repositories;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +10,12 @@ internal sealed class UserProfileRepository(LifeQuestDbContext context)
 {
     public Task<UserProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
         => DbSet.Include(x => x.Interests).FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> GetDailyReminderUserIdsAsync(CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking()
+            .Where(x => x.OnboardingCompleted && x.DailyReminderHour != null)
+            .Select(x => x.UserId)
+            .ToListAsync(cancellationToken);
 }
 
 internal sealed class PlayerProgressRepository : EfRepository<PlayerProgress, LifeQuestDbContext>, IPlayerProgressRepository

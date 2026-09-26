@@ -14,7 +14,7 @@ internal sealed class GetTodayQuestsCommandHandler(QuestOfferService offers, IUs
     {
         var result = await offers.GetOrCreateDailyOffersAsync(user.UserId, cancellationToken);
         return result.Succeeded
-            ? Result<QuestListDto>.Ok(new QuestListDto(result.Data!.Date, result.Data.Quests.ToDtos(), result.Data.Message))
+            ? Result<QuestListDto>.Ok(new QuestListDto(result.Data!.Date, result.Data.Quests.ToDtos(), result.Data.Message, result.Data.Weather))
             : Result<QuestListDto>.Fail(result.Errors);
     }
 }

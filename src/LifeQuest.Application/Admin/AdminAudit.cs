@@ -67,6 +67,9 @@ public static class AdminErrors
     public static readonly Error ApprovalNeedsNote =
         Error.Validation("Note", "Güvenlik kuralı ihlali olan bir template'i onaylamak veya engellemek için gerekçe yazmalısın.");
 
+    public static Error UnknownTemplates(IEnumerable<Guid> ids) =>
+        Error.Validation("TemplateIds", $"Bilinmeyen görev: {string.Join(", ", ids)}");
+
     public static Error UnknownInterests(IEnumerable<Guid> ids) =>
         Error.Validation("InterestIds", $"Bilinmeyen ilgi alanı: {string.Join(", ", ids)}");
 }

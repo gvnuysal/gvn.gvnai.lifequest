@@ -86,6 +86,21 @@ public sealed class ExperimentStatisticsTests
     }
 
     [Fact]
+    public void Guardrail_flags_a_winner_that_users_reject_more_often()
+    {
+        static List<UserExperimentStats> WithSkips(int notInterested)
+            => Enumerable.Range(0, 40).Select(_ => new UserExperimentStats(Guid.NewGuid(), 10, 4, 3, 3, 2, 1, notInterested, 8, 2)).ToList();
+
+        var control = ExperimentStatistics.Summarize(WithSkips(1), weeks: 1);
+        Assert.False(ExperimentStatistics.GuardrailBreached(control, ExperimentStatistics.Summarize(WithSkips(1), weeks: 1)));
+        Assert.True(ExperimentStatistics.GuardrailBreached(control, ExperimentStatistics.Summarize(WithSkips(2), weeks: 1)));
+
+        // Küçük gruplarda uyarı verilmez: gürültü karar değildir.
+        var small = ExperimentStatistics.Summarize(WithSkips(5).Take(5).ToList(), weeks: 1);
+        Assert.False(ExperimentStatistics.GuardrailBreached(control, small));
+    }
+
+    [Fact]
     public void Empty_variant_is_zero_not_an_error()
     {
         var empty = ExperimentStatistics.Summarize([], weeks: 0);

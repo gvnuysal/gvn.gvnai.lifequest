@@ -1,11 +1,9 @@
 using Gvn.GvnFramework.Domain.Events;
-using MediatR;
 
 namespace LifeQuest.Domain.Common;
 
 /// <summary>
-/// GvnDbContext domain event'leri <c>IMediator.Publish(object)</c> ile yayınlar; MediatR bunun için
-/// event'in <see cref="INotification"/> olmasını şart koşar. Framework'teki <c>IDomainEvent</c> bunu
-/// içermediğinden tüm LifeQuest event'leri bu tabandan türetilir.
+/// Tüm LifeQuest domain event'lerinin ortak tabanı. Gvn.GvnFramework 1.1.0 ile <c>IDomainEvent</c> doğrudan
+/// MediatR <c>INotification</c>'dır; GvnDbContext event'leri commit sonrası <c>IMediator.Publish</c> ile yayınlar.
 /// </summary>
-public abstract record LifeQuestDomainEvent : DomainEvent, INotification;
+public abstract record LifeQuestDomainEvent : DomainEvent;

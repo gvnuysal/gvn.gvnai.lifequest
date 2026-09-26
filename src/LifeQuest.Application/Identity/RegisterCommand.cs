@@ -1,3 +1,4 @@
+using Gvn.GvnFramework.Core.Observability;
 using FluentValidation;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
@@ -10,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace LifeQuest.Application.Identity;
 
-public sealed record RegisterCommand(string Email, string Password, string DisplayName, int BirthYear)
+public sealed record RegisterCommand([property: Sensitive(MaskMode.Partial)] string Email, string Password, string DisplayName, int BirthYear)
     : ICommand<AuthTokensDto>;
 
 public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>

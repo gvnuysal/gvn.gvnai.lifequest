@@ -82,6 +82,24 @@ public sealed class ExperimentTests
     }
 }
 
+public sealed class ExperimentPresetTests
+{
+    [Fact]
+    public void Presets_are_valid_and_each_changes_a_production_default()
+    {
+        Assert.Equal(3, ExperimentPresets.All.Count);
+        Assert.Equal(ExperimentPresets.All.Count, ExperimentPresets.All.Select(p => p.Key).Distinct().Count());
+
+        foreach (var preset in ExperimentPresets.All)
+        {
+            Assert.Empty(RecommendationWeightCatalog.Validate(preset.Overrides));
+            Assert.All(preset.Overrides, o =>
+                Assert.NotEqual(RecommendationWeightCatalog.Get(o.Key).Get(new RecommendationWeights()), o.Value));
+            Assert.True(Experiment.Create(preset.Name, preset.Hypothesis, preset.Overrides, preset.TreatmentShare, "admin@x").Succeeded);
+        }
+    }
+}
+
 public sealed class QuestIdeaTests
 {
     private static QuestIdea NewIdea() => QuestIdea.Submit(Guid.NewGuid(), "Mahalle kütüphanesi turu",

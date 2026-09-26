@@ -131,12 +131,22 @@ public sealed class RiskFollowUpTests(LifeQuestApiFactory factory)
             var sp = scope.ServiceProvider;
             var service = new WeeklySummaryService(
                 sp.GetRequiredService<IUserProfileRepository>(), sp.GetRequiredService<IUserQuestRepository>(),
-                sp.GetRequiredService<IWeeklySummaryRepository>(), sp.GetRequiredService<IUnitOfWork>(), nextWeek);
+                sp.GetRequiredService<IWeeklySummaryRepository>(), sp.GetRequiredService<PushNotifier>(),
+                sp.GetRequiredService<IUnitOfWork>(), nextWeek);
             return await service.GenerateForPreviousWeekAsync(userId, CancellationToken.None);
         }
 
+        // Push izni olan kullanıcıya özet bildirim olarak da gider.
+        var endpoint = $"https://push.example.com/weekly/{Guid.NewGuid():N}";
+        await client.PutAsJsonAsync("/api/v1/push/subscription", new
+        {
+            endpoint,
+            keys = new { p256dh = "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM", auth = "tBHItJI5svbpez7KI4CCXg" }
+        });
+
         Assert.True(await Generate());
         Assert.False(await Generate());
+        Assert.Single(factory.Push.Sent, s => s.Endpoint == endpoint && s.Notification.Tag == "weekly-summary");
 
         var latest = await client.GetFromJsonAsync<JsonElement>("/api/v1/summaries/latest", Json);
         Assert.Equal(1, latest.GetProperty("completedCount").GetInt32());

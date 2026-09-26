@@ -687,6 +687,59 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.ToTable("user_accounts", (string)null);
                 });
 
+            modelBuilder.Entity("LifeQuest.Domain.Notifications.PushSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("auth");
+
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("integer")
+                        .HasColumnName("consecutive_failures");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("endpoint");
+
+                    b.Property<DateTime?>("LastSuccessAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_success_at");
+
+                    b.Property<string>("P256dh")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("p256dh");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_push_subscriptions");
+
+                    b.HasIndex("Endpoint")
+                        .IsUnique()
+                        .HasDatabaseName("ix_push_subscriptions_endpoint");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_push_subscriptions_user_id");
+
+                    b.ToTable("push_subscriptions", (string)null);
+                });
+
             modelBuilder.Entity("LifeQuest.Domain.Notifications.WeeklySummary", b =>
                 {
                     b.Property<Guid>("Id")
@@ -815,6 +868,10 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
+                    b.Property<int?>("DailyReminderHour")
+                        .HasColumnType("integer")
+                        .HasColumnName("daily_reminder_hour");
+
                     b.Property<string>("DiscoveryRadius")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -825,6 +882,10 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("integer[]")
                         .HasColumnName("goals");
+
+                    b.Property<DateOnly?>("LastDailyReminderOn")
+                        .HasColumnType("date")
+                        .HasColumnName("last_daily_reminder_on");
 
                     b.Property<string>("MaxPhysicalEffort")
                         .IsRequired()
@@ -1403,6 +1464,105 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.ToTable("user_quests", (string)null);
                 });
 
+            modelBuilder.Entity("LifeQuest.Domain.RealWorld.LocalPlace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("CityKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("city_key");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("CreatedByEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("created_by_email");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.PrimitiveCollection<List<Guid>>("TemplateIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("template_ids");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_local_places");
+
+                    b.HasIndex("CityKey", "Kind", "EndsAt")
+                        .HasDatabaseName("ix_local_places_city_key_kind_ends_at");
+
+                    b.ToTable("local_places", (string)null);
+                });
+
             modelBuilder.Entity("LifeQuest.Domain.Recommendations.RecommendationSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1437,6 +1597,148 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasName("pk_recommendation_settings");
 
                     b.ToTable("recommendation_settings", (string)null);
+                });
+
+            modelBuilder.Entity("LifeQuest.Domain.Social.PartyMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BonusXp")
+                        .HasColumnType("integer")
+                        .HasColumnName("bonus_xp");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<DateTime?>("DroppedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dropped_at");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<Guid>("PartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("party_id");
+
+                    b.Property<int>("QuestLifeXp")
+                        .HasColumnType("integer")
+                        .HasColumnName("quest_life_xp");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("UserQuestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_quest_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quest_party_members");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_quest_party_members_user_id");
+
+                    b.HasIndex("UserQuestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quest_party_members_user_quest_id");
+
+                    b.HasIndex("PartyId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quest_party_members_party_id_user_id");
+
+                    b.ToTable("quest_party_members", (string)null);
+                });
+
+            modelBuilder.Entity("LifeQuest.Domain.Social.QuestParty", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("HostUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_user_id");
+
+                    b.Property<string>("InviteCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("invite_code");
+
+                    b.Property<string>("QuestTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("quest_title");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<DateTime?>("SettledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("settled_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quest_parties");
+
+                    b.HasIndex("HostUserId")
+                        .HasDatabaseName("ix_quest_parties_host_user_id");
+
+                    b.HasIndex("InviteCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quest_parties_invite_code");
+
+                    b.ToTable("quest_parties", (string)null);
                 });
 
             modelBuilder.Entity("LifeQuest.Domain.Catalog.InterestRelation", b =>
@@ -1474,6 +1776,16 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_user_accounts_user_id");
+                });
+
+            modelBuilder.Entity("LifeQuest.Domain.Notifications.PushSubscription", b =>
+                {
+                    b.HasOne("LifeQuest.Domain.Identity.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_push_subscriptions_user_accounts_user_id");
                 });
 
             modelBuilder.Entity("LifeQuest.Domain.Notifications.WeeklySummary", b =>
@@ -1573,6 +1885,23 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_user_quests_user_accounts_user_id");
                 });
 
+            modelBuilder.Entity("LifeQuest.Domain.Social.PartyMember", b =>
+                {
+                    b.HasOne("LifeQuest.Domain.Social.QuestParty", null)
+                        .WithMany("Members")
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_quest_party_members_quest_parties_party_id");
+
+                    b.HasOne("LifeQuest.Domain.Identity.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_quest_party_members_user_accounts_user_id");
+                });
+
             modelBuilder.Entity("LifeQuest.Domain.Profiles.UserProfile", b =>
                 {
                     b.Navigation("Interests");
@@ -1583,6 +1912,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                     b.Navigation("Achievements");
 
                     b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("LifeQuest.Domain.Social.QuestParty", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }
