@@ -41,6 +41,8 @@ services:
       # Zamanlanmış işler uygulama veritabanında ("hangfire" şeması); API yeniden başlasa da kaybolmaz.
       Hangfire__StorageProvider: PostgreSql
       Admin__BootstrapEmails__0: ${ADMIN_EMAIL:-}
+      # Simülasyonun önerdiği ilk A/B deneyi açılışta başlar (bir kez; durdurulursa yeniden açılmaz).
+      Experiments__AutoStartPreset: ${EXPERIMENT_AUTOSTART:-loved-repeat-0.8}
     restart: always
 
   web:

@@ -7,6 +7,7 @@ import {
   Experiment,
   ExperimentAction,
   ExperimentDetail,
+  ExperimentPreset,
   IdeaRequest,
   IdeaStatus,
   MyIdea,
@@ -338,6 +339,10 @@ export class AdminApi {
   // Deneyler
   experiments() {
     return this.http.get<Experiment[]>(`${API}/admin/experiments`);
+  }
+
+  experimentPresets() {
+    return this.http.get<ExperimentPreset[]>(`${API}/admin/experiments/presets`);
   }
 
   experiment(id: string) {

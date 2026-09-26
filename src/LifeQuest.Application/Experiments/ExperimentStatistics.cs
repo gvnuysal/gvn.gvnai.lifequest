@@ -44,6 +44,9 @@ public enum ExperimentVerdict
 public static class ExperimentStatistics
 {
     public const int MinUsersPerVariant = 30;
+
+    /// <summary>Koruma metriği: Deneme grubunda "ilgimi çekmedi" oranı bu kadar puandan fazla artarsa uyarı verilir.</summary>
+    public const double GuardrailMaxNotInterestedIncrease = 0.05;
     private const double Z95 = 1.959964;
 
     public static VariantResult Summarize(IReadOnlyCollection<UserExperimentStats> users, double weeks)
@@ -83,6 +86,14 @@ public static class ExperimentStatistics
             return ExperimentVerdict.TreatmentWorse;
         return ExperimentVerdict.NoDifference;
     }
+
+    /// <summary>
+    /// North-star artsa bile Deneme grubu önerileri belirgin daha sık "ilgimi çekmedi" diye geçiliyorsa ağırlık
+    /// üretime alınmamalıdır. Yeterli veri yokken uyarı verilmez.
+    /// </summary>
+    public static bool GuardrailBreached(VariantResult control, VariantResult treatment)
+        => control.Users >= MinUsersPerVariant && treatment.Users >= MinUsersPerVariant &&
+           treatment.NotInterestedRate - control.NotInterestedRate > GuardrailMaxNotInterestedIncrease;
 
     private static (double Mean, double StandardError) MeanAndStandardError(IReadOnlyList<double> values)
     {

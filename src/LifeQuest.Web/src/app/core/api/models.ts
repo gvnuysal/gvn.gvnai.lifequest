@@ -509,7 +509,21 @@ export interface ExperimentDetail {
     northStar: { difference: number; ciLow: number; ciHigh: number; relativeLift: number | null };
     verdict: ExperimentVerdict;
     minUsersPerVariant: number;
+    /** Deneme grubunda "ilgimi çekmedi" oranı izin verilenden fazla arttı. */
+    guardrailBreached: boolean;
+    guardrailMaxIncrease: number;
   } | null;
+}
+
+export interface ExperimentPreset {
+  key: string;
+  name: string;
+  hypothesis: string;
+  treatmentShare: number;
+  source: string;
+  overrides: Experiment['overrides'];
+  existingExperimentId: string | null;
+  existingStatus: ExperimentStatus | null;
 }
 
 export interface CreateExperimentRequest {
