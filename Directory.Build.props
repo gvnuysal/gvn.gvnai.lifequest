@@ -8,5 +8,9 @@
     <Authors>Güven Uysal</Authors>
     <Company>Gvn</Company>
     <Product>LifeQuest</Product>
+    <!-- Doğrudan ve geçişli bağımlılıklardaki bilinen zafiyetler derlemede uyarı olarak görünür (CI dahil). -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
   </PropertyGroup>
 </Project>

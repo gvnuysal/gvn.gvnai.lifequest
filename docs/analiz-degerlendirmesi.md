@@ -89,10 +89,29 @@ Durum etiketleri: ✅ uygulandı · 🧭 karar (politika) · 🗺️ yol haritas
 
 ## 4. Gvn.GvnFramework bulguları
 
-LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi framework değiştirilmeden LifeQuest tarafında aşıldı; kalıcı çözüm framework'e aittir.
+LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Framework değiştirilmeden LifeQuest tarafında aşıldılar. **Gvn.GvnFramework 1.1.0-preview** (commit d6f40c1) bunların önemli bir kısmını düzeltti; LifeQuest 1.1.0'a geçti ve ilgili geçici çözümler kaldırıldı.
 
-| # | Önem | Bulgu | LifeQuest'teki geçici çözüm |
-|---|---|---|---|
+| # | Önem | Bulgu | 1.1.0 durumu | LifeQuest'te şimdi |
+|---|---|---|---|---|
+| 1 | **Kritik** | `ValidationBehavior`, `(TResponse)Result.Fail(...)` cast'i yüzünden `Result<T>` dönen her command'de doğrulama hatasını **500**'e çeviriyordu. | ✅ Düzeldi (`ResultFactory<T>`, sıralı async doğrulama) | `ResultValidationBehavior` **kaldırıldı**; framework behavior'ı kullanılıyor, hatalar 400 |
+| 2 | Yüksek | `IDomainEvent`, `INotification` değildi; MediatR yayında hata veriyordu. | ✅ Düzeldi (`IDomainEvent : INotification`) | `LifeQuestDomainEvent` artık yalnızca `DomainEvent` |
+| 3 | Yüksek | Domain event'ler **commit'ten sonra** yayınlanıyor; handler hatası başarılı isteği 500 yapıyor. `OutboxMessage` kullanılmıyor. | ❌ Açık | Handler'lar yalnızca yan etkisiz iş (log) |
+| 4 | Yüksek | `LoggingBehavior` istek ve yanıtı olduğu gibi logluyordu (şifre, token, e-posta). | ✅ Düzeldi (gövde varsayılan kapalı, `[Sensitive]`, framework Serilog politikası) | LifeQuest maskeleme politikası **kaldırıldı**; e-postalar `[Sensitive(MaskMode.Partial)]`, testli |
+| 5 | Yüksek | `BackgroundJobs` yalnızca InMemory; `RecurringJobAdmin` zafiyetli `Newtonsoft.Json 11` / `System.Data.SqlClient 4.4` getiriyordu. | ✅ Büyük ölçüde (`Storage = Custom` + `ConfigureStorage`; Hangfire.MediatR kaldırıldı, Newtonsoft 13.0.4) | **Hangfire PostgreSQL deposu** (`hangfire` şeması); geçişli paket sabitlemeleri kaldırıldı, NuGet audit açık ve zafiyet yok |
+| 6 | Orta | `CorrelationIdMiddleware` kimliği log context'e taşımıyor, istemci header'ını temizlemiyor. | ❌ Açık | `CorrelationIdLogContextMiddleware` |
+| 7 | Orta | `OutboxConfiguration` içinde SQL Server'a özgü `nvarchar(max)`. | ❌ Açık | Outbox kullanılmıyor |
+| 8 | Orta | `Security` soyutlama ve implementasyonu birlikte taşıyor; refresh token ve `JwtOptions` doğrulaması yok. | ❌ Açık | Refresh token LifeQuest'te, secret uzunluğu açılışta doğrulanıyor |
+| 9 | Orta | `UseGvnSwagger` içeride `UseRouting`/`UseEndpoints` çağırıyor. | ❌ Açık | `UseRouting` auth'tan önce açıkça çağrılıyor |
+| 10 | Orta | `ApiControllerBase` `Failure`'ı 500'e çeviriyor; 403/429 tipi yok. | ❌ Açık | İş hataları Validation / NotFound / Conflict / Unauthorized |
+| 11 | Düşük | Paket adlarında yazım hatası (`EntityFramewokCore`, `DepedencyInjection`). | ✅ Düzeldi (paket kimliği ve namespace) | Yeni adlara geçildi |
+| 12 | Düşük | `net10.0` hedeflenirken EF Core, OpenApi, JwtBearer 9.0.4. | ❌ Açık | Npgsql 9.0.4 ile uyumlu |
+| 13 | Düşük | `EfRepository` context'i açmıyor; `AuditableEntity.CreatedBy` hiç dolmuyor ve alt sınıftaki aynı adlı özelliği gölgeliyor. | ❌ Açık | Repository'lerde context ayrıca tutuluyor; deneylerde `CreatedByEmail` |
+| 14 | Düşük | `ModuleLoader` statik liste; `IModule.ConfigureServices` `IConfiguration` almıyor. | ❌ Açık | Konfigürasyon `IServiceProvider` üzerinden |
+| 15 | Düşük | Aynı sürüm numarasıyla yeniden paketleme NuGet önbelleğinde tüketiciye ulaşmıyor. | ✅ 1.1.0 yeni sürüm numarasıyla geldi | Paketler repoda (`packages/gvnframework`) |
+
+**Kalan öneri:** 3 (outbox ile güvenilir event yayını), 13 (audit alanlarında kullanıcı bilgisi) ve 12 (10.x paketleri) framework'ün bir sonraki sürümü için önceliklidir.
+
+---|---|---|---|
 | 1 | **Kritik** | `ValidationBehavior`, hata durumunda `(TResponse)Result.Fail(...)` cast'i yapıyor. `Result<T>` dönen her command'de doğrulama hatası `InvalidCastException` → **500** üretiyor. | `ResultValidationBehavior` aynı pipeline sırasında framework behavior'ının yerine geçiyor. |
 | 2 | Yüksek | `IDomainEvent`, `INotification` değil. `GvnDbContext` ise `IMediator.Publish(object)` çağırıyor; `INotification` olmayan event'te MediatR hata fırlatıyor. | `LifeQuestDomainEvent : DomainEvent, INotification` |
 | 3 | Yüksek | Domain event'ler `SaveChangesAsync` içinde, **commit'ten sonra** yayınlanıyor. Bir handler hata verirse başarıyla yazılmış istek 500 dönüyor. `OutboxMessage` tanımlı ama kullanılmıyor. | Handler'lar yalnızca yan etkisiz iş yapıyor (log). |
@@ -126,7 +145,7 @@ LifeQuest geliştirilirken framework'te tespit edilen sorunlar aşağıda. Hepsi
 ## 5. Sonraki adımlar (öncelik sırasıyla)
 
 1. Katalog büyümesi: ilgi başına 6 görev hedefi; topluluk fikirleri ve katalog sağlığı uyarılarıyla (ilk adım tamamlandı: 142 template).
-2. Framework 1–5 düzeltmeleri ve Hangfire için kalıcı PostgreSQL storage.
+2. Framework'ün açık kalan bulguları (3 outbox, 13 audit kullanıcısı, 12 10.x paketleri) bir sonraki sürümde; 1.1.0 geçişi ve Hangfire PostgreSQL deposu tamamlandı.
 3. Mod ayarlarının canlı veride A/B ile doğrulanması: sevdiğini tekrarla 0,6 ↔ 0,8, Sakin keşif %20 ↔ %10, Şaşırt Beni 0,25 ↔ 0,20.
 4. Gerçek LLM adaptörü (`IQuestNarrator`) ve guard ihlal oranının izlenmesi.
 5. Push kanalı ve kullanıcı seçimli günlük hatırlatma; hava durumu entegrasyonu.

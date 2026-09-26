@@ -1,4 +1,4 @@
-using Gvn.GvnFramework.EntityFramewokCore.Repositories;
+using Gvn.GvnFramework.EntityFrameworkCore.Repositories;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
+using Hangfire;
+using Hangfire.PostgreSql;
 using System.Text.Json.Serialization;
 using Gvn.GvnFramework.AspNetCore.Extensions;
 using Gvn.GvnFramework.BackgroundJobs.Configuration;
@@ -21,11 +23,10 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
-// ── Logging: framework Serilog yapılandırması + PII maskeleme ────────────────
+// ── Logging: framework Serilog yapılandırması ────────────────────────────────
+// Maskeleme framework'te: şifre/token gibi bilinen adlar ve [Sensitive] işaretli alanlar (e-posta kısmi) loglanmaz.
 builder.Services.AddSerilog(
-    SerilogConfiguration.CreateDefaultConfiguration(configuration, "LifeQuest.Api")
-        .Destructure.With<SensitiveDataDestructuringPolicy>()
-        .CreateLogger(),
+    SerilogConfiguration.CreateDefaultConfiguration(configuration, "LifeQuest.Api").CreateLogger(),
     dispose: true);
 
 // ── Web ──────────────────────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ builder.Services.AddGvnCaching(cache => configuration.GetSection(CacheOptions.Se
 
 var backgroundJobsEnabled = configuration.GetValue("BackgroundJobs:Enabled", true);
 if (backgroundJobsEnabled)
-    builder.Services.AddGvnBackgroundJobs(hf => configuration.GetSection(HangfireOptions.SectionName).Bind(hf));
+    builder.Services.AddGvnBackgroundJobs(hf => ConfigureHangfire(hf, configuration));
 
 builder.Services.AddGvnSwagger(
     "LifeQuest API", "v1",
@@ -112,4 +113,37 @@ app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
 
-public partial class Program;
+public partial class Program
+{
+    /// <summary>
+    /// Hangfire deposu: <c>Hangfire:StorageProvider</c> = <c>PostgreSql</c> (üretim/test; yeniden başlatmada işler
+    /// kaybolmaz, birden çok API örneği aynı kuyruğu paylaşır) veya <c>InMemory</c> (geliştirme). PostgreSQL deposu
+    /// uygulama veritabanında ayrı <c>hangfire</c> şemasında tutulur ve açılışta gerekirse oluşturulur.
+    /// </summary>
+    private static void ConfigureHangfire(HangfireOptions options, IConfiguration configuration)
+    {
+        configuration.GetSection(HangfireOptions.SectionName).Bind(options);
+
+        var provider = configuration.GetValue("Hangfire:StorageProvider", "InMemory");
+        if (!string.Equals(provider, "PostgreSql", StringComparison.OrdinalIgnoreCase))
+        {
+            options.Storage = HangfireStorageMode.InMemory;
+            return;
+        }
+
+        var connectionString = configuration.GetConnectionString(PersistenceOptions.ConnectionStringName)
+            ?? throw new InvalidOperationException(
+                $"Hangfire:StorageProvider=PostgreSql için ConnectionStrings:{PersistenceOptions.ConnectionStringName} gerekli.");
+
+        options.Storage = HangfireStorageMode.Custom;
+        options.ConfigureStorage = global => global.UsePostgreSqlStorage(
+            npgsql => npgsql.UseNpgsqlConnection(connectionString),
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire",
+                PrepareSchemaIfNecessary = true,
+                QueuePollInterval = TimeSpan.FromSeconds(5),
+                InvisibilityTimeout = TimeSpan.FromMinutes(30)
+            });
+    }
+}

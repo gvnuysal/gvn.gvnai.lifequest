@@ -1,4 +1,4 @@
-using Gvn.GvnFramework.EntityFramewokCore.Repositories;
+using Gvn.GvnFramework.EntityFrameworkCore.Repositories;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Domain.Recommendations;
 using Microsoft.EntityFrameworkCore;

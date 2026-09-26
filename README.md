@@ -7,9 +7,9 @@
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
 [![Angular](https://img.shields.io/badge/Angular-21-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.0.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
+[![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.1.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-325%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-327%20passing-22A559?style=flat-square)](#testler)
 [![Web tests](https://img.shields.io/badge/web%20tests-42%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 [![CI](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml/badge.svg)](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml)
@@ -208,12 +208,12 @@ Modüller (framework `IModule`, `LoadModules` ile yüklenir): **Persistence · I
 | Core | `Result<T>`, `Error`, `Guard`, exception'lar, `Batch` |
 | Domain | `AggregateRoot`, `Entity`, `ValueObject` (`QuestReward`), `ISoftDeletable`, `IRepository`, `IUnitOfWork` |
 | Application | `ICommand`/`IQuery` + handler'lar, pipeline behavior'lar, `PagedRequest`/`PagedResult` |
-| EntityFramewokCore | `GvnDbContext<T>` (audit, soft delete, domain event), `EfRepository`, `UnitOfWork<T>` |
+| EntityFrameworkCore | `GvnDbContext<T>` (audit, soft delete, domain event), `EfRepository`, `UnitOfWork<T>` |
 | Security | JWT, BCrypt, `ICurrentUserService` |
 | Caching | Katalog snapshot cache'i (Memory / Redis) |
 | BackgroundJobs | Periyodik job'lar (`IRecurringJob`, `IBackgroundJobService`) |
 | Logging · AspNetCore · Swagger | Serilog, `ApiControllerBase`, middleware'ler, OpenAPI + Scalar |
-| Modularity · DepedencyInjection | Modül kaydı, `Decorate` |
+| Modularity · DependencyInjection | Modül kaydı, `Decorate` |
 
 Framework'te bulunan sorunlar ve LifeQuest'teki geçici çözümler [analiz değerlendirmesi](docs/analiz-degerlendirmesi.md#4-gvngvnframework-bulguları) dokümanında.
 
@@ -297,7 +297,7 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 | Paket | Kapsam |
 |---|---|
 | `LifeQuest.Domain.Tests` (89) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi, görev günü sınırı, ilgi kapsama kuralı |
-| `LifeQuest.Application.Tests` (51) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması |
+| `LifeQuest.Application.Tests` (53) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması, log maskeleme (şifre/token yok, e-posta kısmi) |
 | `LifeQuest.Catalog.Tests` (147) | 142 seed template'in her biri, katalog dengesi ve ilgi kapsaması: her ilgide ≥ 4 görev, ≥ 1 kısa görev (CI kapısı) |
 | `LifeQuest.Api.IntegrationTests` (38) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit) |
 | `LifeQuest.Web` (42, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi, çalışma anı API adresi, İngilizce rotalar ve eski Türkçe adres yönlendirmeleri |
@@ -361,7 +361,8 @@ Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğ
 | `Jwt:Secret` | **En az 32 bayt.** Üretimde `Jwt__Secret` ortam değişkeni veya user-secrets ile verilir. `appsettings.Development.json` içindeki değer yalnızca geliştirme içindir. |
 | `Database:MigrateOnStartup` | Yalnızca geliştirme için. Üretimde migration ayrı bir adımdır. |
 | `Cache:UseRedis` | `docker compose --profile redis up -d` ile Redis |
-| `BackgroundJobs:Enabled`, `Hangfire:*` | Hangfire (şu an InMemory) |
+| `BackgroundJobs:Enabled`, `Hangfire:*` | Hangfire; `Hangfire:StorageProvider` = `PostgreSql` (varsayılan, `hangfire` şeması; yeniden başlatmada işler korunur) veya `InMemory` (geliştirme) |
+| `Gvn:Pipeline:Logging`, `Gvn:Pipeline:Performance` | Framework pipeline'ı: istek/yanıt gövdesi loglama (varsayılan kapalı), yavaş istek eşiği |
 | `Quests:*`, `Recommendation:*` | Günlük öneri sayısı, aktif görev sınırı, skor ağırlıkları, keşif oranları, tekrar penceresi |
 | `Narration:TimeoutMilliseconds` | Anlatım zaman aşımı (varsayılan 2000) |
 | `Admin:BootstrapEmails` | Açılışta admin rolü verilecek hesaplar (geliştirmede `admin@lifequest.local`) |
@@ -382,11 +383,11 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 - [x] Analiz riskleri: 100 template'lik güvenli katalog, efor/erişilebilirlik, cold start kartları, north-star paneli, haftalık özet, AI anlatım altyapısı, offline simülasyon
 - [x] Yönetim paneli: kullanıcılar, katalog inceleme kuyruğu, canlı öneri ağırlıkları, denetim kaydı
 - [x] Katma değer: A/B deneyleri, topluluk fikirleri, sonra yaparım + takvim, sevdiğini tekrarla, KVKK dışa aktarma, CI + Docker
-- [ ] Gvn.GvnFramework 1.1.0-preview'a geçiş (paket adları düzeltildi; bilinen hataların düzelip düzelmediği kontrol edilmeli)
+- [x] Gvn.GvnFramework 1.1.0-preview'a geçiş: doğrulama, domain event ve log maskeleme geçici çözümleri kaldırıldı · Hangfire kalıcı PostgreSQL deposu
 - [x] Test ortamı ve CI/CD: Docker + Caddy (HTTPS), deploy/rollback script'leri, self-hosted runner ile otomatik deploy · İngilizce URL'ler
 - [x] Katalog derinliği: 142 template, her ilgide ≥ 4 görev ve ≥ 1 kısa görev (north-star +%9, gizli ilgi keşfi %61 → %70)
 - [ ] Katalog: ilgi başına 6 görev · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
-- [ ] Refresh token'ın httpOnly çereze taşınması · Hangfire için kalıcı PostgreSQL storage
+- [ ] Refresh token'ın httpOnly çereze taşınması
 - [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
 - [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma
 - [ ] **Faz 3 · Real World:** mekân/etkinlik kaynakları, hava durumu bağlamı

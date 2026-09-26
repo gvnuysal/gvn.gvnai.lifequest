@@ -1,6 +1,6 @@
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Entities;
-using Gvn.GvnFramework.EntityFramewokCore.Context;
+using Gvn.GvnFramework.EntityFrameworkCore.Context;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Community;

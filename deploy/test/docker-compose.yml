@@ -38,6 +38,8 @@ services:
       Cors__AllowedOrigins__0: https://${UI_HOST}
       ReverseProxy__Enabled: "true"
       ApiDocs__Enabled: "true"
+      # Zamanlanmış işler uygulama veritabanında ("hangfire" şeması); API yeniden başlasa da kaybolmaz.
+      Hangfire__StorageProvider: PostgreSql
       Admin__BootstrapEmails__0: ${ADMIN_EMAIL:-}
     restart: always
 
