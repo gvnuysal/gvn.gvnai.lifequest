@@ -61,6 +61,36 @@ jobs:
       - run: npm test -- --watch=false
       - run: npm run build
 
+      # Mobil uygulamanın metinleri ve ikonları web'den üretilir; web'de değişen metin mobilde de güncellenmiş olmalı.
+      - name: Mobil sözlük ve ikonlar güncel mi
+        run: |
+          node ../../tools/mobile/gen-strings.mjs
+          node ../../tools/mobile/gen-icons.mjs
+          git diff --exit-code -- ../LifeQuest.Mobile.Core
+
+  mobile-android:
+    name: Mobil (Android derlemesi)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 21
+
+      # iOS derlemesi macOS + Xcode gerektirir; CI yalnızca Android'i derler (çekirdek ve testleri backend işinde).
+      - name: MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Android derlemesi
+        run: dotnet build src/LifeQuest.Mobile/LifeQuest.Mobile.csproj -f net10.0-android -c Release
+
   docker:
     name: Docker imajları
     runs-on: ubuntu-latest
