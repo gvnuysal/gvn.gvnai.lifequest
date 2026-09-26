@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,6 +20,14 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
     {
         Converters = { new JsonStringEnumConverter() }
     };
+
+    public LifeQuestApiFactory()
+    {
+        // Refresh token çerezi Secure: istemci HTTPS adresle çalışmazsa CookieContainer çerezi geri göndermez.
+        ClientOptions.BaseAddress = new Uri("https://localhost");
+    }
+
+    public const string RefreshCookieName = "lq_refresh";
 
     public async Task InitializeAsync() => await _postgres.StartAsync();
 
@@ -46,7 +55,10 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
 
     public async Task<HttpClient> CreateUserClientAsync(string? email = null) => (await RegisterAsync(email)).Client;
 
-    /// <summary>Kaydolur; istemci access token'la yetkilendirilir, ham token'lar (refresh dahil) da döner.</summary>
+    /// <summary>
+    /// Kaydolur; istemci access token'la yetkilendirilir ve refresh çerezini taşır. Test kolaylığı için çerezdeki
+    /// refresh token da dönen Tokens'a "refreshToken" olarak eklenir (API gövdede döndürmez).
+    /// </summary>
     public async Task<(HttpClient Client, JsonElement Tokens, string Email)> RegisterAsync(string? email = null)
     {
         email ??= $"user-{Guid.NewGuid():N}@example.com";
@@ -60,7 +72,9 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         });
         response.EnsureSuccessStatusCode();
 
-        var tokens = await response.Content.ReadFromJsonAsync<JsonElement>(Json);
+        var body = (await response.Content.ReadFromJsonAsync<JsonObject>(Json))!;
+        body["refreshToken"] = RefreshCookieOf(response);
+        var tokens = JsonSerializer.SerializeToElement(body, Json);
         Authorize(client, tokens);
         return (client, tokens, email);
     }
@@ -90,6 +104,16 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         {
             _adminLock.Release();
         }
+    }
+
+    /// <summary>Yanıttaki Set-Cookie başlığından refresh token değerini okur.</summary>
+    public static string? RefreshCookieOf(HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues("Set-Cookie", out var cookies))
+            return null;
+        var cookie = cookies.FirstOrDefault(c => c.StartsWith(RefreshCookieName + "=", StringComparison.Ordinal));
+        var value = cookie?.Split(';')[0][(RefreshCookieName.Length + 1)..];
+        return string.IsNullOrEmpty(value) ? null : value;
     }
 
     public static void Authorize(HttpClient client, JsonElement tokens)

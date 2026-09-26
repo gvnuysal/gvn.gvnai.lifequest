@@ -5,7 +5,7 @@ using LifeQuest.Domain.Identity;
 
 namespace LifeQuest.Application.Identity;
 
-public sealed record LogoutCommand(string RefreshToken) : ICommand;
+public sealed record LogoutCommand(string? RefreshToken) : ICommand;
 
 internal sealed class LogoutCommandHandler(
     IRefreshTokenRepository refreshTokens,
@@ -14,6 +14,9 @@ internal sealed class LogoutCommandHandler(
 {
     public async Task<Result> Handle(LogoutCommand command, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(command.RefreshToken))
+            return Result.Ok();
+
         var token = await refreshTokens.GetByHashAsync(AuthTokenIssuer.Hash(command.RefreshToken), cancellationToken);
 
         // Başkasına ait ya da bilinmeyen token için de aynı yanıt: bilgi sızdırılmaz.

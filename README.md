@@ -310,12 +310,10 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Forms. UI kütüphanesi yok; tasarım sistemi CSS değişkenleriyle kurulu. 6 kategori rengi ve açık/koyu tema var. İkonlar kütüphanesiz SVG.
 
-- **Oturum:** access token yalnızca bellekte tutulur. Refresh token açılışta oturumu sessizce geri yükler. 401 alındığında tek seferlik yenileme yapılır.
+- **Oturum:** access token yalnızca bellekte tutulur. Refresh token `HttpOnly; Secure; SameSite=Strict` çerezdedir (yol `/api/v1/auth`), JavaScript okuyamaz ve yanıt gövdesinde dönmez. Açılışta oturum çerezle sessizce geri yüklenir; 401 alındığında tek seferlik yenileme yapılır. Eski sürümün `localStorage`'da bıraktığı token ilk açılışta çereze taşınıp silinir.
 - **PWA:** service worker yalnızca uygulama kabuğunu önbelleğe alır. API yanıtları mahremiyet nedeniyle önbelleğe alınmaz.
 - **Erişilebilirlik:** 44 px dokunma hedefleri, görünür odak, AA kontrast, `prefers-reduced-motion` desteği.
 - **Yönetim paneli (`/admin`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
-
-> ⚠️ Refresh token şu an `localStorage`'da tutuluyor. Üretim öncesinde httpOnly + SameSite çereze taşınması planlanıyor.
 
 ---
 
@@ -387,7 +385,7 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 - [x] Test ortamı ve CI/CD: Docker + Caddy (HTTPS), deploy/rollback script'leri, self-hosted runner ile otomatik deploy · İngilizce URL'ler
 - [x] Katalog derinliği: 142 template, her ilgide ≥ 4 görev ve ≥ 1 kısa görev (north-star +%9, gizli ilgi keşfi %61 → %70)
 - [ ] Katalog: ilgi başına 6 görev · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
-- [ ] Refresh token'ın httpOnly çereze taşınması
+- [x] Refresh token'ın HttpOnly + SameSite=Strict çereze taşınması
 - [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
 - [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma
 - [ ] **Faz 3 · Real World:** mekân/etkinlik kaynakları, hava durumu bağlamı

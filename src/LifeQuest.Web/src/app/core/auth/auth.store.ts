@@ -2,16 +2,19 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, finalize, firstValueFrom, map, shareReplay, tap } from 'rxjs';
 import { AuthApi } from '../api/api-clients';
-import { AuthTokens, LoginRequest, RegisterRequest } from '../api/models';
+import { AuthSession, LoginRequest, RegisterRequest } from '../api/models';
 import { ToastService } from '../state/toast.service';
 import { APP_PATHS } from '../routing/app-paths';
 
-const REFRESH_KEY = 'lq.refresh';
+/** Eski sürümün refresh token'ı sakladığı anahtar; açılışta bir kez çereze taşınıp silinir. */
+const LEGACY_REFRESH_KEY = 'lq.refresh';
+/** Gizli olmayan ipucu: bu tarayıcıda açık oturum (çerez) var mı. Anonim ziyarette boşuna /refresh çağrılmaz. */
+const SESSION_HINT_KEY = 'lq.session';
 
 /**
- * Oturum durumu. Access token yalnızca bellekte tutulur; refresh token sayfa yenilemelerinde oturumu
- * sürdürebilmek için localStorage'dadır (ödünleşim: ileride httpOnly çereze taşınmalı).
- * Backend refresh token'ı her kullanımda döndürür (rotation); eşzamanlı yenilemeler tek istekte birleştirilir.
+ * Oturum durumu. Access token yalnızca bellekte tutulur; refresh token HttpOnly çerezdedir ve JavaScript'ten
+ * okunamaz. Sayfa yenilendiğinde oturum çerezle sessizce sürdürülür. Backend her yenilemede yeni çerez yazar
+ * (rotation); eşzamanlı yenilemeler tek istekte birleştirilir.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
@@ -19,18 +22,18 @@ export class AuthStore {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  private readonly tokens = signal<AuthTokens | null>(null);
-  private refreshInFlight: Observable<AuthTokens> | null = null;
+  private readonly session = signal<AuthSession | null>(null);
+  private refreshInFlight: Observable<AuthSession> | null = null;
 
-  readonly accessToken = computed(() => this.tokens()?.accessToken ?? null);
-  readonly isAuthenticated = computed(() => this.tokens() !== null);
-  readonly userId = computed(() => this.tokens()?.userId ?? null);
-  readonly role = computed(() => roleFromToken(this.tokens()?.accessToken));
+  readonly accessToken = computed(() => this.session()?.accessToken ?? null);
+  readonly isAuthenticated = computed(() => this.session() !== null);
+  readonly userId = computed(() => this.session()?.userId ?? null);
+  readonly role = computed(() => roleFromToken(this.session()?.accessToken));
   readonly isAdmin = computed(() => this.role() === 'admin');
 
-  /** Uygulama açılışında: kayıtlı refresh token varsa oturumu sessizce yeniler. */
+  /** Uygulama açılışında: bu tarayıcıda oturum açılmışsa çerezle sessizce yeniler. */
   async restore(): Promise<void> {
-    if (!this.storedRefreshToken()) return;
+    if (!this.hasSession()) return;
     try {
       await firstValueFrom(this.refresh());
     } catch {
@@ -40,29 +43,27 @@ export class AuthStore {
 
   login(request: LoginRequest): Observable<void> {
     return this.api.login(request).pipe(
-      tap((tokens) => this.set(tokens)),
+      tap((session) => this.set(session)),
       map(() => undefined),
     );
   }
 
   register(request: RegisterRequest): Observable<void> {
     return this.api.register(request).pipe(
-      tap((tokens) => this.set(tokens)),
+      tap((session) => this.set(session)),
       map(() => undefined),
     );
   }
 
-  hasRefreshToken(): boolean {
-    return this.storedRefreshToken() !== null;
+  /** Yenilemeye değer bir oturum var mı (çerezin kendisi JavaScript'ten görünmez). */
+  hasSession(): boolean {
+    return read(SESSION_HINT_KEY) !== null || read(LEGACY_REFRESH_KEY) !== null;
   }
 
   /** Tek uçuşlu yenileme: aynı anda gelen 401'ler aynı isteği bekler. */
-  refresh(): Observable<AuthTokens> {
-    const refreshToken = this.storedRefreshToken();
-    if (!refreshToken) throw new Error('Refresh token yok.');
-
-    this.refreshInFlight ??= this.api.refresh(refreshToken).pipe(
-      tap((tokens) => this.set(tokens)),
+  refresh(): Observable<AuthSession> {
+    this.refreshInFlight ??= this.api.refresh(read(LEGACY_REFRESH_KEY) ?? undefined).pipe(
+      tap((session) => this.set(session)),
       finalize(() => (this.refreshInFlight = null)),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
@@ -71,10 +72,9 @@ export class AuthStore {
   }
 
   async logout(): Promise<void> {
-    const refreshToken = this.storedRefreshToken();
-    if (refreshToken && this.isAuthenticated()) {
+    if (this.isAuthenticated()) {
       try {
-        await firstValueFrom(this.api.logout(refreshToken));
+        await firstValueFrom(this.api.logout());
       } catch {
         // Sunucuya ulaşılamasa da yerel oturum kapatılır.
       }
@@ -85,7 +85,7 @@ export class AuthStore {
 
   /** Yenileme başarısız olduğunda veya hesap askıya alındığında interceptor tarafından çağrılır. */
   sessionExpired(reason: 'expired' | 'suspended' = 'expired'): void {
-    if (!this.isAuthenticated() && !this.hasRefreshToken()) return;
+    if (!this.isAuthenticated() && !this.hasSession()) return;
     this.clear();
     if (reason === 'suspended') this.toast.error('Hesabın askıya alındı. Destek ekibiyle iletişime geçebilirsin.');
     else this.toast.show('Oturumun sona erdi. Lütfen tekrar giriş yap.');
@@ -93,29 +93,40 @@ export class AuthStore {
   }
 
   clear(): void {
-    this.tokens.set(null);
-    try {
-      localStorage.removeItem(REFRESH_KEY);
-    } catch {
-      // yok say
-    }
+    this.session.set(null);
+    remove(SESSION_HINT_KEY);
+    remove(LEGACY_REFRESH_KEY);
   }
 
-  private set(tokens: AuthTokens): void {
-    this.tokens.set(tokens);
-    try {
-      localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
-    } catch {
-      // Depolama kapalıysa oturum yalnızca bu sekme için sürer.
-    }
+  private set(session: AuthSession): void {
+    this.session.set(session);
+    write(SESSION_HINT_KEY, '1');
+    // Token artık çerezde; eski sürümden kalan kopya silinir.
+    remove(LEGACY_REFRESH_KEY);
   }
+}
 
-  private storedRefreshToken(): string | null {
-    try {
-      return localStorage.getItem(REFRESH_KEY);
-    } catch {
-      return null;
-    }
+function read(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function write(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Depolama kapalıysa oturum yalnızca bu sekme için sürer.
+  }
+}
+
+function remove(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // yok say
   }
 }
 

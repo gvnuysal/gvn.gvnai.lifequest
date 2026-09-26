@@ -38,10 +38,14 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(policy => policy
     .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
     .AllowAnyHeader()
     .AllowAnyMethod()
+    // Refresh token HttpOnly çerezde: UI ayrı alan adındayken /auth çağrıları çerezi taşıyabilsin.
+    .AllowCredentials()
     // UI ayrı alan adındayken indirilen dosyanın (.ics, veri dışa aktarma) adını okuyabilmesi için.
     .WithExposedHeaders("Content-Disposition")));
 
 builder.Services.AddLifeQuestRateLimiting(configuration);
+builder.Services.Configure<RefreshCookieOptions>(configuration.GetSection(RefreshCookieOptions.SectionName));
+builder.Services.AddSingleton<RefreshTokenCookie>();
 
 // ── Gvn.GvnFramework modülleri ───────────────────────────────────────────────
 builder.Services.AddGvnSecurity(jwt =>

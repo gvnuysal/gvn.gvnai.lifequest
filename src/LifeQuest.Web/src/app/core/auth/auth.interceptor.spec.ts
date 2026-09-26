@@ -3,15 +3,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AuthTokens } from '../api/models';
+import { AuthSession } from '../api/models';
 import { authInterceptor } from './auth.interceptor';
 import { AuthStore } from './auth.store';
 
-const tokens = (n: number): AuthTokens => ({
+const tokens = (n: number): AuthSession => ({
   userId: 'user-1',
   accessToken: `access-${n}`,
   accessTokenExpiresAt: '2026-01-01T00:15:00Z',
-  refreshToken: `refresh-${n}`,
   refreshTokenExpiresAt: '2026-02-01T00:00:00Z',
 });
 
@@ -57,7 +56,9 @@ describe('authInterceptor', () => {
 
   async function signIn(): Promise<void> {
     const login = firstValueFrom(auth.login({ email: 'a@b.com', password: 'x' }));
-    backend.expectOne('/api/v1/auth/login').flush(tokens(1));
+    const request = backend.expectOne('/api/v1/auth/login');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush(tokens(1));
     await login;
   }
 
@@ -77,7 +78,9 @@ describe('authInterceptor', () => {
 
     const refresh = backend.expectOne('/api/v1/auth/refresh');
     expect(refresh.request.headers.has('Authorization')).toBe(false);
-    expect(refresh.request.body).toEqual({ refreshToken: 'refresh-1' });
+    // Refresh token çerezde: gövde boş, çerez withCredentials ile gider.
+    expect(refresh.request.body).toEqual({});
+    expect(refresh.request.withCredentials).toBe(true);
     refresh.flush(tokens(2));
   });
 
@@ -93,7 +96,7 @@ describe('authInterceptor', () => {
     retry.flush({ ok: true });
 
     expect(await result).toEqual({ ok: true });
-    expect(localStorage.getItem('lq.refresh')).toBe('refresh-2');
+    expect(localStorage.getItem('lq.session')).toBe('1');
   });
 
   it('shares a single refresh between concurrent 401 responses', async () => {
@@ -120,7 +123,7 @@ describe('authInterceptor', () => {
 
     await expect(result).rejects.toBeTruthy();
     expect(auth.isAuthenticated()).toBe(false);
-    expect(localStorage.getItem('lq.refresh')).toBeNull();
+    expect(localStorage.getItem('lq.session')).toBeNull();
   });
 
   it('signs out without refreshing when the account is suspended', async () => {
@@ -135,7 +138,27 @@ describe('authInterceptor', () => {
     await result;
     backend.expectNone('/api/v1/auth/refresh');
     expect(auth.isAuthenticated()).toBe(false);
-    expect(auth.hasRefreshToken()).toBe(false);
+    expect(auth.hasSession()).toBe(false);
+  });
+
+  it('migrates a refresh token left in localStorage by the old version into the cookie', async () => {
+    localStorage.setItem('lq.refresh', 'legacy-token');
+    const restore = auth.restore();
+
+    const refresh = backend.expectOne('/api/v1/auth/refresh');
+    expect(refresh.request.body).toEqual({ refreshToken: 'legacy-token' });
+    refresh.flush(tokens(2));
+    await restore;
+
+    expect(auth.isAuthenticated()).toBe(true);
+    expect(localStorage.getItem('lq.refresh')).toBeNull();
+    expect(localStorage.getItem('lq.session')).toBe('1');
+  });
+
+  it('skips the refresh call on start-up when this browser never signed in', async () => {
+    await auth.restore();
+    backend.expectNone('/api/v1/auth/refresh');
+    expect(auth.isAuthenticated()).toBe(false);
   });
 
   it('refreshes a stale token after a role change so the new role takes effect', async () => {

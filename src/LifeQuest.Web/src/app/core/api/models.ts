@@ -23,11 +23,11 @@ export interface ApiError {
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
-export interface AuthTokens {
+/** Refresh token HttpOnly çerezdedir; JavaScript'e yalnızca access token ve bitiş zamanları gelir. */
+export interface AuthSession {
   userId: string;
   accessToken: string;
   accessTokenExpiresAt: string;
-  refreshToken: string;
   refreshTokenExpiresAt: string;
 }
 

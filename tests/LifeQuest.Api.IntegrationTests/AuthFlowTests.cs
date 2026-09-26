@@ -11,21 +11,64 @@ public sealed class AuthFlowTests(LifeQuestApiFactory factory)
     [Fact]
     public async Task Refresh_token_rotation_detects_reuse_and_revokes_the_family()
     {
-        var client = factory.CreateClient();
+        // Çerezsiz istemciler: token'lar gövdeyle (geçiş yolu) açıkça gönderilir.
+        var client = factory.CreateClient(new() { HandleCookies = false, BaseAddress = new Uri("https://localhost") });
         var email = $"rot-{Guid.NewGuid():N}@example.com";
         var register = await client.PostAsJsonAsync("/api/v1/auth/register",
             new { email, password = "Passw0rd!", displayName = "Rotasyon", birthYear = 1990 });
-        var original = (await register.Content.ReadFromJsonAsync<JsonElement>(Json)).GetProperty("refreshToken").GetString();
+        var original = RefreshCookieOf(register);
+        Assert.NotNull(original);
 
         var rotated = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = original });
         Assert.Equal(HttpStatusCode.OK, rotated.StatusCode);
-        var next = (await rotated.Content.ReadFromJsonAsync<JsonElement>(Json)).GetProperty("refreshToken").GetString();
+        var next = RefreshCookieOf(rotated);
+        Assert.NotEqual(original, next);
 
         var reuse = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = original });
         Assert.Equal(HttpStatusCode.Unauthorized, reuse.StatusCode);
 
         var afterTheft = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = next });
         Assert.Equal(HttpStatusCode.Unauthorized, afterTheft.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_token_lives_only_in_an_http_only_cookie()
+    {
+        var client = factory.CreateClient();
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register",
+            new { email = $"cookie-{Guid.NewGuid():N}@example.com", password = "Passw0rd!", displayName = "Çerez", birthYear = 1990 });
+        Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        var body = await register.Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.False(body.TryGetProperty("refreshToken", out _));
+        Assert.True(body.TryGetProperty("refreshTokenExpiresAt", out _));
+
+        var setCookie = Assert.Single(register.Headers.GetValues("Set-Cookie"), c => c.StartsWith(RefreshCookieName + "="));
+        Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("secure", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("path=/api/v1/auth", setCookie, StringComparison.OrdinalIgnoreCase);
+
+        // Gövdesiz yenileme çerezle çalışır; çerez de döner (rotasyon).
+        var refreshed = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { });
+        Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);
+        Assert.NotNull(RefreshCookieOf(refreshed));
+
+        // Çıkış çerezi siler ve oturum ailesini kapatır; sonraki yenileme reddedilir.
+        Authorize(client, await refreshed.Content.ReadFromJsonAsync<JsonElement>(Json));
+        var logout = await client.PostAsJsonAsync("/api/v1/auth/logout", new { });
+        Assert.Equal(HttpStatusCode.OK, logout.StatusCode);
+        Assert.Contains(logout.Headers.GetValues("Set-Cookie"), c => c.StartsWith(RefreshCookieName + "=;"));
+        client.DefaultRequestHeaders.Authorization = null;
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/v1/auth/refresh", new { })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_without_cookie_or_body_is_unauthorized()
+    {
+        var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/auth/refresh", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains("INVALID_REFRESH_TOKEN", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
