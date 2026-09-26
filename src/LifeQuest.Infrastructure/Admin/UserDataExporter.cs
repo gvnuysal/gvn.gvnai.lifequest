@@ -43,6 +43,10 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
             .ToListAsync(cancellationToken);
         var saved = await db.SavedQuests.AsNoTracking().Where(s => s.UserId == userId).ToListAsync(cancellationToken);
         var ideas = await db.QuestIdeas.AsNoTracking().Where(i => i.UserId == userId).ToListAsync(cancellationToken);
+        var parties = await db.QuestParties.AsNoTracking().Include(p => p.Members)
+            .Where(p => p.Members.Any(m => m.UserId == userId)).ToListAsync(cancellationToken);
+        var devices = await db.PushSubscriptions.AsNoTracking().Where(p => p.UserId == userId).OrderBy(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
 
         var export = new
         {
@@ -61,6 +65,7 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
                 profile.TimeZoneId,
                 profile.MaxPhysicalEffort,
                 profile.NotificationPreference,
+                profile.DailyReminderHour,
                 interests = profile.Interests.Select(i => new
                 {
                     name = interestNames.GetValueOrDefault(i.InterestId, i.InterestId.ToString()),
@@ -92,6 +97,18 @@ internal sealed class UserDataExporter(LifeQuestDbContext db) : IUserDataExporte
             weeklySummaries = summaries.Select(s => new
             {
                 s.WeekStart, s.CompletedCount, s.XpEarned, s.NewCategories, s.TopCategory, s.Title, s.Message, s.ReadAt
+            }),
+            // Şifreleme anahtarları gizlidir; yalnızca push servisi ve tarihler.
+            pushDevices = devices.Select(d => new { pushService = new Uri(d.Endpoint).Host, d.CreatedAt, d.LastSuccessAt }),
+            // Diğer üyelerin yalnızca görünen adları (partide zaten gördükleri); e-posta ya da kimlik yok.
+            questParties = parties.Select(p =>
+            {
+                var me = p.Members.First(m => m.UserId == userId);
+                return new
+                {
+                    p.QuestTitle, p.Status, isHost = p.HostUserId == userId, me.JoinedAt, me.CompletedAt, me.BonusXp,
+                    otherMembers = p.Members.Where(m => m.UserId != userId).Select(m => m.DisplayName)
+                };
             }),
             savedForLater = saved.Select(s => new { s.TemplateId, s.SavedAt }),
             ideas = ideas.Select(i => new

@@ -23,11 +23,11 @@ export interface ApiError {
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
-export interface AuthTokens {
+/** Refresh token HttpOnly çerezdedir; JavaScript'e yalnızca access token ve bitiş zamanları gelir. */
+export interface AuthSession {
   userId: string;
   accessToken: string;
   accessTokenExpiresAt: string;
-  refreshToken: string;
   refreshTokenExpiresAt: string;
 }
 
@@ -69,6 +69,8 @@ export interface Profile {
   timeZoneId: string;
   maxPhysicalEffort: PhysicalEffort;
   notificationPreference: NotificationPreference;
+  /** Günlük push hatırlatmasının yerel saati (7–22); null = kapalı. */
+  dailyReminderHour: number | null;
   interests: ProfileInterest[];
 }
 
@@ -114,6 +116,20 @@ export interface PreferencesRequest {
   timeZoneId?: string | null;
   maxPhysicalEffort?: PhysicalEffort | null;
   notificationPreference?: NotificationPreference | null;
+  dailyReminderHour?: number | null;
+  clearDailyReminder?: boolean | null;
+}
+
+export interface PushSettings {
+  /** Sunucuda VAPID anahtarları tanımlı mı. */
+  enabled: boolean;
+  publicKey: string | null;
+  devices: number;
+}
+
+export interface PushSubscriptionRequest {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
 }
 
 // ── Quest ────────────────────────────────────────────────────────────────────
@@ -167,12 +183,75 @@ export interface QuestDetail {
   quest: Quest;
   score: ScoreBreakdown;
   reasonCodes: string[];
+  /** Kullanıcının şehrinde bu göreve bağlı mekân ve yaklaşan etkinlikler (yalnızca açık görevlerde). */
+  nearbyPlaces: NearbyPlace[];
+  party: Party | null;
+}
+
+export type PartyStatus = 'Open' | 'Completed';
+
+export interface PartyMember {
+  displayName: string;
+  isHost: boolean;
+  isYou: boolean;
+  completed: boolean;
+  dropped: boolean;
+  bonusXp: number;
+}
+
+export interface Party {
+  inviteCode: string;
+  questTitle: string;
+  category: LifeCategory;
+  status: PartyStatus;
+  expiresAt: string;
+  maxMembers: number;
+  isJoinable: boolean;
+  members: PartyMember[];
+}
+
+export interface PartyInvite {
+  inviteCode: string;
+  questTitle: string;
+  category: LifeCategory;
+  hostName: string;
+  memberCount: number;
+  maxMembers: number;
+  expiresAt: string;
+  isMember: boolean;
+  isJoinable: boolean;
+  myQuestId: string | null;
+}
+
+export type OutdoorWeather = 'Unknown' | 'Good' | 'Poor';
+
+export interface WeatherInfo {
+  city: string;
+  temperatureC: number;
+  summary: string;
+  outdoor: OutdoorWeather;
+  /** Hava açık hava için uygun değilse kısa açıklama. */
+  advice: string | null;
+}
+
+export type LocalPlaceKind = 'Venue' | 'Event';
+
+export interface NearbyPlace {
+  id: string;
+  kind: LocalPlaceKind;
+  name: string;
+  address: string | null;
+  url: string | null;
+  note: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
 }
 
 export interface QuestList {
   date: string;
   quests: Quest[];
   message: string | null;
+  weather: WeatherInfo | null;
 }
 
 export interface Achievement {
@@ -190,6 +269,8 @@ export interface QuestCompletion {
   lifeLevel: number;
   leveledUp: boolean;
   newAchievements: Achievement[];
+  /** Quest Party bu tamamlamayla bittiyse kazanılan "birlikte" XP'si. */
+  partyBonusXp: number;
 }
 
 export interface QuestFeedbackResult {
@@ -299,8 +380,33 @@ export type AdminAction =
   | 'ExperimentAdopted'
   | 'ExperimentDiscarded'
   | 'IdeaRejected'
-  | 'IdeaAccepted';
-export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings' | 'Experiment' | 'QuestIdea';
+  | 'IdeaAccepted'
+  | 'PlaceCreated'
+  | 'PlaceUpdated'
+  | 'PlaceDeleted';
+export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings' | 'Experiment' | 'QuestIdea' | 'LocalPlace';
+
+export interface AdminPlace extends NearbyPlace {
+  city: string;
+  isActive: boolean;
+  isPast: boolean;
+  templates: { id: string; code: string; title: string }[];
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface AdminPlaceRequest {
+  kind: LocalPlaceKind;
+  city: string;
+  name: string;
+  address: string | null;
+  url: string | null;
+  note: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  templateIds: string[];
+  isActive: boolean;
+}
 export type WeightGroup = 'Interest' | 'Novelty' | 'Score' | 'Penalty' | 'TasteGraph' | 'Exploration' | 'Windows';
 
 export interface AdminUser {
@@ -509,7 +615,21 @@ export interface ExperimentDetail {
     northStar: { difference: number; ciLow: number; ciHigh: number; relativeLift: number | null };
     verdict: ExperimentVerdict;
     minUsersPerVariant: number;
+    /** Deneme grubunda "ilgimi çekmedi" oranı izin verilenden fazla arttı. */
+    guardrailBreached: boolean;
+    guardrailMaxIncrease: number;
   } | null;
+}
+
+export interface ExperimentPreset {
+  key: string;
+  name: string;
+  hypothesis: string;
+  treatmentShare: number;
+  source: string;
+  overrides: Experiment['overrides'];
+  existingExperimentId: string | null;
+  existingStatus: ExperimentStatus | null;
 }
 
 export interface CreateExperimentRequest {

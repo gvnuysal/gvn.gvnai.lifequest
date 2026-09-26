@@ -134,3 +134,25 @@ public sealed class WeeklySummaryComposerTests
         Assert.Equal(UserRoles.Admin, account.Role);
     }
 }
+
+public sealed class InterestCoverageTests
+{
+    private static readonly Guid Dance = Guid.NewGuid();
+    private static readonly Guid Yoga = Guid.NewGuid();
+
+    private static QuestTemplateSpec Spec(Guid interest, int maxMinutes)
+        => new($"q-{Guid.NewGuid():N}", "Geçerli bir başlık", "Yeterince uzun ve anlamlı bir quest açıklaması burada yer alıyor.",
+            QuestType.Weekly, Difficulty.Easy, LifeCategory.Fitness, null, 20, maxMinutes, CostBand.Free, DayPart.Any,
+            false, false, 7, 0, [interest], PhysicalEffort.Light, false);
+
+    [Fact]
+    public void Thin_interests_and_interests_without_a_short_quest_are_reported()
+    {
+        var specs = new[] { Spec(Dance, 90), Spec(Dance, 120), Spec(Yoga, 30), Spec(Yoga, 30), Spec(Yoga, 45), Spec(Yoga, 90) };
+
+        var violations = CatalogSafetyRules.ValidateInterestCoverage(specs,
+            new Dictionary<Guid, string> { [Dance] = "Dans", [Yoga] = "Yoga" });
+
+        Assert.Equal(["Dans: 2 görev (en az 4).", "Dans: 60 dakikalık kısa görev yok."], violations);
+    }
+}

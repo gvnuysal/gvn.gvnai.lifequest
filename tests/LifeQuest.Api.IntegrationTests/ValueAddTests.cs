@@ -3,6 +3,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using LifeQuest.Domain.Experiments;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Infrastructure.Admin;
+using LifeQuest.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using static LifeQuest.Api.IntegrationTests.LifeQuestApiFactory;
 
 namespace LifeQuest.Api.IntegrationTests;
@@ -12,6 +17,7 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
 {
     [Theory]
     [InlineData("GET", "/api/v1/admin/experiments")]
+    [InlineData("GET", "/api/v1/admin/experiments/presets")]
     [InlineData("POST", "/api/v1/admin/experiments/00000000-0000-0000-0000-000000000001/start")]
     [InlineData("GET", "/api/v1/admin/ideas")]
     [InlineData("POST", "/api/v1/admin/ideas/00000000-0000-0000-0000-000000000001/reject")]
@@ -60,8 +66,11 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
         var startedId = quest.GetProperty("id").GetGuid();
         await AssertErrorAsync(await client.GetAsync($"/api/v1/quests/{startedId}/calendar.ics"), HttpStatusCode.Conflict, "QUEST_NOT_PLANNED");
 
-        var planned = await client.PutAsJsonAsync($"/api/v1/quests/{startedId}/plan",
-            new { plannedAtLocal = DateTime.UtcNow.AddHours(3).AddDays(1).Date.AddHours(10) });
+        // Plan, görevin tamamlama süresi içinde olmalı (günlük görevlerde 1 gün): iki saat sonrası her türde geçerli.
+        var istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        var plannedLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istanbul).AddHours(2);
+        plannedLocal = new DateTime(plannedLocal.Year, plannedLocal.Month, plannedLocal.Day, plannedLocal.Hour, 0, 0);
+        var planned = await client.PutAsJsonAsync($"/api/v1/quests/{startedId}/plan", new { plannedAtLocal = plannedLocal });
         Assert.Equal(HttpStatusCode.OK, planned.StatusCode);
         Assert.NotEqual(JsonValueKind.Null, (await planned.Content.ReadFromJsonAsync<JsonElement>(Json)).GetProperty("plannedAt").ValueKind);
 
@@ -70,7 +79,8 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
         var content = await ics.Content.ReadAsStringAsync();
         Assert.Contains("BEGIN:VEVENT", content);
         Assert.Contains("DTSTART:", content);
-        Assert.Contains("T070000Z", content); // İstanbul 10:00 = 07:00 UTC
+        var expectedUtc = TimeZoneInfo.ConvertTimeToUtc(plannedLocal, istanbul);
+        Assert.Contains($"DTSTART:{expectedUtc:yyyyMMdd'T'HHmmss}Z", content); // yerel saat UTC'ye çevrilir
     }
 
     // ── A/B deneyi ───────────────────────────────────────────────────────────
@@ -139,6 +149,58 @@ public sealed class ValueAddTests(LifeQuestApiFactory factory)
         // Diğer testler için ağırlıkları varsayılana döndür.
         await admin.PostAsJsonAsync("/api/v1/admin/recommendation-weights/reset",
             new { revision = weights.GetProperty("revision").GetInt32(), keys = new[] { "Diversity" }, reason = "Test sonu" });
+    }
+
+    [Fact]
+    public async Task Presets_list_the_simulation_experiments_and_link_the_created_draft()
+    {
+        var admin = await factory.CreateAdminClientAsync();
+        var presets = await admin.GetFromJsonAsync<JsonElement>("/api/v1/admin/experiments/presets", Json);
+        Assert.Equal(3, presets.GetArrayLength());
+
+        var chill = presets.EnumerateArray().Single(p => p.GetProperty("key").GetString() == "chill-exploration-0.1");
+        var change = Assert.Single(chill.GetProperty("overrides").EnumerateArray());
+        Assert.Equal(0.2, change.GetProperty("controlValue").GetDouble());
+        Assert.Equal(0.1, change.GetProperty("treatmentValue").GetDouble());
+        Assert.Equal(JsonValueKind.Null, chill.GetProperty("existingExperimentId").ValueKind);
+
+        var created = await (await admin.PostAsJsonAsync("/api/v1/admin/experiments", new
+        {
+            name = chill.GetProperty("name").GetString(),
+            hypothesis = chill.GetProperty("hypothesis").GetString(),
+            treatmentOverrides = new Dictionary<string, double> { ["ExplorationRateChill"] = 0.1 },
+            treatmentShare = 0.5
+        })).Content.ReadFromJsonAsync<JsonElement>(Json);
+
+        presets = await admin.GetFromJsonAsync<JsonElement>("/api/v1/admin/experiments/presets", Json);
+        chill = presets.EnumerateArray().Single(p => p.GetProperty("key").GetString() == "chill-exploration-0.1");
+        Assert.Equal(created.GetProperty("id").GetGuid(), chill.GetProperty("existingExperimentId").GetGuid());
+        Assert.Equal("Draft", chill.GetProperty("existingStatus").GetString());
+    }
+
+    [Fact]
+    public async Task Auto_start_preset_runs_once_and_is_audited_as_system()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<LifeQuestDbContext>();
+        var logger = NullLogger.Instance;
+        var admin = await factory.CreateAdminClientAsync();
+
+        // Diğer testlerin çalışan deneyi yoksa başlatır; ikinci çağrı yeni deney açmaz.
+        var running = await db.Experiments.AnyAsync(e => e.Status == ExperimentStatus.Running);
+        Assert.False(running);
+        await ExperimentAutoStart.RunAsync(db, "surprise-novelty-0.20", DateTime.UtcNow, logger, default);
+        await ExperimentAutoStart.RunAsync(db, "surprise-novelty-0.20", DateTime.UtcNow, logger, default);
+
+        var started = await db.Experiments.AsNoTracking().Where(e => e.Name == "Şaşırt Beni yeniliği 0,20").ToListAsync();
+        var experiment = Assert.Single(started);
+        Assert.Equal(ExperimentStatus.Running, experiment.Status);
+        Assert.Equal(ExperimentAutoStart.SystemActor, experiment.CreatedByEmail);
+        Assert.Equal(2, await db.AdminAuditEntries.CountAsync(a => a.TargetId == experiment.Id && a.ActorEmail == "system"));
+
+        Assert.Equal(HttpStatusCode.OK, (await admin.PostAsync($"/api/v1/admin/experiments/{experiment.Id}/stop", null)).StatusCode);
+        await ExperimentAutoStart.RunAsync(db, "surprise-novelty-0.20", DateTime.UtcNow, logger, default);
+        Assert.Equal(1, await db.Experiments.CountAsync(e => e.Name == "Şaşırt Beni yeniliği 0,20"));
     }
 
     // ── Topluluk fikirleri ───────────────────────────────────────────────────

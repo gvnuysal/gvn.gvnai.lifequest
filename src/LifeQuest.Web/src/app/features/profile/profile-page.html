@@ -36,7 +36,7 @@
       <div class="field">
         <span class="field__label">Bildirimler</span>
         <lq-segmented ariaLabel="Bildirimler" [options]="notificationOptions" [(value)]="notifications" />
-        <span class="field__hint">Seni geri çağıran bildirim yok; yalnızca haftalık, uygulama içi bir özet.</span>
+        <span class="field__hint">Haftalık özet uygulamada görünür; bildirim izni verdiysen telefonuna da gelir.</span>
       </div>
 
       <div class="field">
@@ -59,6 +59,8 @@
         Kaydet
       </button>
     </section>
+
+    <lq-reminder-card />
 
     <section class="surface card stack">
       <div class="section-title">

@@ -37,6 +37,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/today/today-page').then((m) => m.TodayPage),
       },
       {
+        path: 'party/:code',
+        title: 'Quest Party · LifeQuest',
+        loadComponent: () => import('./features/party/party-page').then((m) => m.PartyPage),
+      },
+      {
         path: 'saved',
         title: 'Sonra yaparım · LifeQuest',
         loadComponent: () => import('./features/saved/saved-page').then((m) => m.SavedPage),
@@ -110,6 +115,11 @@ export const routes: Routes = [
             path: 'experiments/:id',
             title: 'Deney · Yönetim',
             loadComponent: () => import('./features/admin/admin-experiment-page').then((m) => m.AdminExperimentPage),
+          },
+          {
+            path: 'places',
+            title: 'Mekânlar ve etkinlikler · Yönetim',
+            loadComponent: () => import('./features/admin/admin-places-page').then((m) => m.AdminPlacesPage),
           },
           {
             path: 'recommendation-settings',

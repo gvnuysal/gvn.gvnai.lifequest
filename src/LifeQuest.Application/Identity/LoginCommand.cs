@@ -1,3 +1,4 @@
+using Gvn.GvnFramework.Core.Observability;
 using FluentValidation;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
@@ -7,7 +8,7 @@ using LifeQuest.Domain.Identity;
 
 namespace LifeQuest.Application.Identity;
 
-public sealed record LoginCommand(string Email, string Password) : ICommand<AuthTokensDto>;
+public sealed record LoginCommand([property: Sensitive(MaskMode.Partial)] string Email, string Password) : ICommand<AuthTokensDto>;
 
 public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 {

@@ -22,9 +22,27 @@ load_env() {
   [[ ${#JWT_SECRET} -ge 32 ]] || fail "JWT_SECRET en az 32 karakter olmalı ($ENV_FILE). Üretmek için: openssl rand -base64 48"
   [[ -n "${POSTGRES_PASSWORD:-}" ]] || fail "POSTGRES_PASSWORD boş ($ENV_FILE)."
   [[ -n "${UI_HOST:-}" && -n "${API_HOST:-}" ]] || fail "UI_HOST ve API_HOST tanımlı olmalı ($ENV_FILE)."
+  ensure_vapid_keys
   # Elle çalıştırılan compose komutları yayındaki sürümü kullansın.
   local deployed; deployed="$(current_tag)"
   export IMAGE_TAG="${IMAGE_TAG:-${deployed:-current}}"
+}
+
+# Web Push için VAPID anahtar çifti (P-256, base64url) yoksa bir kez üretilip ortam dosyasına eklenir.
+# Anahtar değişirse tarayıcıların mevcut abonelikleri geçersiz olur; bu yüzden var olan asla ezilmez.
+ensure_vapid_keys() {
+  [[ -n "${PUSH_VAPID_PUBLIC_KEY:-}" && -n "${PUSH_VAPID_PRIVATE_KEY:-}" ]] && return
+  command -v openssl >/dev/null || { warn "openssl yok; push bildirimleri kapalı kalacak."; return; }
+  local pem b64url='tr "+/" "-_" | tr -d "=\n"'
+  pem="$(openssl ecparam -name prime256v1 -genkey -noout 2>/dev/null)"
+  # SEC1 DER: 7 baytlık başlıktan sonra 32 baytlık gizli anahtar; SPKI DER'in son 65 baytı sıkıştırılmamış public key.
+  PUSH_VAPID_PRIVATE_KEY="$(printf '%s\n' "$pem" | openssl ec -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 | eval "$b64url")"
+  PUSH_VAPID_PUBLIC_KEY="$(printf '%s\n' "$pem" | openssl ec -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | eval "$b64url")"
+  [[ ${#PUSH_VAPID_PRIVATE_KEY} -eq 43 && ${#PUSH_VAPID_PUBLIC_KEY} -eq 87 ]] || { warn "VAPID anahtarı üretilemedi; push kapalı."; return; }
+  printf '\n# Web Push (VAPID) anahtarları — otomatik üretildi, değiştirmeyin (abonelikler geçersiz olur).\nPUSH_VAPID_PUBLIC_KEY=%s\nPUSH_VAPID_PRIVATE_KEY=%s\n' \
+    "$PUSH_VAPID_PUBLIC_KEY" "$PUSH_VAPID_PRIVATE_KEY" >> "$ENV_FILE"
+  export PUSH_VAPID_PUBLIC_KEY PUSH_VAPID_PRIVATE_KEY
+  ok "Web Push VAPID anahtarları üretildi ve $ENV_FILE dosyasına eklendi."
 }
 
 require_docker() {

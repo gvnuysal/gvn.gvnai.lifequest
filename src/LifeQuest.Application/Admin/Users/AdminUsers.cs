@@ -1,3 +1,4 @@
+using Gvn.GvnFramework.Core.Observability;
 using FluentValidation;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Application.Common;
@@ -212,7 +213,7 @@ internal sealed class SetUserRoleCommandHandler(
     }
 }
 
-public sealed record DeleteUserCommand(Guid UserId, string Reason, string ConfirmEmail) : ICommand;
+public sealed record DeleteUserCommand(Guid UserId, string Reason, [property: Sensitive(MaskMode.Partial)] string ConfirmEmail) : ICommand;
 
 public sealed class DeleteUserCommandValidator : AbstractValidator<DeleteUserCommand>
 {

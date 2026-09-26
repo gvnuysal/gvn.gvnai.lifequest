@@ -45,3 +45,24 @@ internal sealed class QuestTemplateConfiguration : IEntityTypeConfiguration<Ques
         builder.HasRowVersion();
     }
 }
+
+internal sealed class LocalPlaceConfiguration : IEntityTypeConfiguration<LifeQuest.Domain.RealWorld.LocalPlace>
+{
+    public void Configure(EntityTypeBuilder<LifeQuest.Domain.RealWorld.LocalPlace> builder)
+    {
+        builder.ToTable("local_places");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.City).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.CityKey).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(120).IsRequired();
+        builder.Property(x => x.Address).HasMaxLength(200);
+        builder.Property(x => x.Url).HasMaxLength(500);
+        builder.Property(x => x.Note).HasMaxLength(300);
+        builder.Property(x => x.CreatedByEmail).HasMaxLength(254).IsRequired();
+        builder.PrimitiveCollection(x => x.TemplateIds);
+        builder.HasRowVersion();
+
+        // Öneri anında: şehir + tür + tarih aralığı.
+        builder.HasIndex(x => new { x.CityKey, x.Kind, x.EndsAt });
+    }
+}

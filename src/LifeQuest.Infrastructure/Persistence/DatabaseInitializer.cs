@@ -1,9 +1,11 @@
 using LifeQuest.Application.Identity;
+using LifeQuest.Infrastructure.Admin;
 using LifeQuest.Domain.Identity;
 using LifeQuest.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace LifeQuest.Infrastructure.Persistence;
 
@@ -36,6 +38,15 @@ public static class DatabaseInitializer
         var admin = services.GetRequiredService<IConfiguration>()
             .GetSection(AdminOptions.SectionName).Get<AdminOptions>() ?? new AdminOptions();
         await PromoteAdminsAsync(scope.ServiceProvider.GetRequiredService<LifeQuestDbContext>(), admin, cancellationToken);
+
+        var experiments = services.GetRequiredService<IConfiguration>()
+            .GetSection(ExperimentsOptions.SectionName).Get<ExperimentsOptions>() ?? new ExperimentsOptions();
+        await ExperimentAutoStart.RunAsync(
+            scope.ServiceProvider.GetRequiredService<LifeQuestDbContext>(),
+            experiments.AutoStartPreset,
+            services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime,
+            services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(ExperimentAutoStart)),
+            cancellationToken);
     }
 
     private static async Task PromoteAdminsAsync(LifeQuestDbContext db, AdminOptions options, CancellationToken cancellationToken)

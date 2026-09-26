@@ -1,6 +1,6 @@
 # LifeQuest Öneri Motoru — Offline Simülasyon Raporu
 
-> Bu rapor `tools/LifeQuest.Simulation` tarafından üretilir. 100 template'lik gerçek katalog, 8 persona × 20 tohum = **160 sentetik kullanıcı**, **30 gün**. Motor, domain aggregate'leri, ödül hesabı ve öğrenme kuralları üretimdeki kodun kendisidir; yalnızca kullanıcı davranışı modellenir. Sonuçlar deterministiktir: aynı komut aynı sayıları üretir.
+> Bu rapor `tools/LifeQuest.Simulation` tarafından üretilir. 142 template'lik gerçek katalog, 8 persona × 20 tohum = **160 sentetik kullanıcı**, **30 gün**. Motor, domain aggregate'leri, ödül hesabı ve öğrenme kuralları üretimdeki kodun kendisidir; yalnızca kullanıcı davranışı modellenir. Sonuçlar deterministiktir: aynı komut aynı sayıları üretir.
 
 ```bash
 dotnet run --project tools/LifeQuest.Simulation -- --docs docs
@@ -11,54 +11,73 @@ dotnet run --project tools/LifeQuest.Simulation -- --docs docs
 | Soru | Cevap |
 |---|---|
 | Kullanıcı ilk 5 dakikada uygun bir quest buluyor mu? | **Evet.** Tüm senaryolarda kullanıcıların %100'ünde ilk günün ilk önerisi hem kısa hem ilgili. |
-| Öneriler geri bildirimle isabetleniyor mu? | **Kısmen.** Öğrenme, öğrenmesiz duruma göre son 5 günde isabeti **+6 puan** artırıyor (%70'e karşı %64). Ancak mutlak isabet zamanla düşüyor (%81 → %70), çünkü en ilgili template'ler tamamlanıp cooldown'a girdikçe havuz daralıyor. |
-| Analiz sonrası motor değişiklikleri işe yaradı mı? | **Evet.** İlk sürüme göre gizli ilgi keşfi **%48 → %62**, tekrar eden öneri **%45 → %33**. İsabet (%73 → %74) ve north-star (6,25 → 6,33) korunuyor. |
-| Keşif ile isabet arasındaki denge kullanıcının kontrolünde mi? | **Evet.** Discovery Radius, Sakin'den Şaşırt Beni'ye isabeti %86'dan %54'e indirirken keşfi %52'den %75'e, katalog kapsamını 29'dan 43 template'e çıkarıyor. |
-| Cold start kartları değer katıyor mu? | **Az beyan eden kullanıcıda evet.** Yalnızca tek ilgi beyan edildiğinde isabet **+4 puan** (%67 → %71) artıyor. Zengin beyanda fark gürültü içinde. |
-| Efor sınırı erişilebilirliği koruyor mu? | **Evet.** Hareket kısıtı olan persona için kapasiteyi aşan öneri, beyanla %0, beyansız %3. |
+| Öneriler geri bildirimle isabetleniyor mu? | **Kısmen.** Öğrenme, öğrenmesiz duruma göre son 5 günde isabeti **+3 puan** artırıyor (%73'e karşı %70). Mutlak isabet zamanla düşüyor (%83 → %73), çünkü en ilgili template'ler tamamlanıp cooldown'a girdikçe havuz daralıyor. |
+| Katalog derinliği işe yaradı mı? | **Evet, en büyük tek iyileştirme bu.** 100'den 142 template'e (her ilgide ≥ 4 görev, ≥ 1 kısa görev) çıkınca north-star **6,42 → 6,99** (+%9), gizli ilgi keşfi **%61 → %70**, tekrar eden öneri **%34 → %28**. |
+| Analiz sonrası motor değişiklikleri işe yaradı mı? | **Evet.** Aynı katalogla ilk sürüme göre gizli ilgi keşfi **%66 → %70**, tekrar **%40 → %28**, north-star **6,59 → 6,99**. |
+| Keşif ile isabet arasındaki denge kullanıcının kontrolünde mi? | **Evet.** Discovery Radius, Sakin'den Şaşırt Beni'ye isabeti %87'den %59'a indirirken gizli ilgi keşfini %60'tan %82'ye, katalog kapsamını 32'den 47 template'e çıkarıyor. |
+| Cold start kartları değer katıyor mu? | **Az beyan eden kullanıcıda isabet için evet.** Yalnızca tek ilgi beyan edildiğinde isabet %72 → %75. North-star farkı gürültü içinde. |
+| Efor sınırı erişilebilirliği koruyor mu? | **Evet.** Hareket kısıtı olan persona için kapasiteyi aşan öneri, beyanla %0, beyansız %5. |
 
 ## Bulgular
 
-**1. Rastgele keşif pahalıydı, güdümlü keşif değil.** İlk sürümde keşif slotu her gün, ilgi skoru düşük rastgele bir quest seçiyordu ve bu öneriler nadiren kabul görüyordu. Ablasyonda slot kaldırıldığında north-star 6,33'ten 6,88'e çıkıyor ama gizli ilgi keşfi %62'den %46'ya düşüyor. Keşfin ürün tezi için gerekli olduğu, ancak **nereye** keşif yapıldığının önemli olduğu görüldü. Bu yüzden keşif slotu artık önce Taste Graph ile kullanıcının sevdiği bir ilgiye komşu olan quest'leri deniyor ve Dengeli modda günlerin yarısında, Sakin modda beşte birinde açılıyor.
+**1. Katalog derinliği, motor ayarlarından daha çok şey kazandırdı.** 13 ilgi alanında 3'ten az görev vardı (bahçecilikte hiç yoktu); 6 ilgi alanında da kısa görev yoktu. 42 yeni görevle her ilgi alanı en az 4 göreve ve en az 1 kısa göreve ulaştı.
+- **Tam motor (A), 100 → 142 template:**
+  - north-star 6,42 → 6,99
+  - gizli ilgi keşfi %61 → %70
+  - tekrar %34 → %28
+  - 30 günde görülen farklı template 35 → 39
+- **Persona bazında gizli ilgi keşfi** (en çok gizli ilgisi daha önce zayıf ilgi alanlarında olan personalar kazandı):
+  - az vakitli çalışan (meditasyon) %45 → %100
+  - sosyal kelebek (dans, gönüllülük) %48 → %80
+  - şehir bilgisi vermeyen (bahçecilik) %25 → %55
+  - Şaşırt Beni kaşifi (dans, bisiklet) %20 → %30
+- **Düşenler:** Kültür meraklısında %80 → %68 ve öğrencide %83 → %73. Persona başına 20 kullanıcı olduğundan bu farklar gürültü sınırında. Büyüyen katalogda keşif slotunun daha çok alana dağılmasının da payı olabilir.
+- **Kapı:** Kural artık `CatalogSafetyRules.ValidateInterestCoverage` ile CI'da. Yönetim panelindeki katalog sağlığı kartı da zayıf ilgi alanlarını gösteriyor.
 
-**2. "Gösterildi ama seçilmedi" bir sinyaldir.** İlk sürümde önerilerin %45'i, kullanıcıya son 7 günde zaten gösterilmiş bir template'in tekrarıydı. Tekrar cezası yalnızca 3 günlük bir pencereye bakıyordu. Pencere 7 güne çıkarılıp her görmezden gelinen gösterim için ceza eklendiğinde tekrar %33'e indi. Katalog kapsamı arttı; isabet anlamlı ölçüde değişmedi.
+**2. Rastgele keşif pahalıydı, güdümlü keşif değil.** Ablasyonda keşif slotu kaldırılınca north-star 6,99'dan 7,69'a çıkıyor ama gizli ilgi keşfi %70'ten %56'ya düşüyor. Keşif ürün tezi için gerekli; önemli olan **nereye** keşif yapıldığı. Keşif slotu önce Taste Graph ile kullanıcının sevdiği bir ilgiye komşu quest'leri deniyor. Dengeli modda günlerin yarısında, Sakin modda beşte birinde açılıyor.
 
-**3. Tekrar ve yenilik cezaları isabetten ödün veriyor, ama kasıtlı olarak.** Yalnızca ilgi skoruna bakan greedy motor en yüksek north-star'ı (8,20) veriyor. Buna karşılık önerilerin üçte ikisi tekrar, gizli ilgi keşfi %43 ve 30 günde yalnızca 20 farklı template görülüyor; bu, analizin kaçınmak istediği "kahve seviyor → hep kahve" döngüsü. Aynı davranışı isteyen kullanıcı Sakin modu seçerek bunu bilinçli olarak alabiliyor (Sakin: north-star 7,59, isabet %86).
+**3. "Gösterildi ama seçilmedi" bir sinyaldir.** Eski 3 günlük tekrar penceresiyle önerilerin %43'ü son 7 günde gösterilmiş bir template'in tekrarı oluyor. 7 günlük pencere ve gösterim başına ceza ile %28.
 
-**4. Zamanla düşen isabet bir katalog derinliği sorunu.** Cezalar kapatıldığında da düşüş sürüyor (tekrar cezası yokken %88 → %78). Kullanıcı başına 30 günde yaklaşık 36 farklı template tüketiliyor. En sevilenler cooldown'a girince motor bir sonraki en iyi seçeneğe iniyor. Öğrenme bu düşüşü yavaşlatıyor ama durduramıyor.
+**4. Tekrar ve yenilik cezaları isabetten ödün veriyor, ama bilerek.** Yalnızca ilgi skoruna bakan greedy motor en yüksek north-star'ı veriyor (8,58). Buna karşılık önerilerinin %62'si tekrar, gizli ilgi keşfi %44 ve 30 günde yalnızca 21 farklı template görülüyor. Bu tam olarak analizin kaçınmak istediği "kahve seviyor → hep kahve" döngüsü. Bunu isteyen kullanıcı Sakin modu seçebiliyor (north-star 8,12, isabet %87).
 
-**5. North-star'daki darboğaz öneri değil, uygulanabilirlik.** Öğrenme isabeti artırsa da north-star'da anlamlı fark yaratmıyor (öğrenmeli 6,33 ±0,14, öğrenmesiz 6,41 ±0,17). Kabul oranını belirleyen asıl etkenler süre, bütçe ve aynı anda en fazla 5 aktif görev kuralı. North-star'ı artırmanın en kısa yolu kısa, ücretsiz ve şehirden bağımsız quest'lerin payını artırmak.
+**5. Zamanla düşen isabet sürüyor.** Derin katalog düşüşü yavaşlattı (son 5 gün %72 → %73) ama durdurmadı. Tekrar cezası kapatıldığında da düşüş devam ediyor (%89 → %78). En sevilenler cooldown'a girince motor bir sonraki en iyi seçeneğe iniyor. Kalıcı çözüm: katalog büyümeye devam etmeli (topluluk fikirleri) ve "sevdiğini tekrarla" canlı veride ayarlanmalı.
 
-**6. Mod ayarları: Şaşırt Beni fazla agresifti, Sakin fazla kapalıydı.** Tarama (herkes ilgili moda zorlanarak):
-- **Şaşırt Beni:** yenilik ağırlığı 0,35'ten 0,25'e indiğinde gizli ilgi keşfi %75'te sabit kalıyor, north-star 4,17'den 4,68'e (+%12), isabet %49'dan %54'e çıkıyor. 0,20'de keşif düşmeye başlıyor (%70), yani 0,25 kırılma noktası. Mod yine de Dengeli'den belirgin biçimde daha keşifçi (43'e karşı 37 farklı template).
-- **Sakin:** %10 keşif oranının etkisi gürültü içinde (gizli ilgi %44 → %46). %20'de etki belirgin: gizli ilgi %52, north-star %4 düşüyor (7,93 → 7,59). Sakin modda keşif yalnızca Taste Graph komşusu ve risksiz adaylarla yapılıyor; böyle aday yoksa slot normal öneriye dönüyor.
+**6. North-star'daki darboğaz öneri değil, uygulanabilirlik.** Öğrenme isabeti artırsa da north-star'ı artırmıyor (öğrenmesiz 7,40 ±0,18, öğrenmeli 6,99 ±0,14). Kabulü belirleyen asıl etkenler süre, bütçe ve aynı anda en fazla 5 aktif görev kuralı. Kısa ve ücretsiz görevlerin çoğalması tam da bu yüzden north-star'ı artırdı.
 
-Persona bazında (önceki ayar → güncel):
-- **Az vakitli çalışan** (Sakin): gizli ilgi keşfi **%5 → %45**, north-star 5,55 → 5,79. En büyük kazanç burada.
-- **Şaşırt Beni kaşifi:** north-star 3,77 → 4,13, isabet %46 → %49. Hâlâ en düşük north-star'a sahip persona; bu mod bilinçli olarak keşfi seçenler için.
-- **Kültür meraklısı** (Sakin): bedeli ödeyen persona. Beyan ettiği ilgiler zaten komşularını kapsadığı için keşiften kazancı yok; north-star 7,21 → 6,70. Sakin keşif oranı `Recommendation:ExplorationRateChill` ile ayarlanabilir veya kapatılabilir.
-- **Şehir bilgisi vermeyen** kullanıcıda gizli ilgi keşfi %30'da kalıyor; şehir gerektiren quest'ler filtrelendiği için havuz dar.
+**7. Mod ayarları.** Tarama, herkes ilgili moda zorlanarak yapıldı.
+- **Şaşırt Beni:** Yenilik ağırlığı 0,35'ten 0,25'e inince north-star 4,96'dan 5,48'e (+%10), isabet %54'ten %59'a çıkıyor. Gizli ilgi keşfi %80–82 arasında sabit. 0,20'de de keşif korunuyor; bir sonraki A/B adayı.
+- **Sakin:** Derin katalogla Sakin moddaki keşfin kazancı küçüldü.
+  - %0 → %20 keşif oranı: gizli ilgi keşfi %54 → %60, north-star %5 düşüyor (8,51 → 8,12).
+  - Önceki katalogda az vakitli çalışanın tek umudu bu keşif slotuydu. Artık meditasyon görevleri beyan ettiği ilgilere (yoga) komşu olduğu için slot olmadan da %95 keşfediyor.
+  - %20'yi %10'a indirmek canlı veride A/B ile denenmeli.
 
-> Düzeltme: bu raporun önceki sürümünde persona tablosu ve efor karşılaştırması, senaryo listesinin sırası değiştiği için yanlışlıkla ilk sürüm (V0) verisini gösteriyordu. Tablolar artık güncel motoru (A) gösteriyor.
+**8. Sevdiğini tekrarla küçük ama bedava bir kazanç.** 5 puan verilen deneyim cooldown'dan sonra 0,2 yerine 0,6 yenilik skoruyla yeniden önerilebiliyor. Kazanç: north-star 6,85 → 6,99, geç dönem isabeti %71 → %73; keşif değişmiyor. 0,8 north-star'ı 7,12'ye çıkarıyor, ilk A/B deneyi için aday.
 
 ## Kodda yapılan iyileştirmeler
 
-| Değişiklik | Neden | Etki (V0 → A) |
+| Değişiklik | Neden | Etki |
 |---|---|---|
-| Keşif slotu Taste Graph komşularını önceliklendirir (`GuidedExploration`) | Rastgele keşif düşük kabul görüyordu | Gizli ilgi keşfi %48 → %62 (tüm değişikliklerle) |
-| Dengeli modda keşif slotu olasılıksal: %50 (`ExplorationRateExplore`) | Her gün keşif north-star'dan yiyordu | North-star korundu (6,25 → 6,33) |
-| Görmezden gelinen öneri cezası, 7 günlük pencere (`IgnoredOfferPenalty`, `IgnoredOfferWindowDays`) | Önerilerin neredeyse yarısı tekrardı | Tekrar %45 → %33 |
-| Şaşırt Beni yeniliği 0,35 → 0,25 (`NoveltySurpriseMe`) | Mod anlamlı deneyimi fazla düşürüyordu | Şaşırt Beni north-star +%12, keşif sabit |
-| Sakin modda %20 güdümlü keşif (`ExplorationRateChill`) | Sakin kullanıcı gizli ilgilerini hiç keşfetmiyordu | Az vakitli çalışanda gizli ilgi %5 → %45 |
+| Katalog 100 → 142 template; ilgi kapsama kuralı (≥ 4 görev, ≥ 1 kısa) | 13 ilgi alanı neredeyse boştu | North-star +%9, gizli ilgi keşfi %61 → %70, tekrar %34 → %28 |
+| Keşif slotu Taste Graph komşularını önceliklendirir (`GuidedExploration`) | Rastgele keşif düşük kabul görüyordu | Gizli ilgi keşfi (aynı katalogla ilk sürüme göre) %66 → %70 |
+| Dengeli modda keşif slotu olasılıksal, %50 (`ExplorationRateExplore`) | Her gün keşif, north-star'ı düşürüyordu | North-star korundu |
+| Görmezden gelinen öneri cezası, 7 günlük pencere | Önerilerin neredeyse yarısı tekrardı | Tekrar %43 → %28 |
+| Şaşırt Beni yeniliği 0,35 → 0,25 | Mod anlamlı deneyimi fazla düşürüyordu | Şaşırt Beni north-star +%10 |
+| Sakin modda %20 güdümlü keşif | Sakin kullanıcı gizli ilgilerini keşfedemiyordu | Gizli ilgi keşfi %54 → %60 (derin katalogla kazanç küçüldü) |
+| Sevdiğini tekrarla (`LovedRepeatNovelty` = 0,6) | Çok sevilen deneyimler cooldown sonrası da cezalanıyordu | North-star +%2 |
 
-Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir ve birim testleriyle korunur.
+Motor ayarları yönetim panelindeki **Öneri ayarları** ekranından değiştirilebilir. Etkileri **Deneyler** sekmesinde A/B testiyle ölçülebilir.
 
 ## Öneriler (öncelik sırasıyla)
 
-1. **Katalog derinliği.** Her ilgi alanında en az 3-4 template; özellikle kısa, ücretsiz ve şehirden bağımsız görevler. Zamanla düşen isabetin ve north-star darboğazının ortak çözümü bu.
-2. **"Sevdiğin bir deneyimi tekrarla."** 5 puan verilmiş template'ler cooldown bittikten sonra yenilik cezasından muaf tutulmalı. Keşif tezine zarar vermeden geç dönem isabetini destekler.
-3. **Cold start kartlarını hedefle.** İki ya da daha az ilgi seçen kullanıcıya kart adımı vurgulu gösterilmeli; zengin beyanda atlanabilir kalmalı.
-4. **Gerçek veriyle doğrulama.** Mod ayarları (Şaşırt Beni 0,25, Sakin %20) dahil; saklanan skor dökümleri ve `/api/v1/admin/metrics` ile aynı metrikler canlı veride izlenmeli. Contextual bandit'e geçiş için gereken veri zaten toplanıyor.
+1. **Katalog büyümeye devam etmeli.** En büyük kaldıraç içerik. Topluluk fikirleri kuyruğu ve katalog sağlığı kartındaki uyarılar yeni görevlerin nereye ekleneceğini gösterir. Sonraki hedef: ilgi başına 6 görev.
+2. **İlk A/B deneyleri.** Sırasıyla:
+   - sevdiğini tekrarla 0,6'ya karşı 0,8
+   - Sakin keşif oranı %20'ye karşı %10
+   - Şaşırt Beni yeniliği 0,25'e karşı 0,20
+
+   Birincil metrik north-star, koruma metriği "ilgimi çekmedi" oranı.
+3. **Cold start kartlarını hedefle.** İki ya da daha az ilgi seçen kullanıcıya kart adımı vurgulu gösterilmeli.
+4. **Gerçek veriyle doğrulama.** Saklanan skor dökümleri ve deney sonuçları contextual bandit'e geçiş için gereken veriyi topluyor.
 
 ## Sonuçlar
 
@@ -68,11 +87,11 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **V0** İlk sürüm (analiz öncesi) | %73 ±1 | %78 → %70 | %41 | 6.25 ±0.14 | 4.1 | 4.8 | 34 | %45 | %48 ±3 | %100 |
-| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
-| **B** Tam motor, kartsız | %74 ±1 | %83 → %71 | %42 | 6.54 ±0.14 | 4.1 | 4.8 | 36 | %35 | %65 ±3 | %100 |
-| **C** Öğrenme kapalı | %71 ±1 | %84 → %67 | %41 | 6.53 ±0.17 | 4.1 | 4.9 | 34 | %36 | %57 ±3 | %100 |
-| **D** Yalnızca ilgi skoru (greedy) | %94 ±1 | %98 → %94 | %51 | 8.20 ±0.16 | 4.2 | 4.3 | 20 | %66 | %43 ±3 | %100 |
+| **V0** İlk sürüm (analiz öncesi) | %75 ±1 | %80 → %72 | %42 | 6.59 ±0.12 | 4.1 | 4.8 | 38 | %40 | %66 ±3 | %100 |
+| **A** Tam motor + cold start kartları | %76 ±1 | %83 → %73 | %44 | 6.99 ±0.14 | 4.2 | 4.9 | 39 | %28 | %70 ±2 | %100 |
+| **B** Tam motor, kartsız | %75 ±1 | %85 → %71 | %44 | 7.07 ±0.14 | 4.2 | 4.7 | 39 | %30 | %67 ±3 | %100 |
+| **C** Öğrenme kapalı | %76 ±1 | %86 → %70 | %45 | 7.40 ±0.18 | 4.2 | 4.7 | 36 | %33 | %56 ±3 | %100 |
+| **D** Yalnızca ilgi skoru (greedy) | %95 ±0 | %99 → %95 | %52 | 8.58 ±0.15 | 4.2 | 4.0 | 21 | %62 | %44 ±3 | %100 |
 
 ### Ablasyon: tam motordan tek bileşen çıkarıldığında
 
@@ -80,19 +99,19 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **A** Tam motor + cold start kartları | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
-| **X-Rep** A − tekrar cezası | %82 ±1 | %88 → %79 | %46 | 7.26 ±0.14 | 4.1 | 4.4 | 27 | %57 | %68 ±3 | %100 |
-| **X-Nov** A − yenilik | %80 ±1 | %84 → %76 | %44 | 6.99 ±0.14 | 4.1 | 4.5 | 32 | %40 | %63 ±3 | %100 |
-| **X-Div** A − çeşitlilik | %76 ±1 | %83 → %72 | %43 | 6.77 ±0.14 | 4.1 | 4.7 | 34 | %36 | %67 ±3 | %100 |
-| **X-Exp** A − keşif slotu | %81 ±1 | %90 → %80 | %46 | 7.12 ±0.16 | 4.1 | 4.7 | 30 | %39 | %46 ±3 | %100 |
-| **X-Ign3** A, eski tekrar penceresi (3 gün) | %76 ±1 | %82 → %74 | %43 | 6.58 ±0.14 | 4.1 | 4.8 | 32 | %48 | %64 ±3 | %100 |
+| **A** Tam motor + cold start kartları | %76 ±1 | %83 → %73 | %44 | 6.99 ±0.14 | 4.2 | 4.9 | 39 | %28 | %70 ±2 | %100 |
+| **X-Rep** A − tekrar cezası | %83 ±1 | %89 → %78 | %48 | 7.87 ±0.13 | 4.2 | 4.2 | 30 | %53 | %75 ±3 | %100 |
+| **X-Nov** A − yenilik | %81 ±1 | %86 → %78 | %47 | 7.56 ±0.14 | 4.2 | 4.4 | 35 | %32 | %74 ±2 | %100 |
+| **X-Div** A − çeşitlilik | %78 ±1 | %84 → %74 | %45 | 7.20 ±0.15 | 4.2 | 4.7 | 38 | %28 | %73 ±3 | %100 |
+| **X-Exp** A − keşif slotu | %85 ±1 | %92 → %83 | %48 | 7.69 ±0.15 | 4.2 | 4.8 | 33 | %34 | %56 ±3 | %100 |
+| **X-Ign3** A, eski tekrar penceresi (3 gün) | %78 ±1 | %83 → %75 | %45 | 7.21 ±0.14 | 4.2 | 4.8 | 36 | %43 | %71 ±3 | %100 |
 
 ### Cold start: kullanıcı onboarding'de yalnızca tek ilgi beyan ederse
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **S-A** Tek ilgi beyanı + kartlar | %72 ±1 | %79 → %71 | %40 | 6.11 ±0.16 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
-| **S-B** Tek ilgi beyanı, kartsız | %68 ±1 | %77 → %68 | %38 | 5.80 ±0.17 | 4.1 | 4.7 | 37 | %32 | %66 ±3 | %100 |
+| **S-A** Tek ilgi beyanı + kartlar | %75 ±1 | %81 → %73 | %43 | 6.69 ±0.15 | 4.2 | 4.9 | 40 | %28 | %72 ±3 | %100 |
+| **S-B** Tek ilgi beyanı, kartsız | %72 ±1 | %83 → %70 | %42 | 6.72 ±0.16 | 4.2 | 4.7 | 39 | %30 | %71 ±3 | %100 |
 
 ### Discovery Radius
 
@@ -100,9 +119,9 @@ Tüm ayarlar `appsettings.json → Recommendation` üzerinden değiştirilebilir
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **R-Chill** Herkes Sakin | %86 ±1 | %92 → %83 | %48 | 7.62 ±0.15 | 4.2 | 4.5 | 29 | %47 | %49 ±3 | %100 |
-| **R-Explore** Herkes Dengeli | %73 ±1 | %82 → %69 | %41 | 6.41 ±0.13 | 4.1 | 4.9 | 36 | %31 | %63 ±3 | %100 |
-| **R-Surprise** Herkes Şaşırt Beni | %56 ±1 | %67 → %53 | %33 | 4.96 ±0.13 | 4.1 | 5.0 | 42 | %22 | %70 ±3 | %100 |
+| **R-Chill** Herkes Sakin | %87 ±0 | %93 → %85 | %50 | 8.12 ±0.14 | 4.2 | 4.6 | 31 | %40 | %60 ±3 | %100 |
+| **R-Explore** Herkes Dengeli | %76 ±1 | %84 → %74 | %44 | 6.96 ±0.13 | 4.2 | 5.0 | 40 | %25 | %69 ±3 | %100 |
+| **R-Surprise** Herkes Şaşırt Beni | %59 ±1 | %69 → %53 | %35 | 5.48 ±0.12 | 4.1 | 5.2 | 47 | %17 | %82 ±2 | %100 |
 
 ### Mod ayarları: Şaşırt Beni yeniliği ve Sakin keşif oranı
 
@@ -112,27 +131,27 @@ Herkes ilgili moda zorlanarak çalıştırıldı. Üretim değerleri: Şaşırt 
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **SN0.35** Şaşırt Beni, yenilik 0.35 | %51 ±1 | %65 → %47 | %31 | 4.49 ±0.13 | 4.0 | 5.2 | 44 | %21 | %73 ±3 | %100 |
-| **SN0.30** Şaşırt Beni, yenilik 0.30 | %54 ±1 | %66 → %50 | %32 | 4.79 ±0.12 | 4.1 | 5.0 | 43 | %21 | %74 ±3 | %100 |
-| **SN0.25** Şaşırt Beni, yenilik 0.25 | %56 ±1 | %67 → %53 | %33 | 4.96 ±0.13 | 4.1 | 5.0 | 42 | %22 | %70 ±3 | %100 |
-| **SN0.20** Şaşırt Beni, yenilik 0.20 | %59 ±1 | %69 → %55 | %35 | 5.19 ±0.13 | 4.1 | 5.0 | 41 | %24 | %72 ±3 | %100 |
-| **CR0.0** Sakin, keşif oranı 0.0 | %90 ±1 | %95 → %88 | %50 | 7.97 ±0.16 | 4.2 | 4.5 | 25 | %50 | %43 ±3 | %100 |
-| **CR0.1** Sakin, keşif oranı 0.1 | %88 ±1 | %94 → %85 | %49 | 7.85 ±0.16 | 4.2 | 4.5 | 27 | %48 | %44 ±3 | %100 |
-| **CR0.2** Sakin, keşif oranı 0.2 | %86 ±1 | %92 → %83 | %48 | 7.62 ±0.15 | 4.2 | 4.5 | 29 | %47 | %49 ±3 | %100 |
-| **CR0.3** Sakin, keşif oranı 0.3 | %84 ±1 | %90 → %81 | %47 | 7.43 ±0.14 | 4.2 | 4.6 | 30 | %45 | %53 ±3 | %100 |
+| **SN0.35** Şaşırt Beni, yenilik 0.35 | %54 ±1 | %68 → %50 | %33 | 4.96 ±0.13 | 4.1 | 5.3 | 50 | %15 | %80 ±2 | %100 |
+| **SN0.30** Şaşırt Beni, yenilik 0.30 | %56 ±1 | %69 → %51 | %34 | 5.19 ±0.13 | 4.1 | 5.3 | 48 | %15 | %81 ±2 | %100 |
+| **SN0.25** Şaşırt Beni, yenilik 0.25 | %59 ±1 | %69 → %53 | %35 | 5.48 ±0.12 | 4.1 | 5.2 | 47 | %17 | %82 ±2 | %100 |
+| **SN0.20** Şaşırt Beni, yenilik 0.20 | %61 ±1 | %70 → %57 | %36 | 5.72 ±0.12 | 4.1 | 5.0 | 45 | %17 | %81 ±2 | %100 |
+| **CR0.0** Sakin, keşif oranı 0.0 | %91 ±1 | %97 → %90 | %52 | 8.51 ±0.15 | 4.2 | 4.5 | 27 | %44 | %54 ±3 | %100 |
+| **CR0.1** Sakin, keşif oranı 0.1 | %89 ±1 | %95 → %87 | %52 | 8.42 ±0.14 | 4.2 | 4.5 | 30 | %42 | %60 ±3 | %100 |
+| **CR0.2** Sakin, keşif oranı 0.2 | %87 ±0 | %93 → %85 | %50 | 8.12 ±0.14 | 4.2 | 4.6 | 31 | %40 | %60 ±3 | %100 |
+| **CR0.3** Sakin, keşif oranı 0.3 | %85 ±0 | %91 → %82 | %49 | 8.04 ±0.14 | 4.2 | 4.5 | 33 | %38 | %62 ±3 | %100 |
 
 Persona bazında önceki mod ayarları (A0: yenilik 0,35, Sakin'de keşif yok) ile güncel ayarlar (A):
 
 | Persona | Keşif modu | İsabet A0 → A | North-star A0 → A | Gizli ilgi keşfi A0 → A |
 |---|---|---|---|---|
-| Kahve ve kafe tutkunu | Explore | %65 → %65 | 4.81 → 4.81 | %85 → %85 |
-| Kültür meraklısı | Chill | %86 → %82 | 7.26 → 6.69 | %83 → %80 |
-| Düşük bütçeli öğrenci | Explore | %76 → %76 | 6.78 → 6.78 | %83 → %83 |
-| Az vakitli çalışan | Chill | %100 → %97 | 5.68 → 5.69 | %5 → %45 |
-| Hareket kısıtı olan kullanıcı | Explore | %71 → %71 | 5.65 → 5.65 | %95 → %95 |
-| Sosyal kelebek | Explore | %74 → %74 | 9.04 → 9.04 | %48 → %48 |
-| Şehir bilgisi vermeyen doğa sever | Explore | %79 → %79 | 8.45 → 8.45 | %25 → %25 |
-| Şaşırt Beni kaşifi | SurpriseMe | %48 → %51 | 4.03 → 4.29 | %30 → %20 |
+| Kahve ve kafe tutkunu | Explore | %65 → %65 | 5.66 → 5.66 | %88 → %88 |
+| Kültür meraklısı | Chill | %89 → %83 | 7.47 → 7.33 | %73 → %68 |
+| Düşük bütçeli öğrenci | Explore | %80 → %80 | 7.51 → 7.51 | %73 → %73 |
+| Az vakitli çalışan | Chill | %100 → %97 | 6.35 → 6.20 | %95 → %100 |
+| Hareket kısıtı olan kullanıcı | Explore | %76 → %76 | 6.78 → 6.78 | %83 → %83 |
+| Sosyal kelebek | Explore | %77 → %77 | 9.68 → 9.68 | %80 → %80 |
+| Şehir bilgisi vermeyen doğa sever | Explore | %77 → %77 | 8.25 → 8.25 | %55 → %55 |
+| Şaşırt Beni kaşifi | SurpriseMe | %51 → %53 | 4.19 → 4.50 | %35 → %30 |
 
 ### Sevdiğini tekrarla
 
@@ -140,30 +159,30 @@ Persona bazında önceki mod ayarları (A0: yenilik 0,35, Sakin'de keşif yok) i
 
 | Senaryo | İsabet | İlk 5 → son 5 gün | Kabul | North-star / hafta | Puan | Kategori | Katalog | Tekrar | Gizli ilgi keşfi | Gün 1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **LR0.2** Sevdiğini tekrarla, yenilik 0.2 | %74 ±1 | %81 → %70 | %41 | 6.33 ±0.14 | 4.1 | 4.8 | 36 | %33 | %62 ±3 | %100 |
-| **LR0.4** Sevdiğini tekrarla, yenilik 0.4 | %74 ±1 | %81 → %69 | %41 | 6.40 ±0.15 | 4.1 | 4.7 | 35 | %33 | %62 ±3 | %100 |
-| **LR0.6** Sevdiğini tekrarla, yenilik 0.6 | %74 ±1 | %81 → %72 | %42 | 6.42 ±0.14 | 4.1 | 4.8 | 35 | %34 | %61 ±3 | %100 |
-| **LR0.8** Sevdiğini tekrarla, yenilik 0.8 | %75 ±1 | %81 → %72 | %42 | 6.56 ±0.15 | 4.1 | 4.7 | 35 | %35 | %63 ±3 | %100 |
+| **LR0.2** Sevdiğini tekrarla, yenilik 0.2 | %75 ±1 | %82 → %71 | %43 | 6.85 ±0.14 | 4.2 | 4.9 | 41 | %25 | %71 ±3 | %100 |
+| **LR0.4** Sevdiğini tekrarla, yenilik 0.4 | %76 ±1 | %82 → %72 | %44 | 6.97 ±0.14 | 4.2 | 4.9 | 40 | %27 | %71 ±2 | %100 |
+| **LR0.6** Sevdiğini tekrarla, yenilik 0.6 | %76 ±1 | %83 → %73 | %44 | 6.99 ±0.14 | 4.2 | 4.9 | 39 | %28 | %70 ±2 | %100 |
+| **LR0.8** Sevdiğini tekrarla, yenilik 0.8 | %76 ±1 | %83 → %74 | %45 | 7.12 ±0.14 | 4.2 | 4.8 | 39 | %29 | %69 ±3 | %100 |
 
 ### Erişilebilirlik: hareket kısıtı olan persona
 
 | Senaryo | Kapasitesini aşan öneri | İsabet | North-star / hafta |
 |---|---|---|---|
-| Efor sınırı beyan edildi | %0 | %71 | 5.65 |
-| Efor sınırı beyan edilmedi | %3 | %70 | 5.75 |
+| Efor sınırı beyan edildi | %0 | %76 | 6.78 |
+| Efor sınırı beyan edilmedi | %5 | %76 | 6.34 |
 
 ### Persona kırılımı (senaryo A)
 
 | Persona | Keşif modu | İsabet | İlk 5 gün | Son 5 gün | North-star / hafta | Tamamlanan kategori | Gizli ilgi keşfi |
 |---|---|---|---|---|---|---|---|
-| Kahve ve kafe tutkunu | Explore | %65 | %68 | %67 | 4.81 | 4.6 | %85 |
-| Kültür meraklısı | Chill | %82 | %89 | %78 | 6.69 | 4.5 | %80 |
-| Düşük bütçeli öğrenci | Explore | %76 | %83 | %75 | 6.78 | 4.3 | %83 |
-| Az vakitli çalışan | Chill | %97 | %99 | %94 | 5.69 | 4.5 | %45 |
-| Hareket kısıtı olan kullanıcı | Explore | %71 | %80 | %68 | 5.65 | 4.1 | %95 |
-| Sosyal kelebek | Explore | %74 | %83 | %67 | 9.04 | 5.9 | %48 |
-| Şehir bilgisi vermeyen doğa sever | Explore | %79 | %85 | %76 | 8.45 | 4.4 | %25 |
-| Şaşırt Beni kaşifi | SurpriseMe | %51 | %62 | %47 | 4.29 | 6.0 | %20 |
+| Kahve ve kafe tutkunu | Explore | %65 | %74 | %66 | 5.66 | 4.3 | %88 |
+| Kültür meraklısı | Chill | %83 | %91 | %78 | 7.33 | 4.6 | %68 |
+| Düşük bütçeli öğrenci | Explore | %80 | %84 | %79 | 7.51 | 4.4 | %73 |
+| Az vakitli çalışan | Chill | %97 | %99 | %94 | 6.20 | 4.3 | %100 |
+| Hareket kısıtı olan kullanıcı | Explore | %76 | %78 | %74 | 6.78 | 5.4 | %83 |
+| Sosyal kelebek | Explore | %77 | %87 | %75 | 9.68 | 5.5 | %80 |
+| Şehir bilgisi vermeyen doğa sever | Explore | %77 | %85 | %75 | 8.25 | 4.4 | %55 |
+| Şaşırt Beni kaşifi | SurpriseMe | %53 | %62 | %45 | 4.50 | 6.0 | %30 |
 
 ## Yöntem
 

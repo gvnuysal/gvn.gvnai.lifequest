@@ -5,6 +5,10 @@ using Gvn.GvnFramework.Core.Results;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Quests;
 
+using LifeQuest.Application.RealWorld;
+using LifeQuest.Domain.Profiles;
+using LifeQuest.Domain.RealWorld;
+
 namespace LifeQuest.Application.Quests;
 
 public sealed record GetActiveQuestsQuery : IQuery<IReadOnlyList<QuestDto>>;
@@ -27,15 +31,31 @@ internal sealed class GetActiveQuestsQueryHandler(IUserQuestRepository quests, I
 
 public sealed record GetQuestQuery(Guid QuestId) : IQuery<QuestDetailDto>;
 
-internal sealed class GetQuestQueryHandler(IUserQuestRepository quests, IUserContext user)
+internal sealed class GetQuestQueryHandler(
+    IUserQuestRepository quests,
+    IUserProfileRepository profiles,
+    ILocalPlaceRepository places,
+    Domain.Social.IQuestPartyRepository parties,
+    IUserContext user,
+    TimeProvider clock)
     : IQueryHandler<GetQuestQuery, QuestDetailDto>
 {
     public async Task<Result<QuestDetailDto>> Handle(GetQuestQuery query, CancellationToken cancellationToken)
     {
         var quest = await quests.GetForUserAsync(query.QuestId, user.UserId, cancellationToken);
-        return quest is null
-            ? Result<QuestDetailDto>.Fail(QuestErrors.NotFound)
-            : Result<QuestDetailDto>.Ok(new QuestDetailDto(quest.ToDto(), quest.Score, quest.ReasonCodes));
+        if (quest is null)
+            return Result<QuestDetailDto>.Fail(QuestErrors.NotFound);
+
+        IReadOnlyList<NearbyPlaceDto> nearby = [];
+        var city = (await profiles.GetByUserIdAsync(user.UserId, cancellationToken))?.City;
+        if (!string.IsNullOrWhiteSpace(city) && quest.IsOpen)
+            nearby = (await places.GetForTemplateAsync(CityKey.Normalize(city), quest.TemplateId, clock.GetUtcNow().UtcDateTime, cancellationToken))
+                .Select(NearbyPlaceDto.From)
+                .ToList();
+
+        var party = await parties.GetByUserQuestAsync(quest.Id, cancellationToken);
+        return Result<QuestDetailDto>.Ok(new QuestDetailDto(quest.ToDto(), quest.Score, quest.ReasonCodes, nearby,
+            party is null ? null : Social.PartyMapping.ToDto(party, user.UserId, clock.GetUtcNow().UtcDateTime)));
     }
 }
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AdminApi } from '../../core/api/api-clients';
-import { Experiment, WeightField } from '../../core/api/models';
+import { Experiment, ExperimentPreset, WeightField } from '../../core/api/models';
 import { firstErrorMessage, parseApiErrors } from '../../core/http/api-error';
 import { formatDate } from '../../core/labels/format';
 import { ToastService } from '../../core/state/toast.service';
@@ -35,6 +35,32 @@ interface OverrideRow {
         <button lq-button size="sm" (click)="openCreate()">Yeni deney</button>
       </header>
 
+      @if (presets().length) {
+        <section class="stack presets" aria-labelledby="presets-title">
+          <h2 id="presets-title" class="presets__title">Önerilen deneyler</h2>
+          <p class="muted small">Simülasyon raporunun önerdiği ilk deneyler, öncelik sırasıyla. Birincil metrik north-star, koruma metriği "ilgimi çekmedi" oranı.</p>
+          @for (p of presets(); track p.key) {
+            <article class="surface item">
+              <div class="item__head">
+                <strong>{{ p.name }}</strong>
+                @if (p.existingStatus; as status) {
+                  <span [class]="'pill pill--' + statusLabels[status].tone">{{ statusLabels[status].label }}</span>
+                }
+              </div>
+              <p class="muted small">{{ p.hypothesis }}</p>
+              <p class="small">
+                @for (o of p.overrides; track o.key) { <span class="change">{{ o.label }}: {{ o.controlValue }} → <strong>{{ o.treatmentValue }}</strong></span> }
+              </p>
+              @if (p.existingExperimentId; as existingId) {
+                <a class="link" [routerLink]="experimentPath(existingId)">Deneye git</a>
+              } @else {
+                <button lq-button size="sm" variant="secondary" (click)="usePreset(p)">Taslağı hazırla</button>
+              }
+            </article>
+          }
+        </section>
+      }
+
       @if (error()) {
         <lq-empty-state icon="info" title="Deneyler yüklenemedi" [message]="error()" />
       } @else if (experiments(); as list) {
@@ -57,7 +83,7 @@ interface OverrideRow {
           </a>
         } @empty {
           <lq-empty-state icon="target" title="Henüz deney yok"
-            message="Simülasyon raporunun önerdiği ilk deney: Sevdiğini tekrarla 0,6'ya karşı 0,8." />
+            message="Yukarıdaki önerilen deneylerden biriyle başlayabilirsin." />
         }
       } @else {
         <lq-skeleton [height]="120" />
@@ -112,6 +138,9 @@ interface OverrideRow {
     .item { padding: var(--space-4); display: flex; flex-direction: column; gap: 6px; color: inherit; text-decoration: none; }
     .item:hover { border-color: var(--ink-3); }
     .item__head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .presets { gap: var(--space-3); }
+    .presets__title { font-size: var(--fs-lg); margin: 0; }
+    .item .link { align-self: flex-start; text-decoration: none; }
     .change { display: inline-block; margin-right: 10px; }
     .override { display: grid; grid-template-columns: 1fr auto 6rem auto; align-items: center; gap: 8px; }
     .override__label { font-weight: 700; font-size: var(--fs-sm); }
@@ -126,7 +155,9 @@ export class AdminExperimentsPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  protected readonly statusLabels = EXPERIMENT_STATUS_LABELS;
   protected readonly experiments = signal<Experiment[] | null>(null);
+  protected readonly presets = signal<ExperimentPreset[]>([]);
   protected readonly error = signal<string | null>(null);
   protected readonly createOpen = signal(false);
   protected readonly createError = signal<string | null>(null);
@@ -158,14 +189,28 @@ export class AdminExperimentsPage {
     return formatDate(value, { day: 'numeric', month: 'short' });
   }
 
-  protected openCreate(): void {
-    this.name = '';
-    this.hypothesis = '';
-    this.shareValue = 0.5;
+  protected openCreate(preset?: ExperimentPreset): void {
+    this.name = preset?.name ?? '';
+    this.hypothesis = preset?.hypothesis ?? '';
+    this.shareValue = preset?.treatmentShare ?? 0.5;
     this.rows.set([]);
     this.createError.set(null);
     this.createOpen.set(true);
-    if (!this.fields().length) this.api.weights().subscribe({ next: (w) => this.fields.set(w.fields) });
+
+    const fillRows = (fields: WeightField[]) => {
+      if (!preset) return;
+      this.rows.set(preset.overrides.flatMap((o) => {
+        const field = fields.find((f) => f.key === o.key);
+        return field ? [{ field, value: o.treatmentValue }] : [];
+      }));
+    };
+    if (this.fields().length) fillRows(this.fields());
+    else this.api.weights().subscribe({ next: (w) => { this.fields.set(w.fields); fillRows(w.fields); } });
+  }
+
+  /** Hazır deney form olarak açılır; admin gözden geçirip taslağı kendisi oluşturur. */
+  protected usePreset(preset: ExperimentPreset): void {
+    this.openCreate(preset);
   }
 
   protected addRow(event: Event): void {
@@ -207,6 +252,7 @@ export class AdminExperimentsPage {
   }
 
   private load(): void {
+    this.api.experimentPresets().subscribe({ next: (list) => this.presets.set(list), error: () => this.presets.set([]) });
     this.api.experiments().subscribe({
       next: (list) => this.experiments.set(list),
       error: (err: unknown) => this.error.set(firstErrorMessage(err)),

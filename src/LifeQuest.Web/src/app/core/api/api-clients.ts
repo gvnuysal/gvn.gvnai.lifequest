@@ -7,6 +7,13 @@ import {
   Experiment,
   ExperimentAction,
   ExperimentDetail,
+  ExperimentPreset,
+  AdminPlace,
+  AdminPlaceRequest,
+  Party,
+  PartyInvite,
+  PushSettings,
+  PushSubscriptionRequest,
   IdeaRequest,
   IdeaStatus,
   MyIdea,
@@ -24,7 +31,7 @@ import {
   TemplateSearch,
   TemplateValidation,
   UserRole,
-  AuthTokens,
+  AuthSession,
   Interest,
   InterestSelection,
   LoginRequest,
@@ -66,20 +73,23 @@ export const API = `${apiBaseUrl()}/api/v1`;
 export class AuthApi {
   private readonly http = inject(HttpClient);
 
+  // withCredentials: API ayrı alan adındayken refresh çerezinin yazılıp geri gönderilebilmesi için.
   register(body: RegisterRequest) {
-    return this.http.post<AuthTokens>(`${API}/auth/register`, body);
+    return this.http.post<AuthSession>(`${API}/auth/register`, body, { withCredentials: true });
   }
 
   login(body: LoginRequest) {
-    return this.http.post<AuthTokens>(`${API}/auth/login`, body);
+    return this.http.post<AuthSession>(`${API}/auth/login`, body, { withCredentials: true });
   }
 
-  refresh(refreshToken: string) {
-    return this.http.post<AuthTokens>(`${API}/auth/refresh`, { refreshToken });
+  /** `legacyRefreshToken`: eski sürümün localStorage'da bıraktığı token; bir kez gönderilip çereze taşınır. */
+  refresh(legacyRefreshToken?: string) {
+    const body = legacyRefreshToken ? { refreshToken: legacyRefreshToken } : {};
+    return this.http.post<AuthSession>(`${API}/auth/refresh`, body, { withCredentials: true });
   }
 
-  logout(refreshToken: string) {
-    return this.http.post<void>(`${API}/auth/logout`, { refreshToken });
+  logout() {
+    return this.http.post<void>(`${API}/auth/logout`, {}, { withCredentials: true });
   }
 }
 
@@ -249,6 +259,49 @@ export class SummariesApi {
 }
 
 @Injectable({ providedIn: 'root' })
+export class PartiesApi {
+  private readonly http = inject(HttpClient);
+
+  /** Kabul edilmiş görev için davet; zaten varsa aynı parti döner. */
+  create(questId: string) {
+    return this.http.post<Party>(`${API}/quests/${questId}/party`, null);
+  }
+
+  invite(code: string) {
+    return this.http.get<PartyInvite>(`${API}/parties/${encodeURIComponent(code)}`);
+  }
+
+  join(code: string) {
+    return this.http.post<PartyInvite>(`${API}/parties/${encodeURIComponent(code)}/join`, null);
+  }
+
+  leave(code: string) {
+    return this.http.delete<void>(`${API}/parties/${encodeURIComponent(code)}/members/me`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class PushApi {
+  private readonly http = inject(HttpClient);
+
+  settings() {
+    return this.http.get<PushSettings>(`${API}/push`);
+  }
+
+  subscribe(body: PushSubscriptionRequest) {
+    return this.http.put<PushSettings>(`${API}/push/subscription`, body);
+  }
+
+  unsubscribe(endpoint: string) {
+    return this.http.delete<void>(`${API}/push/subscription`, { body: { endpoint } });
+  }
+
+  test() {
+    return this.http.post<number>(`${API}/push/test`, null);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
 export class AdminApi {
   private readonly http = inject(HttpClient);
 
@@ -332,9 +385,28 @@ export class AdminApi {
     return this.http.post<RecommendationWeights>(`${API}/admin/recommendation-weights/reset`, { revision, keys, reason });
   }
 
+  // Mekânlar ve etkinlikler
+  places(city?: string) {
+    return this.http.get<AdminPlace[]>(`${API}/admin/places`, { params: city ? { city } : {} });
+  }
+
+  savePlace(request: AdminPlaceRequest, id?: string) {
+    return id
+      ? this.http.put<AdminPlace>(`${API}/admin/places/${id}`, request)
+      : this.http.post<AdminPlace>(`${API}/admin/places`, request);
+  }
+
+  deletePlace(id: string) {
+    return this.http.delete<void>(`${API}/admin/places/${id}`);
+  }
+
   // Deneyler
   experiments() {
     return this.http.get<Experiment[]>(`${API}/admin/experiments`);
+  }
+
+  experimentPresets() {
+    return this.http.get<ExperimentPreset[]>(`${API}/admin/experiments/presets`);
   }
 
   experiment(id: string) {

@@ -9,6 +9,7 @@
     <PackageReference Include="Gvn.GvnFramework.Logging" />
     <PackageReference Include="Gvn.GvnFramework.Swagger" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Hangfire.PostgreSql" />
   </ItemGroup>
 
   <ItemGroup>

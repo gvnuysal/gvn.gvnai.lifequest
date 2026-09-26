@@ -20,6 +20,9 @@ public interface IUserQuestRepository : IRepository<UserQuest>
     Task<IReadOnlyList<QuestHistoryItem>> GetHistoryItemsAsync(Guid userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 
     /// <summary>Açık (Offered/Accepted) quest'lerin template id'leri — aynı quest iki kez sunulmaz.</summary>
+    /// <summary>Kullanıcının bu template için açık (önerilmiş ya da kabul edilmiş, süresi dolmamış) görevi.</summary>
+    Task<UserQuest?> GetOpenForTemplateAsync(Guid userId, Guid templateId, DateTime nowUtc, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Guid>> GetOpenTemplateIdsAsync(Guid userId, DateTime nowUtc, CancellationToken cancellationToken = default);
 
     /// <summary>Tüm zamanlarda tamamlanan template'ler ve son tamamlanma anı (cooldown + novelty).</summary>

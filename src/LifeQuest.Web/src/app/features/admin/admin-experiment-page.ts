@@ -63,6 +63,13 @@ interface MetricRow {
             <span class="eyebrow">Sonuç · {{ r.weeks }} hafta</span>
             <p class="verdict__label">{{ verdict()!.label }}</p>
             <p class="small">{{ verdictHint() }}</p>
+            @if (r.guardrailBreached) {
+              <p class="guardrail small" role="alert">
+                <strong>Koruma metriği aşıldı:</strong> Deneme grubunda "ilgimi çekmedi" oranı
+                {{ pct(r.control.notInterestedRate) }} → {{ pct(r.treatment.notInterestedRate) }}
+                (izin verilen artış en fazla {{ pct(r.guardrailMaxIncrease) }} puan). North-star artsa da üretime almadan önce incele.
+              </p>
+            }
             <div class="ci" [attr.aria-label]="'North-star farkı ' + r.northStar.difference + ', güven aralığı ' + r.northStar.ciLow + ' ile ' + r.northStar.ciHigh">
               <span class="ci__zero" [style.left.%]="ciPosition(0)"></span>
               <span class="ci__range" [style.left.%]="ciPosition(r.northStar.ciLow)"
@@ -132,6 +139,7 @@ interface MetricRow {
     th { text-align: left; color: var(--ink-3); font-size: var(--fs-xs); font-weight: 800; padding: 6px 4px; border-bottom: 1px solid var(--line); }
     td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
     th:not(:first-child), td:not(:first-child) { text-align: right; }
+    .guardrail { padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--danger); color: var(--ink-1); }
     .verdict__label { font-size: var(--fs-xl); font-weight: 900; }
     .verdict[data-tone='success'] .verdict__label { color: var(--success); }
     .verdict[data-tone='danger'] .verdict__label { color: var(--danger); }
@@ -155,6 +163,8 @@ export class AdminExperimentPage {
   protected readonly pending = signal<ExperimentAction | null>(null);
   protected readonly busy = signal(false);
 
+  protected readonly pct = (v: number) => `%${Math.round(v * 100)}`;
+
   protected readonly statusMeta = computed(() => EXPERIMENT_STATUS_LABELS[this.detail()?.experiment.status ?? 'Draft']);
   protected readonly share = computed(() => Math.round((this.detail()?.experiment.treatmentShare ?? 0) * 100));
   protected readonly verdict = computed(() => {
@@ -176,7 +186,7 @@ export class AdminExperimentPage {
     if (!r) return [];
     const row = (label: string, pick: (v: VariantResult) => string, hint?: string): MetricRow =>
       ({ label, control: pick(r.control), treatment: pick(r.treatment), hint });
-    const pct = (v: number) => `%${Math.round(v * 100)}`;
+    const pct = this.pct;
     return [
       row('Kullanıcı', (v) => `${v.users}`),
       row('North-star / hafta', (v) => `${v.northStar.toFixed(2)} ±${v.northStarStandardError.toFixed(2)}`, 'Kullanıcı başına haftalık anlamlı deneyim ± standart hata'),

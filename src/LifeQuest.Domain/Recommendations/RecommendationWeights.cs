@@ -47,6 +47,15 @@ public sealed record RecommendationWeights
     /// </summary>
     public double LovedRepeatNovelty { get; init; } = 0.6;
 
+    /// <summary>
+    /// Kullanıcının şehrinde yaklaşan, bu görevle bağlantılı bir etkinlik varsa bağlam skoruna eklenen pay
+    /// (bağlam 1'i aşabilir; etkisi <see cref="Context"/> ağırlığıyla çarpılır).
+    /// </summary>
+    public double LocalEventBoost { get; init; } = 0.5;
+
+    /// <summary>Hava açık hava için uygunken gündüz önerilen açık hava görevine eklenen bağlam payı.</summary>
+    public double GoodWeatherOutdoorBoost { get; init; } = 0.2;
+
     public double InterestWeightFor(DiscoveryRadius radius) => radius switch
     {
         DiscoveryRadius.Chill => InterestChill,

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ProgressApi, QuestsApi, SavedApi, SummariesApi } from '../../core/api/api-clients';
 import { Progress, Quest, QuestList, WeeklySummary } from '../../core/api/models';
+import { WeatherChip } from '../../ui/weather-chip';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, greeting } from '../../core/labels/format';
 import { ProfileStore } from '../../core/state/profile.store';
@@ -15,7 +16,7 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-today-page',
-  imports: [RouterLink, Button, Icon, ProgressBar, QuestCard, EmptyState, Skeleton],
+  imports: [RouterLink, Button, Icon, ProgressBar, QuestCard, EmptyState, Skeleton, WeatherChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -32,6 +33,8 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
           </a>
         }
       </header>
+
+      @if (today()?.weather; as weather) { <lq-weather-chip [weather]="weather" /> }
 
       @if (summary(); as s) {
         <section class="summary" aria-labelledby="summary-title">

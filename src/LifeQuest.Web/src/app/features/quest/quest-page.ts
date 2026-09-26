@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { QuestsApi } from '../../core/api/api-clients';
 import { saveResponse } from '../../core/http/download';
-import { QuestCompletion, QuestDetail, SkipReason } from '../../core/api/models';
+import { NearbyPlace, Party, QuestCompletion, QuestDetail, SkipReason } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, formatDuration, formatRemaining } from '../../core/labels/format';
 import {
@@ -26,11 +26,12 @@ import { Rating } from '../../ui/rating';
 import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { Celebration, FeedbackSubmission } from './celebration';
+import { PartyCard } from './party-card';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 @Component({
   selector: 'lq-quest-page',
-  imports: [RouterLink, Button, CategoryBadge, CategoryIcon, Icon, OptionCard, Rating, Sheet, EmptyState, Skeleton, Celebration],
+  imports: [RouterLink, Button, CategoryBadge, CategoryIcon, Icon, OptionCard, Rating, Sheet, EmptyState, Skeleton, Celebration, PartyCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './quest-page.html',
   styleUrl: './quest-page.scss',
@@ -193,6 +194,20 @@ export class QuestPage {
         this.loading.set(false);
       },
     });
+  }
+
+  protected partyCreated(party: Party): void {
+    const current = this.detail();
+    if (current) this.detail.set({ ...current, party });
+  }
+
+  /** Bağlam skoru gerçek dünya payıyla 1'i aşabilir; çubuk tam genişlikte durur. */
+  protected barWidth(value: number): number {
+    return Math.min(Math.max(value, 0), 1) * 100;
+  }
+
+  protected eventWhen(place: NearbyPlace): string {
+    return formatDate(place.startsAt!, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   }
 
   private patchQuest(quest: QuestDetail['quest']): void {

@@ -18,6 +18,11 @@ public sealed class AdminExperimentsController(ISender sender) : ApiControllerBa
         => HandleResult(await sender.Send(new ListExperimentsQuery(), cancellationToken));
 
     /// <summary>Deney ve (başladıysa) Kontrol / Deneme karşılaştırması.</summary>
+    /// <summary>Simülasyonun önerdiği hazır deneyler; oluşturulmuş olanlar deney kimliğiyle döner.</summary>
+    [HttpGet("experiments/presets")]
+    public async Task<IActionResult> Presets(CancellationToken cancellationToken)
+        => HandleResult(await sender.Send(new ListExperimentPresetsQuery(), cancellationToken));
+
     [HttpGet("experiments/{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
         => HandleResult(await sender.Send(new GetExperimentQuery(id), cancellationToken));

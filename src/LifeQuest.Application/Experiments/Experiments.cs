@@ -40,7 +40,9 @@ public sealed record ExperimentResultsDto(
     VariantResult Treatment,
     NorthStarComparison NorthStar,
     ExperimentVerdict Verdict,
-    int MinUsersPerVariant);
+    int MinUsersPerVariant,
+    bool GuardrailBreached,
+    double GuardrailMaxIncrease);
 
 public sealed record ExperimentDetailDto(ExperimentDto Experiment, ExperimentResultsDto? Results);
 
@@ -101,8 +103,50 @@ internal sealed class GetExperimentQueryHandler(
 
         return Result<ExperimentDetailDto>.Ok(new ExperimentDetailDto(dto, new ExperimentResultsDto(
             weeks, control, treatment, comparison, ExperimentStatistics.Verdict(control, treatment, comparison),
-            ExperimentStatistics.MinUsersPerVariant)));
+            ExperimentStatistics.MinUsersPerVariant,
+            ExperimentStatistics.GuardrailBreached(control, treatment),
+            ExperimentStatistics.GuardrailMaxNotInterestedIncrease)));
     }
+}
+
+/// <param name="ExistingExperimentId">Aynı değişikliği deneyen, kapatılmamış son deney (varsa yeniden oluşturulmaz).</param>
+public sealed record ExperimentPresetDto(
+    string Key,
+    string Name,
+    string Hypothesis,
+    double TreatmentShare,
+    string Source,
+    IReadOnlyList<OverrideDto> Overrides,
+    Guid? ExistingExperimentId,
+    ExperimentStatus? ExistingStatus);
+
+public sealed record ListExperimentPresetsQuery : IQuery<IReadOnlyList<ExperimentPresetDto>>;
+
+internal sealed class ListExperimentPresetsQueryHandler(IExperimentRepository experiments, IRecommendationWeightsProvider weights)
+    : IQueryHandler<ListExperimentPresetsQuery, IReadOnlyList<ExperimentPresetDto>>
+{
+    public async Task<Result<IReadOnlyList<ExperimentPresetDto>>> Handle(ListExperimentPresetsQuery query, CancellationToken cancellationToken)
+    {
+        var production = await weights.GetAsync(cancellationToken);
+        var existing = (await experiments.GetAllOrderedAsync(cancellationToken))
+            .Where(e => e.Outcome != ExperimentOutcome.Discarded)
+            .ToList();
+
+        return Result<IReadOnlyList<ExperimentPresetDto>>.Ok(ExperimentPresets.All.Select(preset =>
+        {
+            var match = existing.FirstOrDefault(e => SameOverrides(e.TreatmentOverrides, preset.Overrides));
+            var overrides = preset.Overrides.Select(o =>
+            {
+                var field = RecommendationWeightCatalog.Get(o.Key);
+                return new OverrideDto(o.Key, field.Label, field.Get(production), o.Value);
+            }).ToList();
+            return new ExperimentPresetDto(preset.Key, preset.Name, preset.Hypothesis, preset.TreatmentShare, preset.Source,
+                overrides, match?.Id, match?.Status);
+        }).ToList());
+    }
+
+    private static bool SameOverrides(IReadOnlyDictionary<string, double> a, IReadOnlyDictionary<string, double> b)
+        => a.Count == b.Count && a.All(o => b.TryGetValue(o.Key, out var v) && Math.Abs(v - o.Value) < 1e-9);
 }
 
 // ── Komutlar ──────────────────────────────────────────────────────────────────

@@ -1,8 +1,7 @@
 using System.Globalization;
 using FluentValidation;
-using Gvn.GvnFramework.Application.Behaviors;
+using Gvn.GvnFramework.Application.Configuration;
 using Gvn.GvnFramework.Application.DependencyInjection;
-using LifeQuest.Application.Behaviors;
 using LifeQuest.Application.Diagnostics;
 using LifeQuest.Application.Identity;
 using LifeQuest.Application.Narration;
@@ -10,7 +9,6 @@ using LifeQuest.Application.Notifications;
 using LifeQuest.Application.Profiles;
 using LifeQuest.Application.Quests;
 using LifeQuest.Domain.Recommendations;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,8 +20,10 @@ public static class DependencyInjection
     public static IServiceCollection AddLifeQuestApplication(this IServiceCollection services, IConfiguration configuration)
     {
         // Framework: MediatR handler'ları, FluentValidation validator'ları ve Logging/Validation/Performance pipeline'ı.
+        // 1.1.0'dan itibaren ValidationBehavior Result<T> döndürür ve istek/yanıt gövdelerini varsayılan olarak loglamaz.
         services.AddApplicationServices(typeof(DependencyInjection).Assembly);
-        services.ReplaceFrameworkValidationBehavior();
+        services.Configure<PipelineLoggingOptions>(configuration.GetSection(PipelineLoggingOptions.SectionName));
+        services.Configure<PerformanceOptions>(configuration.GetSection(PerformanceOptions.SectionName));
 
         ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("tr");
 
@@ -38,7 +38,11 @@ public static class DependencyInjection
         services.AddScoped<ProfileService>();
         services.AddScoped<QuestOfferService>();
         services.AddScoped<WeeklySummaryService>();
+        services.AddScoped<PushNotifier>();
+        services.AddScoped<DailyReminderService>();
         services.AddScoped<QuestNarrationService>();
+        services.AddScoped<RealWorld.RealWorldContextService>();
+        services.AddScoped<Social.PartyService>();
         services.AddScoped<Admin.AdminAuditWriter>();
 
         // AI Quest Master portu: gerçek bir LLM adaptörü Infrastructure'da kaydedilirse onu kullanır.
@@ -46,17 +50,5 @@ public static class DependencyInjection
         services.Configure<NarrationOptions>(configuration.GetSection(NarrationOptions.SectionName));
 
         return services;
-    }
-
-    /// <summary>Framework ValidationBehavior'ı, pipeline sırasını koruyarak düzeltilmiş sürümle değiştirir.</summary>
-    private static void ReplaceFrameworkValidationBehavior(this IServiceCollection services)
-    {
-        var index = services
-            .Select((descriptor, i) => (descriptor, i))
-            .Single(x => x.descriptor.ServiceType == typeof(IPipelineBehavior<,>) &&
-                         x.descriptor.ImplementationType == typeof(ValidationBehavior<,>))
-            .i;
-
-        services[index] = ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(ResultValidationBehavior<,>));
     }
 }

@@ -24,6 +24,12 @@ public static class RecommendationWeightCatalog
 
         Weight(nameof(RecommendationWeights.Context), "Bağlam uyumu", WeightGroup.Score,
             "Gün dilimi, süre ve bütçe uyumu.", w => w.Context, (w, v) => w with { Context = v }),
+        Weight(nameof(RecommendationWeights.LocalEventBoost), "Şehirde etkinlik", WeightGroup.Score,
+            "Kullanıcının şehrinde bu görevle bağlantılı yaklaşan bir etkinlik varsa bağlam skoruna eklenen pay.",
+            w => w.LocalEventBoost, (w, v) => w with { LocalEventBoost = v }),
+        Weight(nameof(RecommendationWeights.GoodWeatherOutdoorBoost), "Güzel havada açık hava", WeightGroup.Score,
+            "Hava uygunken gündüz açık hava görevine eklenen bağlam payı. Kötü havada açık hava görevleri zaten o an önerilmez.",
+            w => w.GoodWeatherOutdoorBoost, (w, v) => w with { GoodWeatherOutdoorBoost = v }),
         Weight(nameof(RecommendationWeights.GoalFit), "Hedef uyumu", WeightGroup.Score,
             "Kullanıcının seçtiği hedef kategorilere uyum.", w => w.GoalFit, (w, v) => w with { GoalFit = v }),
         Weight(nameof(RecommendationWeights.Diversity), "Çeşitlilik", WeightGroup.Score,

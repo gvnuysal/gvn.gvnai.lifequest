@@ -8,7 +8,7 @@ import { AuthStore } from './auth.store';
 const ANONYMOUS_AUTH_ENDPOINTS = /\/auth\/(login|register|refresh)$/;
 
 /**
- * API isteklerine Bearer token ekler. 401 alınırsa refresh token ile bir kez yenileyip isteği tekrarlar;
+ * API isteklerine Bearer token ekler. 401 alınırsa refresh çereziyle bir kez yenileyip isteği tekrarlar;
  * yenileme de başarısızsa oturumu kapatır. Rol değişikliğinde sunucu 401 TOKEN_STALE döner; aynı yenileme
  * akışı güncel rolle yeni token alır.
  */
@@ -31,7 +31,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         error instanceof HttpErrorResponse &&
         error.status === 401 &&
         !isAnonymousAuthCall &&
-        auth.hasRefreshToken();
+        auth.hasSession();
 
       if (!canRefresh) return throwError(() => error);
 

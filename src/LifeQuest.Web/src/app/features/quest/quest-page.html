@@ -55,7 +55,7 @@
           @for (component of scoreComponents; track component.key) {
             <li [class.penalty]="component.penalty">
               <span class="bars__label">{{ component.label }}</span>
-              <span class="bars__track"><span [style.width.%]="d.score[component.key] * 100"></span></span>
+              <span class="bars__track"><span [style.width.%]="barWidth(d.score[component.key])"></span></span>
               <span class="bars__value">{{ component.penalty && d.score[component.key] > 0 ? '−' : '' }}{{ (d.score[component.key] * 100).toFixed(0) }}</span>
             </li>
           }
@@ -63,6 +63,29 @@
         <p class="why__foot">Skorlar 0–100 arasıdır. Kırmızı çubuklar öneriyi aşağı çeken etkenlerdir.</p>
       }
     </section>
+
+    @if (q.status === 'Accepted' || detail()?.party) {
+      <lq-party-card [quest]="q" [party]="detail()?.party ?? null" (created)="partyCreated($event)" />
+    }
+
+    @if (detail()?.nearbyPlaces?.length) {
+      <section class="nearby surface" aria-labelledby="nearby-title">
+        <h2 id="nearby-title" class="nearby__title"><lq-icon name="map-pin" [size]="18" /> Şehrinde</h2>
+        <ul class="nearby__list">
+          @for (place of detail()!.nearbyPlaces; track place.id) {
+            <li>
+              <strong>{{ place.name }}</strong>
+              @if (place.kind === 'Event' && place.startsAt) {
+                <span class="nearby__when"><lq-icon name="calendar" [size]="14" /> {{ eventWhen(place) }}</span>
+              }
+              @if (place.address) { <span class="muted">{{ place.address }}</span> }
+              @if (place.note) { <span>{{ place.note }}</span> }
+              @if (place.url) { <a [href]="place.url" target="_blank" rel="noopener noreferrer">Ayrıntılar</a> }
+            </li>
+          }
+        </ul>
+      </section>
+    }
 
     <section class="status-card" [attr.data-status]="q.status">
       @switch (q.status) {

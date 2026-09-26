@@ -7,9 +7,9 @@ using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Recommendations;
 using LifeQuest.Infrastructure.Admin;
 using Gvn.GvnFramework.BackgroundJobs.Abstractions;
-using Gvn.GvnFramework.DepedencyInjection.Extensions;
+using Gvn.GvnFramework.DependencyInjection.Extensions;
 using Gvn.GvnFramework.Domain.Repositories;
-using Gvn.GvnFramework.EntityFramewokCore.UnitOfWork;
+using Gvn.GvnFramework.EntityFrameworkCore.UnitOfWork;
 using Gvn.GvnFramework.Modularity.Abstractions;
 using Hangfire;
 using LifeQuest.Application.Abstractions;
@@ -21,6 +21,9 @@ using LifeQuest.Domain.Progression;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Infrastructure.Catalog;
 using LifeQuest.Infrastructure.Jobs;
+using LifeQuest.Infrastructure.Notifications;
+using LifeQuest.Infrastructure.RealWorld;
+using LifeQuest.Domain.RealWorld;
 using LifeQuest.Infrastructure.Persistence;
 using LifeQuest.Infrastructure.Persistence.Repositories;
 using LifeQuest.Infrastructure.Persistence.Seed;
@@ -108,7 +111,18 @@ public sealed class NotificationModule : IModule
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IWeeklySummaryRepository, WeeklySummaryRepository>();
+        services.AddScoped<IPushSubscriptionRepository, PushSubscriptionRepository>();
         services.AddScoped<WeeklySummaryJob>();
+        services.AddScoped<DailyReminderJob>();
+
+        services.AddOptions<PushOptions>().BindConfiguration(PushOptions.SectionName);
+
+        // Gerçek dünya bağlamı: hava durumu (Open-Meteo) ve yöneticinin girdiği mekân/etkinlikler.
+        services.AddScoped<ILocalPlaceRepository, LocalPlaceRepository>();
+        services.AddScoped<LifeQuest.Domain.Social.IQuestPartyRepository, QuestPartyRepository>();
+        services.AddOptions<WeatherOptions>().BindConfiguration(WeatherOptions.SectionName);
+        services.AddHttpClient<IWeatherProvider, OpenMeteoWeatherProvider>(client => client.Timeout = TimeSpan.FromSeconds(4));
+        services.AddHttpClient<IPushSender, WebPushSender>(client => client.Timeout = TimeSpan.FromSeconds(15));
     }
 
     public void Configure(IApplicationBuilder app)
@@ -118,8 +132,11 @@ public sealed class NotificationModule : IModule
 
         using var scope = app.ApplicationServices.CreateScope();
 #pragma warning disable CS4014 // Hangfire dönen Task'ı kendisi bekler.
-        scope.ServiceProvider.GetRequiredService<IBackgroundJobService>().AddOrUpdateRecurring<WeeklySummaryJob>(
+        var jobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobService>();
+        jobs.AddOrUpdateRecurring<WeeklySummaryJob>(
             WeeklySummaryJob.JobId, job => job.ExecuteAsync(CancellationToken.None), WeeklySummaryJob.Cron);
+        jobs.AddOrUpdateRecurring<DailyReminderJob>(
+            DailyReminderJob.JobId, job => job.ExecuteAsync(CancellationToken.None), DailyReminderJob.Cron);
 #pragma warning restore CS4014
     }
 }

@@ -1,4 +1,4 @@
-using Gvn.GvnFramework.EntityFramewokCore.Repositories;
+using Gvn.GvnFramework.EntityFrameworkCore.Repositories;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Recommendations;
@@ -64,6 +64,9 @@ internal sealed class QuestTemplateRepository(LifeQuestDbContext context)
             .ToListAsync(cancellationToken);
         return (items, total);
     }
+
+    public async Task<IReadOnlyList<QuestTemplate>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+        => ids.Count == 0 ? [] : await DbSet.AsNoTracking().Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<QuestTemplateSpec>> GetOfferableSpecsAsync(CancellationToken cancellationToken = default)
         => (await DbSet.AsNoTracking().Where(t => t.IsActive && t.Safety == SafetyLevel.Safe).ToListAsync(cancellationToken))

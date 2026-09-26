@@ -25,7 +25,7 @@ internal sealed class SuggestQuestsCommandHandler(QuestOfferService offers, IUse
     {
         var result = await offers.SuggestAsync(user.UserId, command.AvailableMinutes, command.MaxCost, cancellationToken);
         return result.Succeeded
-            ? Result<QuestListDto>.Ok(new QuestListDto(result.Data!.Date, result.Data.Quests.ToDtos(), result.Data.Message))
+            ? Result<QuestListDto>.Ok(new QuestListDto(result.Data!.Date, result.Data.Quests.ToDtos(), result.Data.Message, result.Data.Weather))
             : Result<QuestListDto>.Fail(result.Errors);
     }
 }

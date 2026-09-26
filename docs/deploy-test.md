@@ -170,6 +170,8 @@ Migration'lar API açılışında uygulanır (`Database__MigrateOnStartup=true`)
 
 Admin hesabı: `.env` içindeki `ADMIN_EMAIL` (varsayılan `admin@lifequest.local`) ile test ortamında **kaydol**. Hesap açılışta admin olur. Test veritabanı geliştirme veritabanından ayrıdır.
 
+İlk A/B deneyi (**Sevdiğini tekrarla 0,8**) API açılışında `EXPERIMENT_AUTOSTART` ayarıyla otomatik başlar. Denetim kaydında aktör `system` görünür. Deney durdurulursa yeniden açılmaz; sıradaki deneyi **Yönetim → Deneyler → Önerilen deneyler**'den başlatırsın.
+
 ---
 
 ## 5. Sorun giderme

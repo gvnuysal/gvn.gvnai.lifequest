@@ -42,6 +42,9 @@ export const AUDIT_ACTION_LABELS: Record<AdminAction, string> = {
   ExperimentDiscarded: 'Deney kapatıldı',
   IdeaRejected: 'Fikir reddedildi',
   IdeaAccepted: 'Fikir kataloğa eklendi',
+  PlaceCreated: 'Mekân/etkinlik eklendi',
+  PlaceUpdated: 'Mekân/etkinlik güncellendi',
+  PlaceDeleted: 'Mekân/etkinlik silindi',
 };
 
 export const VERDICT_LABELS: Record<ExperimentVerdict, { label: string; tone: string; hint: string }> = {
