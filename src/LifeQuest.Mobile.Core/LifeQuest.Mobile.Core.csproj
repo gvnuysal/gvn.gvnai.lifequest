@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mobil uygulamanın UI'sız çekirdeği: API istemcisi, oturum, sözlük, biçimlendirme ve ViewModel'ler.
+       MAUI'ye bağlı değildir; Linux CI'da derlenir ve test edilir. -->
+  <PropertyGroup>
+    <RootNamespace>LifeQuest.Mobile.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LifeQuest.Mobile.Tests" />
+  </ItemGroup>
+
+</Project>
