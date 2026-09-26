@@ -34,6 +34,7 @@ public sealed class LifeQuestDbContext(DbContextOptions<LifeQuestDbContext> opti
     public DbSet<PlayerProgress> PlayerProgress => Set<PlayerProgress>();
     public DbSet<XpTransaction> XpTransactions => Set<XpTransaction>();
     public DbSet<WeeklySummary> WeeklySummaries => Set<WeeklySummary>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<AdminAuditEntry> AdminAuditEntries => Set<AdminAuditEntry>();
     public DbSet<RecommendationSettings> RecommendationSettings => Set<RecommendationSettings>();
     public DbSet<Experiment> Experiments => Set<Experiment>();

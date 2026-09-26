@@ -21,6 +21,7 @@ using LifeQuest.Domain.Progression;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Infrastructure.Catalog;
 using LifeQuest.Infrastructure.Jobs;
+using LifeQuest.Infrastructure.Notifications;
 using LifeQuest.Infrastructure.Persistence;
 using LifeQuest.Infrastructure.Persistence.Repositories;
 using LifeQuest.Infrastructure.Persistence.Seed;
@@ -108,7 +109,12 @@ public sealed class NotificationModule : IModule
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IWeeklySummaryRepository, WeeklySummaryRepository>();
+        services.AddScoped<IPushSubscriptionRepository, PushSubscriptionRepository>();
         services.AddScoped<WeeklySummaryJob>();
+        services.AddScoped<DailyReminderJob>();
+
+        services.AddOptions<PushOptions>().BindConfiguration(PushOptions.SectionName);
+        services.AddHttpClient<IPushSender, WebPushSender>(client => client.Timeout = TimeSpan.FromSeconds(15));
     }
 
     public void Configure(IApplicationBuilder app)
@@ -118,8 +124,11 @@ public sealed class NotificationModule : IModule
 
         using var scope = app.ApplicationServices.CreateScope();
 #pragma warning disable CS4014 // Hangfire dönen Task'ı kendisi bekler.
-        scope.ServiceProvider.GetRequiredService<IBackgroundJobService>().AddOrUpdateRecurring<WeeklySummaryJob>(
+        var jobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobService>();
+        jobs.AddOrUpdateRecurring<WeeklySummaryJob>(
             WeeklySummaryJob.JobId, job => job.ExecuteAsync(CancellationToken.None), WeeklySummaryJob.Cron);
+        jobs.AddOrUpdateRecurring<DailyReminderJob>(
+            DailyReminderJob.JobId, job => job.ExecuteAsync(CancellationToken.None), DailyReminderJob.Cron);
 #pragma warning restore CS4014
     }
 }

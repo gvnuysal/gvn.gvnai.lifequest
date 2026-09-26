@@ -1,8 +1,8 @@
 namespace LifeQuest.Domain.Notifications;
 
 /// <summary>
-/// Kullanıcının seçtiği bildirim sıklığı. "Bugün uygulamaya girmedin" türü geri çağırma yoktur.
-/// Günlük hatırlatma, push kanalı eklendiğinde gelecek.
+/// Haftalık özet tercihi. "Bugün uygulamaya girmedin" türü geri çağırma yoktur. Günlük push hatırlatması ayrıdır
+/// ve kullanıcı saat seçerek açar (<see cref="DailyReminder"/>, <c>UserProfile.DailyReminderHour</c>).
 /// </summary>
 public enum NotificationPreference
 {

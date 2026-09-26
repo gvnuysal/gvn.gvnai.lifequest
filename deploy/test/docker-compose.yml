@@ -42,6 +42,10 @@ services:
       Hangfire__StorageProvider: PostgreSql
       Admin__BootstrapEmails__0: ${ADMIN_EMAIL:-}
       # Simülasyonun önerdiği ilk A/B deneyi açılışta başlar (bir kez; durdurulursa yeniden açılmaz).
+      # Web Push: anahtarlar ilk deploy'da lib.sh tarafından üretilir. Boşsa push kapalıdır.
+      Push__Subject: mailto:${ADMIN_EMAIL:-admin@lifequest.local}
+      Push__VapidPublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
+      Push__VapidPrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
       Experiments__AutoStartPreset: ${EXPERIMENT_AUTOSTART:-loved-repeat-0.8}
     restart: always
 

@@ -31,6 +31,12 @@ public sealed class UserProfile : AggregateRoot
     /// <summary>Varsayılan: haftalık uygulama içi özet. Kullanıcıyı geri çağıran agresif bildirim yok.</summary>
     public NotificationPreference NotificationPreference { get; private set; } = NotificationPreference.WeeklySummary;
 
+    /// <summary>Günlük push hatırlatmasının yerel saati; null = kapalı (varsayılan). Yalnızca kullanıcı açarsa gönderilir.</summary>
+    public int? DailyReminderHour { get; private set; }
+
+    /// <summary>Son hatırlatmanın gönderildiği yerel takvim günü (günde bir kez).</summary>
+    public DateOnly? LastDailyReminderOn { get; private set; }
+
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
 
     private UserProfile() { }
@@ -66,6 +72,9 @@ public sealed class UserProfile : AggregateRoot
         if (preferences.TimeZoneId is { } tz && !TimeZones.IsValid(tz))
             return Result.Fail(ProfileErrors.InvalidTimeZone);
 
+        if (preferences.DailyReminderHour is { } hour && !DailyReminder.IsValidHour(hour))
+            return Result.Fail(ProfileErrors.InvalidReminderHour);
+
         if (preferences.DiscoveryRadius is { } radius) DiscoveryRadius = radius;
         if (preferences.Budget is { } budget) Budget = budget;
         if (preferences.WeeklyAvailableMinutes is { } weekly) WeeklyAvailableMinutes = weekly;
@@ -73,6 +82,8 @@ public sealed class UserProfile : AggregateRoot
         if (preferences.TimeZoneId is { } timeZoneId) TimeZoneId = timeZoneId;
         if (preferences.MaxPhysicalEffort is { } effort) MaxPhysicalEffort = effort;
         if (preferences.Notifications is { } notifications) NotificationPreference = notifications;
+        if (preferences.ClearDailyReminder) DailyReminderHour = null;
+        else if (preferences.DailyReminderHour is { } reminderHour) DailyReminderHour = reminderHour;
         if (preferences.ClearCity) City = null;
         else if (!string.IsNullOrWhiteSpace(preferences.City)) City = preferences.City.Trim();
 
@@ -125,6 +136,14 @@ public sealed class UserProfile : AggregateRoot
         => _interests.ToDictionary(i => i.InterestId, i => i.Weight);
 
     public TimeZoneInfo ResolveTimeZone() => TimeZones.Resolve(TimeZoneId);
+
+    public bool IsDailyReminderDue(DateTime utcNow)
+        => DailyReminderHour is { } hour &&
+           DailyReminder.IsDue(hour, LastDailyReminderOn, TimeZoneInfo.ConvertTimeFromUtc(utcNow, ResolveTimeZone()));
+
+    /// <summary>Gönderilmese de (ör. bugün görev tamamlanmış) o günün hatırlatması "işlendi" sayılır.</summary>
+    public void MarkDailyReminderHandled(DateTime utcNow)
+        => LastDailyReminderOn = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utcNow, ResolveTimeZone()));
 }
 
 /// <summary>Null alanlar değiştirilmez.</summary>
@@ -137,6 +156,8 @@ public sealed record ProfilePreferences(
     bool ClearCity = false,
     string? TimeZoneId = null,
     PhysicalEffort? MaxPhysicalEffort = null,
-    NotificationPreference? Notifications = null);
+    NotificationPreference? Notifications = null,
+    int? DailyReminderHour = null,
+    bool ClearDailyReminder = false);
 
 public sealed record InterestSelection(Guid InterestId, double Weight);

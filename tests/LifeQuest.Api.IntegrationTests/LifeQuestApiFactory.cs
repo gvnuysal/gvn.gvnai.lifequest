@@ -4,7 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
+using LifeQuest.Application.Abstractions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 
 namespace LifeQuest.Api.IntegrationTests;
@@ -46,7 +49,11 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         builder.UseSetting("BackgroundJobs:Enabled", "false");
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
         builder.UseSetting("Admin:BootstrapEmails:0", AdminEmail);
+        builder.ConfigureTestServices(services => services.AddSingleton<IPushSender>(Push));
     }
+
+    /// <summary>Gerçek push servisi yerine gönderilenleri kaydeder.</summary>
+    public FakePushSender Push { get; } = new();
 
     public const string Password = "Passw0rd!";
 
@@ -133,6 +140,25 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
             timeZoneId = "Europe/Istanbul"
         }, Json);
         response.EnsureSuccessStatusCode();
+    }
+}
+
+public sealed class FakePushSender : IPushSender
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<(string Endpoint, PushNotification Notification)> _sent = new();
+
+    public bool IsConfigured => true;
+    public string PublicKey => "BFakePublicKeyForTests";
+
+    public IReadOnlyList<(string Endpoint, PushNotification Notification)> Sent => _sent.ToList();
+
+    public Task<PushDelivery> SendAsync(PushTarget target, PushNotification notification, CancellationToken cancellationToken)
+    {
+        // Adresinde "gone" geçen abonelik push servisinde silinmiş gibi davranır.
+        if (target.Endpoint.Contains("gone", StringComparison.Ordinal))
+            return Task.FromResult(PushDelivery.Expired);
+        _sent.Enqueue((target.Endpoint, notification));
+        return Task.FromResult(PushDelivery.Sent);
     }
 }
 

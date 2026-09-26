@@ -38,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<ProfileService>();
         services.AddScoped<QuestOfferService>();
         services.AddScoped<WeeklySummaryService>();
+        services.AddScoped<PushNotifier>();
+        services.AddScoped<DailyReminderService>();
         services.AddScoped<QuestNarrationService>();
         services.AddScoped<Admin.AdminAuditWriter>();
 

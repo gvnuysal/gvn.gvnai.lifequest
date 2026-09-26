@@ -1,4 +1,5 @@
 using Gvn.GvnFramework.Domain.Repositories;
+using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Notifications;
 using LifeQuest.Domain.Profiles;
@@ -15,6 +16,7 @@ public sealed class WeeklySummaryService(
     IUserProfileRepository profiles,
     IUserQuestRepository quests,
     IWeeklySummaryRepository summaries,
+    PushNotifier notifier,
     IUnitOfWork unitOfWork,
     TimeProvider clock)
 {
@@ -44,8 +46,14 @@ public sealed class WeeklySummaryService(
                 : null,
             await quests.CountAcceptedAsync(userId, cancellationToken));
 
-        await summaries.AddAsync(WeeklySummary.Create(userId, weekStart, stats, nowUtc), cancellationToken);
+        var summary = WeeklySummary.Create(userId, weekStart, stats, nowUtc);
+        await summaries.AddAsync(summary, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Push izni veren kullanıcıya özet ayrıca bildirim olarak gider; izin yoksa yalnızca uygulama içinde görünür.
+        if (await notifier.SendToUserAsync(userId, new PushNotification(summary.Title, summary.Message, "/today", "weekly-summary"),
+                cancellationToken) > 0)
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 

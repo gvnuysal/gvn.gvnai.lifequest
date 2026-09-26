@@ -8,6 +8,8 @@ import {
   ExperimentAction,
   ExperimentDetail,
   ExperimentPreset,
+  PushSettings,
+  PushSubscriptionRequest,
   IdeaRequest,
   IdeaStatus,
   MyIdea,
@@ -249,6 +251,27 @@ export class SummariesApi {
 
   markRead(id: string) {
     return this.http.post<void>(`${API}/summaries/${id}/read`, null);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class PushApi {
+  private readonly http = inject(HttpClient);
+
+  settings() {
+    return this.http.get<PushSettings>(`${API}/push`);
+  }
+
+  subscribe(body: PushSubscriptionRequest) {
+    return this.http.put<PushSettings>(`${API}/push/subscription`, body);
+  }
+
+  unsubscribe(endpoint: string) {
+    return this.http.delete<void>(`${API}/push/subscription`, { body: { endpoint } });
+  }
+
+  test() {
+    return this.http.post<number>(`${API}/push/test`, null);
   }
 }
 

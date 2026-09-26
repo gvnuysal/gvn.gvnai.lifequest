@@ -69,6 +69,8 @@ export interface Profile {
   timeZoneId: string;
   maxPhysicalEffort: PhysicalEffort;
   notificationPreference: NotificationPreference;
+  /** Günlük push hatırlatmasının yerel saati (7–22); null = kapalı. */
+  dailyReminderHour: number | null;
   interests: ProfileInterest[];
 }
 
@@ -114,6 +116,20 @@ export interface PreferencesRequest {
   timeZoneId?: string | null;
   maxPhysicalEffort?: PhysicalEffort | null;
   notificationPreference?: NotificationPreference | null;
+  dailyReminderHour?: number | null;
+  clearDailyReminder?: boolean | null;
+}
+
+export interface PushSettings {
+  /** Sunucuda VAPID anahtarları tanımlı mı. */
+  enabled: boolean;
+  publicKey: string | null;
+  devices: number;
+}
+
+export interface PushSubscriptionRequest {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
 }
 
 // ── Quest ────────────────────────────────────────────────────────────────────

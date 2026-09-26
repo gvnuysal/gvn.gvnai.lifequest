@@ -20,7 +20,9 @@ public sealed record UpdatePreferencesCommand(
     bool? ClearCity,
     string? TimeZoneId,
     PhysicalEffort? MaxPhysicalEffort = null,
-    NotificationPreference? NotificationPreference = null) : ICommand<ProfileDto>;
+    NotificationPreference? NotificationPreference = null,
+    int? DailyReminderHour = null,
+    bool? ClearDailyReminder = null) : ICommand<ProfileDto>;
 
 public sealed class UpdatePreferencesCommandValidator : AbstractValidator<UpdatePreferencesCommand>
 {
@@ -34,6 +36,9 @@ public sealed class UpdatePreferencesCommandValidator : AbstractValidator<Update
         RuleFor(x => x.TimeZoneId).ValidTimeZone();
         RuleFor(x => x.MaxPhysicalEffort).IsInEnum();
         RuleFor(x => x.NotificationPreference).IsInEnum();
+        RuleFor(x => x.DailyReminderHour)
+            .InclusiveBetween(DailyReminder.EarliestHour, DailyReminder.LatestHour)
+            .When(x => x.DailyReminderHour is not null);
     }
 }
 
@@ -52,7 +57,8 @@ internal sealed class UpdatePreferencesCommandHandler(
         var result = profile.UpdatePreferences(new ProfilePreferences(
             command.DiscoveryRadius, command.Budget, command.WeeklyAvailableMinutes, command.Goals,
             command.City, command.ClearCity ?? false, command.TimeZoneId,
-            command.MaxPhysicalEffort, command.NotificationPreference));
+            command.MaxPhysicalEffort, command.NotificationPreference,
+            command.DailyReminderHour, command.ClearDailyReminder ?? false));
 
         if (!result.Succeeded)
             return Result<ProfileDto>.Fail(result.Errors);
