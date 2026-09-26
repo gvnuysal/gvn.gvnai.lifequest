@@ -75,12 +75,13 @@ public sealed class PushTests(LifeQuestApiFactory factory)
     public async Task Daily_reminder_is_sent_once_at_the_chosen_local_hour_and_skipped_after_a_completion()
     {
         // Şu an yerel saati 08-21 arasında olan bir saat dilimi seçilir; test günün her saatinde çalışır.
+        // Saat sınırında başlamamak için önce beklenir; yerel saat bekledikten sonra hesaplanır.
+        if (DateTime.UtcNow is { Minute: >= 58 } now)
+            await Task.Delay(TimeSpan.FromMinutes(60 - now.Minute) - TimeSpan.FromSeconds(now.Second) + TimeSpan.FromSeconds(2));
         var (timeZoneId, localHour) = Enumerable.Range(-12, 27)
             .Select(offset => ($"Etc/GMT{(offset <= 0 ? "+" : "-")}{Math.Abs(offset)}", offset))
             .Select(z => (z.Item1, TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(z.Item1)).Hour))
             .First(z => z.Hour is >= 8 and <= 21);
-        if (DateTime.UtcNow.Minute == 59)
-            await Task.Delay(TimeSpan.FromSeconds(61));
 
         var reminded = await factory.CreateUserClientAsync();
         var busy = await factory.CreateUserClientAsync();

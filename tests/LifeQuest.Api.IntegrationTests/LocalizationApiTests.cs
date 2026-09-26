@@ -129,12 +129,13 @@ public sealed class LocalizationApiTests(LifeQuestApiFactory factory)
     [Fact]
     public async Task Background_push_uses_the_account_language()
     {
+        // Saat sınırında başlamamak için önce beklenir; yerel saat bekledikten sonra hesaplanır.
+        if (DateTime.UtcNow is { Minute: >= 58 } now)
+            await Task.Delay(TimeSpan.FromMinutes(60 - now.Minute) - TimeSpan.FromSeconds(now.Second) + TimeSpan.FromSeconds(2));
         var (timeZoneId, localHour) = Enumerable.Range(-12, 27)
             .Select(offset => ($"Etc/GMT{(offset <= 0 ? "+" : "-")}{Math.Abs(offset)}", offset))
             .Select(z => (z.Item1, TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(z.Item1)).Hour))
             .First(z => z.Hour is >= 8 and <= 21);
-        if (DateTime.UtcNow.Minute == 59)
-            await Task.Delay(TimeSpan.FromSeconds(61));
 
         var client = await EnglishUserAsync();
         var endpoint = $"https://push.example.com/en/{Guid.NewGuid():N}";
