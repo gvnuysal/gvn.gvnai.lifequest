@@ -15,12 +15,14 @@ public enum DiscoveryRadius
 
 public static class DiscoveryRadiusExtensions
 {
-    public static string DisplayName(this DiscoveryRadius radius) => radius switch
+    public static string DisplayName(this DiscoveryRadius radius) => radius.LocalizedName().Current;
+
+    public static Localization.LocalizedText LocalizedName(this DiscoveryRadius radius) => radius switch
     {
-        DiscoveryRadius.Chill => "Sakin",
-        DiscoveryRadius.Explore => "Dengeli",
-        DiscoveryRadius.SurpriseMe => "Şaşırt Beni",
-        _ => radius.ToString()
+        DiscoveryRadius.Chill => new("Sakin", "Chill"),
+        DiscoveryRadius.Explore => new("Dengeli", "Balanced"),
+        DiscoveryRadius.SurpriseMe => new("Şaşırt Beni", "Surprise Me"),
+        _ => Localization.LocalizedText.Same(radius.ToString())
     };
 }
 

@@ -12,6 +12,7 @@ internal sealed class QuestPartyConfiguration : IEntityTypeConfiguration<QuestPa
         builder.ToTable("quest_parties");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.QuestTitle).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.QuestTitleEn).HasMaxLength(200);
         builder.Property(x => x.InviteCode).HasMaxLength(QuestParty.InviteCodeLength).IsRequired();
         builder.HasIndex(x => x.InviteCode).IsUnique();
         builder.HasIndex(x => x.HostUserId);

@@ -16,7 +16,7 @@ public sealed class UserQuestTests
         QuestType type = QuestType.Weekly, DateTime? expiresAt = null)
     {
         var candidate = Candidate("culture-new-venue", category, [Guid.NewGuid()], type, secondary: secondary);
-        var recommendation = new RecommendedQuest(candidate, ScoreBreakdown.Empty, false, [], "test");
+        var recommendation = new RecommendedQuest(candidate, ScoreBreakdown.Empty, false, [], Localization.LocalizedText.Same("test"));
         var reward = RewardCalculator.Calculate(type, Difficulty.Medium, secondary is not null, 1m);
 
         return UserQuest.Offer(Guid.NewGuid(), recommendation, reward, QuestSource.Daily,

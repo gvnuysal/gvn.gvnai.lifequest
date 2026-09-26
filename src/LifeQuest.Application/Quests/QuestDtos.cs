@@ -57,12 +57,13 @@ public sealed record QuestFeedbackDto(QuestDto Quest, IReadOnlyList<AchievementD
 
 public static class QuestMappings
 {
+    /// <summary>Metinler isteğin dilinde (İngilizce kopya yoksa Türkçe).</summary>
     public static QuestDto ToDto(this UserQuest q) => new(
-        q.Id, q.Title, q.Description, q.Type, q.Difficulty, q.Category, q.SecondaryCategory,
+        q.Id, q.LocalizedTitle.Current, q.LocalizedDescription.Current, q.Type, q.Difficulty, q.Category, q.SecondaryCategory,
         q.MinMinutes, q.MaxMinutes, q.Cost, q.Effort,
         new QuestRewardDto(q.Reward.LifeXp, q.Reward.PrimaryCategoryXp, q.Reward.SecondaryCategoryXp),
         q.Status, q.Source, q.OfferedAt, q.ExpiresAt, q.AcceptedAt, q.CompletedAt, q.SkipReason,
-        q.Rating, q.Preference, q.IsExploration, q.Explanation, q.PlannedAt);
+        q.Rating, q.Preference, q.IsExploration, q.LocalizedExplanation.Current, q.PlannedAt);
 
     public static IReadOnlyList<QuestDto> ToDtos(this IEnumerable<UserQuest> quests)
         => quests.OrderBy(q => q.Slot).Select(ToDto).ToList();

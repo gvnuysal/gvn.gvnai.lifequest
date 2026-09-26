@@ -23,5 +23,5 @@ public sealed record ProgressDto(
 public static class ProgressMappings
 {
     public static AchievementDto ToDto(this AchievementDefinition definition, DateTime? unlockedAt)
-        => new(definition.Code, definition.Title, definition.Description, unlockedAt is not null, unlockedAt);
+        => new(definition.Code, definition.Title.Current, definition.Description.Current, unlockedAt is not null, unlockedAt);
 }

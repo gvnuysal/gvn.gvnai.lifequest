@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { LanguageSwitch } from '../../ui/language-switch';
 
 @Component({
   selector: 'lq-auth-layout',
+  imports: [LanguageSwitch],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page page--bare">
+      <div class="lang"><lq-language-switch /></div>
       <header class="brand">
         <img src="icons/icon.svg" alt="" width="64" height="64" />
         <p class="eyebrow" lang="en">LifeQuest</p>
@@ -18,6 +21,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     </div>
   `,
   styles: `
+    .lang { display: flex; justify-content: flex-end; }
     .page { min-height: 100dvh; justify-content: center; }
     .brand { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
     .brand img { border-radius: 18px; box-shadow: var(--shadow-md); margin-bottom: 6px; }

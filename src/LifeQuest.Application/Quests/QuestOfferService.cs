@@ -221,7 +221,7 @@ public sealed class QuestOfferService(
         var reward = RewardCalculator.Calculate(
             candidate.Type, candidate.Difficulty, candidate.SecondaryCategory is not null, novelty);
 
-        var topics = candidate.InterestIds.Select(input.Graph.NameOf).ToList();
+        var topics = candidate.InterestIds.Select(id => input.Graph.NameOf(id).Tr).ToList();
         var text = await narration.NarrateAsync(candidate, topics, cancellationToken);
 
         var quest = UserQuest.Offer(input.UserId, item, reward, source, offerDate, slot, nowUtc, expiresAtUtc, text);

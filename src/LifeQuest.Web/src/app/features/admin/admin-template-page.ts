@@ -1,3 +1,5 @@
+import { ideaFlagLabel } from './admin-labels';
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -47,140 +49,152 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="section">
-      <a class="back" [routerLink]="paths.admin.catalog"><lq-icon name="arrow-left" [size]="18" /> Katalog</a>
+      <a class="back" [routerLink]="paths.admin.catalog"><lq-icon name="arrow-left" [size]="18" /> {{ t().adminTemplate.back }}</a>
 
       @if (loadError()) {
-        <lq-empty-state icon="info" title="Template yüklenemedi" [message]="loadError()" />
+        <lq-empty-state icon="info" [title]="t().adminTemplate.loadFailed" [message]="loadError()" />
       } @else if (ready()) {
         <header class="stack">
-          <h1>{{ template() ? template()!.title : 'Yeni template' }}</h1>
+          <h1>{{ template() ? template()!.title : t().adminTemplate.newTemplate }}</h1>
           @if (sourceIdea(); as idea) {
             <p class="from-idea small">
-              Bu template bir topluluk fikrinden oluşturuluyor. Kaydedince fikir "kataloğa eklendi" olarak işaretlenir.
-              @if (idea.flags.length) { <br />Otomatik tarama: {{ idea.flags.join(' · ') }} }
+              {{ t().adminTemplate.fromIdea }}
+              @if (idea.flags.length) { <br />{{ t().adminTemplate.autoScreen }} {{ flags(idea.flags) }} }
             </p>
           }
-          @if (template(); as t) {
+          @if (template(); as tpl) {
             <div class="row wrap">
-              <span [class]="'pill pill--' + safetyMeta(t.safety).tone">{{ safetyMeta(t.safety).label }}</span>
-              @if (!t.isActive) { <span class="pill">Pasif</span> }
-              <span class="pill">v{{ t.version }}</span>
-              <span class="pill">{{ t.source === 'Admin' ? 'Admin tarafından yönetiliyor' : 'Seed verisiyle senkron' }}</span>
+              <span [class]="'pill pill--' + safetyMeta(tpl.safety).tone">{{ safetyMeta(tpl.safety).label }}</span>
+              @if (!tpl.isActive) { <span class="pill">{{ t().adminTemplate.inactive }}</span> }
+              <span class="pill">v{{ tpl.version }}</span>
+              <span class="pill">{{ tpl.source === 'Admin' ? t().adminTemplate.managedByAdmin : t().adminTemplate.seedSync }}</span>
             </div>
           }
         </header>
 
-        @if (template(); as t) {
+        @if (template(); as tpl) {
           <section class="surface card" aria-labelledby="decision-title">
-            <h2 id="decision-title" class="section-title">Yayın durumu</h2>
-            @if (t.violations.length) {
+            <h2 id="decision-title" class="section-title">{{ t().adminTemplate.publishState }}</h2>
+            @if (tpl.violations.length) {
               <ul class="violations">
-                @for (v of t.violations; track v) { <li>{{ v }}</li> }
+                @for (v of tpl.violations; track v) { <li>{{ v }}</li> }
               </ul>
             } @else {
-              <p class="ok small">Editoryal güvenlik kurallarının hepsine uyuyor.</p>
+              <p class="ok small">{{ t().adminTemplate.rulesOk }}</p>
             }
             <div class="actions">
-              @if (t.safety !== 'Safe') {
-                <button lq-button size="sm" (click)="openSafety('Safe')">Onayla ve yayınla</button>
+              @if (tpl.safety !== 'Safe') {
+                <button lq-button size="sm" (click)="openSafety('Safe')">{{ t().adminTemplate.approve }}</button>
               }
-              @if (t.safety === 'Safe') {
-                <button lq-button variant="soft" size="sm" (click)="openSafety('NeedsReview')">İncelemeye al</button>
+              @if (tpl.safety === 'Safe') {
+                <button lq-button variant="soft" size="sm" (click)="openSafety('NeedsReview')">{{ t().adminTemplate.toReview }}</button>
               }
-              @if (t.safety !== 'Blocked') {
-                <button lq-button variant="danger" size="sm" (click)="openSafety('Blocked')">Engelle</button>
+              @if (tpl.safety !== 'Blocked') {
+                <button lq-button variant="danger" size="sm" (click)="openSafety('Blocked')">{{ t().adminTemplate.block }}</button>
               }
-              <button lq-button variant="soft" size="sm" [loading]="busy()" (click)="toggleActive(t)">
-                {{ t.isActive ? 'Pasifleştir' : 'Etkinleştir' }}
+              <button lq-button variant="soft" size="sm" [loading]="busy()" (click)="toggleActive(tpl)">
+                {{ tpl.isActive ? t().adminTemplate.deactivate : t().adminTemplate.activate }}
               </button>
             </div>
-            @if (t.source === 'Seed') {
-              <p class="muted small">Düzenlediğinde veya karar verdiğinde bu template seed verisiyle senkronlanmayı bırakır.</p>
+            @if (tpl.source === 'Seed') {
+              <p class="muted small">{{ t().adminTemplate.seedHint }}</p>
             }
           </section>
         }
 
         <form class="stack form" [formGroup]="form" (ngSubmit)="save()">
           <div class="field">
-            <label for="code">Kod</label>
+            <label for="code">{{ t().adminTemplate.code }}</label>
             <input id="code" class="input" formControlName="code" autocomplete="off" placeholder="ornek-kod"
                    [attr.aria-invalid]="fieldError('code') ? true : null" />
-            <span class="field__hint">Küçük harf, rakam ve tire. Kaydettikten sonra değiştirilemez.</span>
+            <span class="field__hint">{{ t().adminTemplate.codeHint }}</span>
             @if (fieldError('code'); as e) { <span class="field__error">{{ e }}</span> }
           </div>
           <div class="field">
-            <label for="title">Başlık</label>
-            <input id="title" class="input" formControlName="title" maxlength="150" />
-            <span class="field__hint">{{ form.controls.title.value.length }} / 80 önerilen</span>
+            <label for="title">{{ t().adminTemplate.titleTr }}</label>
+            <input id="title" class="input" formControlName="title" maxlength="150" lang="tr" />
+            <span class="field__hint">{{ t().adminTemplate.titleHint(form.controls.title.value.length) }}</span>
             @if (fieldError('title'); as e) { <span class="field__error">{{ e }}</span> }
           </div>
           <div class="field">
-            <label for="description">Açıklama</label>
-            <textarea id="description" class="input" rows="3" formControlName="description" maxlength="1000"></textarea>
-            <span class="field__hint">{{ form.controls.description.value.length }} karakter · 30–300 önerilen</span>
+            <label for="description">{{ t().adminTemplate.descriptionTr }}</label>
+            <textarea id="description" class="input" rows="3" formControlName="description" maxlength="1000" lang="tr"></textarea>
+            <span class="field__hint">{{ t().adminTemplate.descriptionHint(form.controls.description.value.length) }}</span>
             @if (fieldError('description'); as e) { <span class="field__error">{{ e }}</span> }
+          </div>
+          <div class="field">
+            <label for="title-en">{{ t().adminTemplate.titleEn }}</label>
+            <input id="title-en" class="input" formControlName="titleEn" maxlength="150" lang="en" />
+            <span class="field__hint">{{ t().adminTemplate.titleHint(form.controls.titleEn.value.length) }}</span>
+            @if (fieldError('titleEn'); as e) { <span class="field__error">{{ e }}</span> }
+          </div>
+          <div class="field">
+            <label for="description-en">{{ t().adminTemplate.descriptionEn }}</label>
+            <textarea id="description-en" class="input" rows="3" formControlName="descriptionEn" maxlength="1000" lang="en"></textarea>
+            <span class="field__hint">{{ t().adminTemplate.descriptionHint(form.controls.descriptionEn.value.length) }} · {{ t().adminTemplate.englishHint }}</span>
+            @if (fieldError('descriptionEn'); as e) { <span class="field__error">{{ e }}</span> }
           </div>
 
           <div class="grid">
             <div class="field">
-              <label for="category">Kategori</label>
+              <label for="category">{{ t().adminTemplate.category }}</label>
               <select id="category" class="input" formControlName="category">
                 @for (c of categories; track c) { <option [value]="c">{{ catLabel(c) }}</option> }
               </select>
             </div>
             <div class="field">
-              <label for="secondary">İkincil kategori</label>
+              <label for="secondary">{{ t().adminTemplate.secondary }}</label>
               <select id="secondary" class="input" formControlName="secondaryCategory">
-                <option [ngValue]="null">Yok</option>
+                <option [ngValue]="null">{{ t().adminTemplate.none }}</option>
                 @for (c of categories; track c) { <option [ngValue]="c">{{ catLabel(c) }}</option> }
               </select>
               @if (fieldError('secondaryCategory'); as e) { <span class="field__error">{{ e }}</span> }
             </div>
             <div class="field">
-              <label for="type">Tür</label>
+              <label for="type">{{ t().adminTemplate.type }}</label>
               <select id="type" class="input" formControlName="type">
-                @for (t of types; track t) { <option [value]="t">{{ typeLabels[t] }}</option> }
+                @for (ty of types; track ty) { <option [value]="ty">{{ typeLabels[ty] }}</option> }
               </select>
             </div>
             <div class="field">
-              <label for="difficulty">Zorluk</label>
+              <label for="difficulty">{{ t().adminTemplate.difficulty }}</label>
               <select id="difficulty" class="input" formControlName="difficulty">
                 @for (d of difficulties; track d) { <option [value]="d">{{ difficultyLabels[d] }}</option> }
               </select>
             </div>
             <div class="field">
-              <label for="min">En kısa (dk)</label>
+              <label for="min">{{ t().adminTemplate.minMinutes }}</label>
               <input id="min" class="input" type="number" min="1" formControlName="minMinutes" />
             </div>
             <div class="field">
-              <label for="max">En uzun (dk)</label>
+              <label for="max">{{ t().adminTemplate.maxMinutes }}</label>
               <input id="max" class="input" type="number" min="1" formControlName="maxMinutes" />
               @if (fieldError('maxMinutes'); as e) { <span class="field__error">{{ e }}</span> }
             </div>
             <div class="field">
-              <label for="cost">Maliyet</label>
+              <label for="cost">{{ t().adminTemplate.cost }}</label>
               <select id="cost" class="input" formControlName="cost">
                 @for (c of costs; track c) { <option [value]="c">{{ costLabels[c].label }}</option> }
               </select>
             </div>
             <div class="field">
-              <label for="effort">Fiziksel efor</label>
+              <label for="effort">{{ t().adminTemplate.effort }}</label>
               <select id="effort" class="input" formControlName="effort">
                 @for (e of efforts; track e) { <option [value]="e">{{ effortLabels[e].label }}</option> }
               </select>
             </div>
             <div class="field">
-              <label for="cooldown">Tekrar aralığı (gün)</label>
+              <label for="cooldown">{{ t().adminTemplate.cooldown }}</label>
               <input id="cooldown" class="input" type="number" min="0" max="365" formControlName="cooldownDays" />
             </div>
             <div class="field">
-              <label for="risk">Risk skoru (0–1)</label>
+              <label for="risk">{{ t().adminTemplate.risk }}</label>
               <input id="risk" class="input" type="number" min="0" max="1" step="0.05" formControlName="riskScore" />
             </div>
           </div>
 
           <div class="field">
-            <span class="field__label">Gün dilimleri</span>
+            <span class="field__label">{{ t().adminTemplate.dayParts }}</span>
             <div class="row wrap">
               @for (p of dayParts; track p.value) {
                 <button lq-chip [selected]="hasDayPart(p.value)" (click)="toggleDayPart(p.value)">{{ p.label }}</button>
@@ -190,34 +204,34 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
           </div>
 
           <div class="field">
-            <span class="field__label">İlgi alanları</span>
+            <span class="field__label">{{ t().adminTemplate.interests }}</span>
             <div class="row wrap">
               @for (i of selectedInterests(); track i.id) {
                 <button lq-chip [selected]="true" (click)="toggleInterest(i.id)">{{ i.name }} <lq-icon name="x" [size]="14" /></button>
               } @empty {
-                <span class="muted small">En az bir ilgi alanı seç.</span>
+                <span class="muted small">{{ t().adminTemplate.pickInterest }}</span>
               }
             </div>
-            <select class="input" aria-label="İlgi alanı ekle" (change)="addInterest($event)">
-              <option value="">+ İlgi alanı ekle</option>
+            <select class="input" [attr.aria-label]="t().adminTemplate.addInterestAria" (change)="addInterest($event)">
+              <option value="">{{ t().adminTemplate.addInterest }}</option>
               @for (i of availableInterests(); track i.id) { <option [value]="i.id">{{ i.name }} · {{ catLabel(i.category) }}</option> }
             </select>
             @if (fieldError('interestIds'); as e) { <span class="field__error">{{ e }}</span> }
           </div>
 
           <div class="toggles">
-            <label class="toggle"><input type="checkbox" formControlName="isOutdoor" /> Açık havada yapılır</label>
-            <label class="toggle"><input type="checkbox" formControlName="requiresCity" /> Şehir bilgisi gerektirir</label>
-            <label class="toggle"><input type="checkbox" formControlName="isStarter" /> Onboarding başlangıç kartı</label>
+            <label class="toggle"><input type="checkbox" formControlName="isOutdoor" /> {{ t().adminTemplate.outdoor }}</label>
+            <label class="toggle"><input type="checkbox" formControlName="requiresCity" /> {{ t().adminTemplate.requiresCity }}</label>
+            <label class="toggle"><input type="checkbox" formControlName="isStarter" /> {{ t().adminTemplate.starter }}</label>
           </div>
 
           @if (check(); as c) {
             <section class="check" [class.check--ok]="!c.violations.length" aria-live="polite">
               @if (c.violations.length) {
-                <strong>Kaydedilirse inceleme bekleyecek:</strong>
+                <strong>{{ t().adminTemplate.willWait }}</strong>
                 <ul>@for (v of c.violations; track v) { <li>{{ v }}</li> }</ul>
               } @else {
-                <strong>Kurallara uygun; kaydedilince hemen yayına girer.</strong>
+                <strong>{{ t().adminTemplate.willPublish }}</strong>
               }
             </section>
           }
@@ -225,8 +239,8 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
           @if (saveError()) { <p class="field__error" role="alert">{{ saveError() }}</p> }
 
           <div class="actions">
-            <button lq-button type="button" variant="soft" [loading]="checking()" (click)="runCheck()">Kontrol et</button>
-            <button lq-button type="submit" [loading]="busy()">{{ template() ? 'Değişiklikleri kaydet' : 'Oluştur' }}</button>
+            <button lq-button type="button" variant="soft" [loading]="checking()" (click)="runCheck()">{{ t().adminTemplate.check }}</button>
+            <button lq-button type="submit" [loading]="busy()">{{ template() ? t().adminTemplate.saveChanges : t().adminTemplate.create }}</button>
           </div>
         </form>
       } @else {
@@ -239,21 +253,21 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
       @if (safetyAction(); as a) {
         <div class="stack">
           @if (a.safety === 'Safe' && template()?.violations?.length) {
-            <p class="muted">Bu template kural ihlali içeriyor. Onaylarsan kullanıcılara önerilmeye başlar.</p>
+            <p class="muted">{{ t().adminTemplate.approveWithViolations }}</p>
           } @else if (a.safety === 'Blocked') {
-            <p class="muted">Engellenen template seed verisiyle de yeniden açılmaz.</p>
+            <p class="muted">{{ t().adminTemplate.blockedHint }}</p>
           } @else if (a.safety === 'NeedsReview') {
-            <p class="muted">Template yeniden onaylanana kadar önerilmez.</p>
+            <p class="muted">{{ t().adminTemplate.reviewHint }}</p>
           } @else {
-            <p class="muted">Template kullanıcılara önerilmeye başlar.</p>
+            <p class="muted">{{ t().adminTemplate.publishHint }}</p>
           }
           <div class="field">
-            <label for="note">Gerekçe{{ a.needsNote ? '' : ' (isteğe bağlı)' }}</label>
+            <label for="note">{{ t().adminTemplate.reason }}{{ a.needsNote ? '' : t().adminTemplate.optional }}</label>
             <textarea id="note" class="input" rows="3" maxlength="500" #note></textarea>
           </div>
           @if (safetyError()) { <p class="field__error" role="alert">{{ safetyError() }}</p> }
           <button lq-button [block]="true" [variant]="a.safety === 'Blocked' ? 'danger' : 'primary'" [loading]="busy()"
-                  (click)="decide(a, note.value)">Onayla</button>
+                  (click)="decide(a, note.value)">{{ t().adminTemplate.confirm }}</button>
         </div>
       }
     </lq-sheet>
@@ -280,6 +294,10 @@ type SafetyAction = { safety: SafetyLevel; title: string; needsNote: boolean };
   `,
 })
 export class AdminTemplatePage implements OnInit {
+  protected readonly t = t;
+  protected flags(flags: string[]): string {
+    return flags.map(ideaFlagLabel).join(' · ');
+  }
   protected readonly paths = APP_PATHS;
   /** Rota parametresi; "yeni" rotasında tanımsızdır. */
   readonly id = input<string>();
@@ -309,6 +327,8 @@ export class AdminTemplatePage implements OnInit {
     code: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]{3,64}$/)]],
     title: ['', Validators.required],
     description: ['', Validators.required],
+    titleEn: '',
+    descriptionEn: '',
     category: 'Learning' as LifeCategory,
     secondaryCategory: this.fb.control<LifeCategory | null>(null),
     type: 'Weekly' as QuestType,
@@ -380,8 +400,8 @@ export class AdminTemplatePage implements OnInit {
     if (server) return server;
     const control = this.form.get(name);
     if (!control || !control.invalid || !control.touched) return null;
-    if (name === 'code') return 'Kod 3-64 karakter; küçük harf, rakam ve tire içermeli.';
-    return 'Bu alan gerekli.';
+    if (name === 'code') return t().adminTemplate.codeError;
+    return t().adminTemplate.required;
   }
 
   protected hasDayPart(part: DayPart): boolean {
@@ -433,7 +453,7 @@ export class AdminTemplatePage implements OnInit {
     request.subscribe({
       next: (saved) => {
         this.busy.set(false);
-        this.toast.success(saved.safety === 'Safe' ? 'Template kaydedildi ve yayında.' : 'Template kaydedildi; inceleme bekliyor.');
+        this.toast.success(saved.safety === 'Safe' ? t().adminTemplate.savedLive : t().adminTemplate.savedReview);
         if (current) this.fill(saved);
         else void this.router.navigate(templatePath(saved.id));
       },
@@ -446,26 +466,28 @@ export class AdminTemplatePage implements OnInit {
 
   protected openSafety(safety: SafetyLevel): void {
     const violations = this.template()?.violations.length ?? 0;
-    const titles: Record<SafetyLevel, string> = { Safe: 'Onayla ve yayınla', NeedsReview: 'İncelemeye al', Blocked: 'Template\'i engelle' };
+    const titles: Record<SafetyLevel, string> = {
+      Safe: t().adminTemplate.approve, NeedsReview: t().adminTemplate.toReview, Blocked: t().adminTemplate.blockTitle,
+    };
     this.safetyError.set(null);
     this.safetyAction.set({ safety, title: titles[safety], needsNote: safety === 'Blocked' || (safety === 'Safe' && violations > 0) });
   }
 
   protected decide(action: SafetyAction, note: string): void {
-    const t = this.template();
-    if (!t) return;
+    const tpl = this.template();
+    if (!tpl) return;
     if (action.needsNote && !note.trim()) {
-      this.safetyError.set('Bu karar için gerekçe yazmalısın.');
+      this.safetyError.set(t().adminTemplate.needsReason);
       return;
     }
 
     this.busy.set(true);
-    this.api.setTemplateSafety(t.id, action.safety, note.trim() || null).subscribe({
+    this.api.setTemplateSafety(tpl.id, action.safety, note.trim() || null).subscribe({
       next: (saved) => {
         this.busy.set(false);
         this.safetyAction.set(null);
         this.fill(saved);
-        this.toast.success('Karar kaydedildi.');
+        this.toast.success(t().adminTemplate.decided);
       },
       error: (err: unknown) => {
         this.busy.set(false);
@@ -474,13 +496,13 @@ export class AdminTemplatePage implements OnInit {
     });
   }
 
-  protected toggleActive(t: AdminTemplate): void {
+  protected toggleActive(tpl: AdminTemplate): void {
     this.busy.set(true);
-    this.api.setTemplateActive(t.id, !t.isActive).subscribe({
+    this.api.setTemplateActive(tpl.id, !tpl.isActive).subscribe({
       next: (saved) => {
         this.busy.set(false);
         this.fill(saved);
-        this.toast.success(saved.isActive ? 'Template etkinleştirildi.' : 'Template pasifleştirildi.');
+        this.toast.success(saved.isActive ? t().adminTemplate.activated : t().adminTemplate.deactivated);
       },
       error: (err: unknown) => {
         this.busy.set(false);
@@ -495,6 +517,8 @@ export class AdminTemplatePage implements OnInit {
       code: t.code,
       title: t.title,
       description: t.description,
+      titleEn: t.titleEn ?? '',
+      descriptionEn: t.descriptionEn ?? '',
       category: t.category,
       secondaryCategory: t.secondaryCategory,
       type: t.type,
@@ -557,7 +581,7 @@ export class AdminTemplatePage implements OnInit {
       else general.push(e.message);
     }
     this.fieldErrors.set(fields);
-    this.saveError.set(general[0] ?? (Object.keys(fields).length ? 'Formdaki hataları düzelt.' : null));
+    this.saveError.set(general[0] ?? (Object.keys(fields).length ? t().adminTemplate.fixErrors : null));
   }
 }
 

@@ -1,3 +1,4 @@
+import { t } from '../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 @Component({
@@ -8,7 +9,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
     'aria-valuemin': '0',
     'aria-valuemax': '100',
     '[attr.aria-valuenow]': 'percent()',
-    '[attr.aria-label]': 'label()',
+    '[attr.aria-label]': 'label() ?? t().ui.progress',
     '[style.--fill]': 'color()',
     '[style.height.px]': 'height()',
   },
@@ -32,11 +33,12 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   `,
 })
 export class ProgressBar {
+  protected readonly t = t;
   /** 0-1 arası */
   readonly value = input.required<number>();
   readonly color = input('var(--xp)');
   readonly height = input(10);
-  readonly label = input('İlerleme');
+  readonly label = input<string | null>(null);
 
   protected readonly percent = computed(() => Math.round(Math.min(1, Math.max(0, this.value())) * 100));
 }

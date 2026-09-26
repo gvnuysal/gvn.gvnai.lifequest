@@ -20,6 +20,11 @@ using LifeQuest.Infrastructure;
 using LifeQuest.Infrastructure.Persistence;
 using Serilog;
 
+// İstek dışı kod (arka plan işleri, açılış) makinenin kültüründen bağımsız olarak Türkçe çalışır; kullanıcıya
+// giden metinler Language.Use(hesap dili) ile, istekler Accept-Language ile yerelleşir.
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
@@ -90,6 +95,17 @@ if (configuration.GetValue("ReverseProxy:Enabled", false))
     forwarded.KnownProxies.Clear();
     app.UseForwardedHeaders(forwarded);
 }
+
+// Dil: Accept-Language (web her istekte gönderir) → tr / en; yoksa tr. Hata ve doğrulama mesajları bu dilde üretilir.
+app.UseRequestLocalization(options =>
+{
+    options.SetDefaultCulture("tr-TR")
+        .AddSupportedCultures("tr-TR", "tr", "en-US", "en")
+        .AddSupportedUICultures("tr-TR", "tr", "en-US", "en");
+    options.FallBackToParentCultures = true;
+    options.FallBackToParentUICultures = true;
+    options.RequestCultureProviders = [new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider()];
+});
 
 app.UseGvnCorrelationId();
 app.UseMiddleware<CorrelationIdLogContextMiddleware>();

@@ -4,6 +4,7 @@ import { CATEGORIES, CATEGORY_ORDER } from '../core/labels/labels';
 import { CategoryBadge } from './category-badge';
 import { Chip } from './chip';
 import { Icon } from './icon';
+import { t } from '../core/i18n/i18n';
 
 export const LIKE_WEIGHT = 0.6;
 export const LOVE_WEIGHT = 0.9;
@@ -18,8 +19,8 @@ export const LOVE_WEIGHT = 0.9;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p class="legend">
-      <span><span class="dot"></span> Bir kez dokun: ilgimi çekiyor</span>
-      <span><span class="dot dot--strong"></span> İki kez: çok seviyorum</span>
+      <span><span class="dot"></span> {{ t().ui.interestLegendOnce }}</span>
+      <span><span class="dot dot--strong"></span> {{ t().ui.interestLegendTwice }}</span>
     </p>
     @for (group of groups(); track group.category) {
       <section>
@@ -73,9 +74,11 @@ export class InterestPicker {
     return this.selection()[code] ?? 0;
   }
 
+  protected readonly t = t;
+
   protected stateLabel(code: string): string {
     const weight = this.weight(code);
-    return weight >= LOVE_WEIGHT ? 'çok seviyorum' : weight > 0 ? 'ilgimi çekiyor' : 'seçili değil';
+    return weight >= LOVE_WEIGHT ? t().ui.interestLove : weight > 0 ? t().ui.interestLike : t().ui.interestNone;
   }
 
   protected cycle(code: string): void {

@@ -104,10 +104,12 @@ public sealed class WeeklySummaryComposerTests
         var (_, message) = WeeklySummaryComposer.Compose(
             new WeeklyStats(3, 420, [LifeCategory.Culture, LifeCategory.Fitness], LifeCategory.Culture, 1));
 
-        Assert.Contains("3 gerçek deneyim", message);
-        Assert.Contains("420 XP", message);
-        Assert.Contains("Kültür ve Hareket alanında ilk adımını attın", message);
-        Assert.Contains("En çok Kültür", message);
+        Assert.Contains("3 gerçek deneyim", message.Tr);
+        Assert.Contains("420 XP", message.Tr);
+        Assert.Contains("Kültür ve Hareket alanında ilk adımını attın", message.Tr);
+        Assert.Contains("En çok Kültür", message.Tr);
+        Assert.Equal("This week you had 3 real-life experiences and earned 420 XP. You took your first step in Culture and Movement. "
+                     + "You spent the most time on Culture.", message.En);
     }
 
     [Fact]
@@ -116,13 +118,14 @@ public sealed class WeeklySummaryComposerTests
         var (_, quiet) = WeeklySummaryComposer.Compose(new WeeklyStats(0, 0, [], null, 0));
         var (_, pending) = WeeklySummaryComposer.Compose(new WeeklyStats(0, 0, [], null, 2));
 
-        foreach (var message in new[] { quiet, pending })
+        foreach (var message in new[] { quiet.Tr, pending.Tr })
         {
             Assert.DoesNotContain("kaybettin", message);
             Assert.DoesNotContain("seri", message);
             Assert.DoesNotContain("girmedin", message);
         }
-        Assert.Contains("Acele yok", pending);
+        Assert.Contains("Acele yok", pending.Tr);
+        Assert.DoesNotContain("lost", pending.En + quiet.En);
     }
 
     [Fact]

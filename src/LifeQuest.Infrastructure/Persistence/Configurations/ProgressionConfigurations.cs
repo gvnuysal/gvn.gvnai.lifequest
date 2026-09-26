@@ -52,6 +52,7 @@ internal sealed class XpTransactionConfiguration : IEntityTypeConfiguration<XpTr
         builder.ToTable("xp_transactions");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Description).HasMaxLength(150).IsRequired();
+        builder.Property(x => x.DescriptionEn).HasMaxLength(150);
         builder.HasOne<UserAccount>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
 
         // Çift XP'ye karşı veritabanı seviyesinde son savunma hattı.

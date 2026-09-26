@@ -9,6 +9,9 @@ public interface IUserAccountRepository : IRepository<UserAccount>
     Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken = default);
 
     Task<int> CountByRoleAsync(string role, CancellationToken cancellationToken = default);
+
+    /// <summary>Kullanıcının hesap dili (arka plan bildirimleri için); hesap yoksa varsayılan.</summary>
+    Task<string> GetLanguageAsync(Guid userId, CancellationToken cancellationToken = default);
 }
 
 public interface IRefreshTokenRepository : IRepository<RefreshToken>

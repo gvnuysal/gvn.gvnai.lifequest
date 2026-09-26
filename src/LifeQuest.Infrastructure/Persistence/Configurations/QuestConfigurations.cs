@@ -15,6 +15,9 @@ internal sealed class UserQuestConfiguration : IEntityTypeConfiguration<UserQues
         builder.Property(x => x.Title).HasMaxLength(150).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(1000).IsRequired();
         builder.Property(x => x.Explanation).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.TitleEn).HasMaxLength(150);
+        builder.Property(x => x.DescriptionEn).HasMaxLength(1000);
+        builder.Property(x => x.ExplanationEn).HasMaxLength(500);
         builder.PrimitiveCollection(x => x.InterestIds);
         builder.PrimitiveCollection(x => x.ReasonCodes);
 

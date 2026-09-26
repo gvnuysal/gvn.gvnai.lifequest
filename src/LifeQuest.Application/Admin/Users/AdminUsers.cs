@@ -10,6 +10,7 @@ using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Identity;
 using MediatR;
 using Microsoft.Extensions.Options;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Admin.Users;
 
@@ -100,7 +101,7 @@ public sealed class SuspendUserCommandValidator : AbstractValidator<SuspendUserC
 {
     public SuspendUserCommandValidator()
     {
-        RuleFor(x => x.Days).Must(d => d is null or 1 or 7 or 30).WithMessage("Askı süresi 1, 7, 30 gün veya süresiz olmalıdır.");
+        RuleFor(x => x.Days).Must(d => d is null or 1 or 7 or 30).WithMessage(_ => Text.Of("Askı süresi 1, 7, 30 gün veya süresiz olmalıdır.", "The suspension must be 1, 7 or 30 days, or indefinite."));
         RuleFor(x => x.Reason).NotEmpty().MaximumLength(500);
     }
 }
@@ -171,7 +172,7 @@ public sealed record SetUserRoleCommand(Guid UserId, string Role) : ICommand<Adm
 public sealed class SetUserRoleCommandValidator : AbstractValidator<SetUserRoleCommand>
 {
     public SetUserRoleCommandValidator()
-        => RuleFor(x => x.Role).Must(r => r is UserRoles.User or UserRoles.Admin).WithMessage("Rol 'user' veya 'admin' olmalıdır.");
+        => RuleFor(x => x.Role).Must(r => r is UserRoles.User or UserRoles.Admin).WithMessage(_ => Text.Of("Rol 'user' veya 'admin' olmalıdır.", "The role must be 'user' or 'admin'."));
 }
 
 internal sealed class SetUserRoleCommandHandler(

@@ -42,7 +42,8 @@ public sealed class RealWorldEngineTests
         var top = Assert.Single(with.Items);
         Assert.Equal("concert", top.Candidate.Code);
         Assert.Equal(ReasonCode.LocalEvent, top.Reasons[0].Code);
-        Assert.StartsWith("Şehrinde bu hafta", top.Explanation);
+        Assert.StartsWith("Şehrinde bu hafta", top.Explanation.Tr);
+        Assert.StartsWith("Suggested because there's a related event in your city this week", top.Explanation.En);
         Assert.True(top.Score.Total > without.Items.Single().Score.Total);
     }
 

@@ -8,6 +8,7 @@ using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Community;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Admin.Catalog;
 
@@ -32,12 +33,15 @@ public sealed record TemplateInput(
     double RiskScore,
     IReadOnlyList<Guid> InterestIds,
     PhysicalEffort Effort,
-    bool IsStarter)
+    bool IsStarter,
+    string? TitleEn = null,
+    string? DescriptionEn = null)
 {
     public QuestTemplateSpec ToSpec() => new(
         Code.Trim(), Title.Trim(), Description.Trim(), Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
         Cost, DayParts.Aggregate(DayPart.None, (all, p) => all | p), RequiresCity, IsOutdoor, CooldownDays,
-        Math.Round(RiskScore, 2), InterestIds.Distinct().ToList(), Effort, IsStarter);
+        Math.Round(RiskScore, 2), InterestIds.Distinct().ToList(), Effort, IsStarter,
+        string.IsNullOrWhiteSpace(TitleEn) ? null : TitleEn.Trim(), string.IsNullOrWhiteSpace(DescriptionEn) ? null : DescriptionEn.Trim());
 }
 
 /// <summary>
@@ -49,24 +53,27 @@ public sealed class TemplateInputValidator : AbstractValidator<TemplateInput>
     public TemplateInputValidator()
     {
         RuleFor(x => x.Code).NotEmpty().Matches("^[a-z0-9-]{3,64}$")
-            .WithMessage("Kod 3-64 karakter; küçük harf, rakam ve tire içermelidir.");
+            .WithMessage(_ => Text.Of("Kod 3-64 karakter; küçük harf, rakam ve tire içermelidir.", "The code must be 3-64 characters of lowercase letters, digits and hyphens."));
         RuleFor(x => x.Title).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(1000);
+        // İngilizce isteğe bağlı: boşsa İngilizce kullanıcı Türkçe metni görür.
+        RuleFor(x => x.TitleEn).MaximumLength(150);
+        RuleFor(x => x.DescriptionEn).MaximumLength(1000);
         RuleFor(x => x.Type).IsInEnum();
         RuleFor(x => x.Difficulty).IsInEnum();
         RuleFor(x => x.Category).IsInEnum();
         RuleFor(x => x.SecondaryCategory).IsInEnum()
-            .NotEqual(x => x.Category).WithMessage("İkincil kategori birincil kategoriyle aynı olamaz.");
+            .NotEqual(x => x.Category).WithMessage(_ => Text.Of("İkincil kategori birincil kategoriyle aynı olamaz.", "The secondary category can't be the same as the primary."));
         RuleFor(x => x.MinMinutes).InclusiveBetween(1, 10080);
         RuleFor(x => x.MaxMinutes).InclusiveBetween(1, 10080)
-            .GreaterThanOrEqualTo(x => x.MinMinutes).WithMessage("En uzun süre en kısa süreden küçük olamaz.");
+            .GreaterThanOrEqualTo(x => x.MinMinutes).WithMessage(_ => Text.Of("En uzun süre en kısa süreden küçük olamaz.", "The longest duration can't be shorter than the shortest."));
         RuleFor(x => x.Cost).IsInEnum();
-        RuleFor(x => x.DayParts).NotEmpty().WithMessage("En az bir gün dilimi seçilmelidir.");
+        RuleFor(x => x.DayParts).NotEmpty().WithMessage(_ => Text.Of("En az bir gün dilimi seçilmelidir.", "Pick at least one part of the day."));
         RuleForEach(x => x.DayParts).Must(p => p is DayPart.Morning or DayPart.Afternoon or DayPart.Evening or DayPart.Night)
-            .WithMessage("Geçersiz gün dilimi.");
+            .WithMessage(_ => Text.Of("Geçersiz gün dilimi.", "Invalid part of the day."));
         RuleFor(x => x.CooldownDays).InclusiveBetween(0, 365);
         RuleFor(x => x.RiskScore).InclusiveBetween(0, 1);
-        RuleFor(x => x.InterestIds).NotEmpty().WithMessage("En az bir ilgi alanı seçilmelidir.");
+        RuleFor(x => x.InterestIds).NotEmpty().WithMessage(_ => Text.Of("En az bir ilgi alanı seçilmelidir.", "Pick at least one interest."));
         RuleFor(x => x.Effort).IsInEnum();
     }
 }
@@ -95,7 +102,9 @@ public sealed record AdminTemplateDto(
     bool IsActive,
     EditorialSource Source,
     int Version,
-    IReadOnlyList<string> Violations);
+    IReadOnlyList<string> Violations,
+    string? TitleEn = null,
+    string? DescriptionEn = null);
 
 public sealed record AdminTemplateListItem(
     Guid Id,
@@ -119,11 +128,12 @@ internal static class AdminTemplateMapping
     public static AdminTemplateDto ToAdminDto(this QuestTemplate t) => new(
         t.Id, t.Code, t.Title, t.Description, t.Type, t.Difficulty, t.Category, t.SecondaryCategory, t.MinMinutes, t.MaxMinutes,
         t.Cost, Split(t.DayParts), t.RequiresCity, t.IsOutdoor, t.CooldownDays, t.RiskScore, t.InterestIds, t.Effort,
-        t.IsStarter, t.Safety, t.IsActive, t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()));
+        t.IsStarter, t.Safety, t.IsActive, t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()),
+        t.TitleEn, t.DescriptionEn);
 
     public static AdminTemplateListItem ToListItem(this QuestTemplate t) => new(
-        t.Id, t.Code, t.Title, t.Category, t.Type, t.Cost, t.Safety, t.IsActive, t.Source, t.Version,
-        CatalogSafetyRules.ValidateTemplate(t.ToSpec()).Count);
+        t.Id, t.Code, LocalizedText.WithFallback(t.Title, t.TitleEn).Current, t.Category, t.Type, t.Cost, t.Safety, t.IsActive,
+        t.Source, t.Version, CatalogSafetyRules.ValidateTemplate(t.ToSpec()).Count);
 
     /// <summary>Blocked admin kararıdır ve korunur; diğer durumlarda kurallar Safe / NeedsReview'u belirler.</summary>
     public static SafetyLevel SafetyFor(IReadOnlyList<string> violations, SafetyLevel current)
@@ -230,7 +240,7 @@ internal sealed class GetCatalogHealthQueryHandler(
     public async Task<Result<CatalogHealthDto>> Handle(GetCatalogHealthQuery query, CancellationToken cancellationToken)
     {
         var specs = await templates.GetOfferableSpecsAsync(cancellationToken);
-        var interests = (await catalog.GetInterestsAsync(cancellationToken)).ToDictionary(i => i.Id, i => i.Name);
+        var interests = (await catalog.GetInterestsAsync(cancellationToken)).ToDictionary(i => i.Id, i => i.DisplayName());
         var total = Math.Max(1, specs.Count);
 
         return Result<CatalogHealthDto>.Ok(new CatalogHealthDto(
@@ -294,7 +304,7 @@ internal sealed class CreateTemplateCommandHandler(
         if (idea is not null)
         {
             var actor = await audit.GetActorAsync(cancellationToken);
-            idea.Accept(template.Id, actor.Email, "Fikrin kataloğa eklendi, teşekkürler!", clock.GetUtcNow().UtcDateTime);
+            idea.Accept(template.Id, actor.Email, Text.Of("Fikrin kataloğa eklendi, teşekkürler!", "Your idea was added to the catalog, thank you!"), clock.GetUtcNow().UtcDateTime);
             await audit.RecordAsync(AdminAction.IdeaAccepted, AdminTargetType.QuestIdea, idea.Id, idea.Title, null,
                 new { templateId = template.Id, template.Code }, cancellationToken);
         }

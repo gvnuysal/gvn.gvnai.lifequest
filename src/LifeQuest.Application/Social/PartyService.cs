@@ -17,6 +17,7 @@ public sealed class PartyService(
     IQuestPartyRepository parties,
     IPlayerProgressRepository progress,
     PushNotifier notifier,
+    Domain.Identity.IUserAccountRepository accounts,
     IUnitOfWork unitOfWork,
     ILogger<PartyService> logger)
 {
@@ -48,10 +49,17 @@ public sealed class PartyService(
         try
         {
             foreach (var member in settlement.Completers)
-                await notifier.SendToUserAsync(member.UserId, new PushNotification(
-                    "Birlikte başardınız!",
-                    $"{settlement.Party.QuestTitle}: parti tamamlandı, +{member.BonusXp} XP \"birlikte\" bonusu.",
-                    "/progress", "party"), cancellationToken);
+            {
+                // Her üyeye kendi dilinde.
+                var title = settlement.Party.LocalizedQuestTitle;
+                var english = await accounts.GetLanguageAsync(member.UserId, cancellationToken) == Domain.Localization.Language.English;
+                await notifier.SendToUserAsync(member.UserId, english
+                    ? new PushNotification("You did it together!",
+                        $"{title.En}: party complete, +{member.BonusXp} XP \"together\" bonus.", "/progress", "party")
+                    : new PushNotification("Birlikte başardınız!",
+                        $"{title.Tr}: parti tamamlandı, +{member.BonusXp} XP \"birlikte\" bonusu.", "/progress", "party"),
+                    cancellationToken);
+            }
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -81,7 +89,7 @@ public sealed class PartyService(
             if (memberProgress is null) continue;
 
             var transaction = memberProgress.ApplyPartyBonus(
-                member.UserQuestId, settlement.Party.QuestTitle, settlement.Party.Category, member.BonusXp, nowUtc);
+                member.UserQuestId, settlement.Party.LocalizedQuestTitle, settlement.Party.Category, member.BonusXp, nowUtc);
             await progress.AddTransactionAsync(transaction, cancellationToken);
         }
     }

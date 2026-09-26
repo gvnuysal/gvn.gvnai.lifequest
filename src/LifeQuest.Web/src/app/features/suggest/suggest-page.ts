@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { QuestsApi } from '../../core/api/api-clients';
@@ -19,23 +20,23 @@ import { APP_PATHS } from '../../core/routing/app-paths';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <a class="back" [routerLink]="paths.today"><lq-icon name="arrow-left" [size]="18" /> Bugün</a>
+      <a class="back" [routerLink]="paths.today"><lq-icon name="arrow-left" [size]="18" /> {{ t().suggest.back }}</a>
       <header class="stack">
-        <h1>Ne kadar vaktin var?</h1>
-        <p class="muted">Bu ana uygun, gerçek hayatta yapabileceğin öneriler getirelim.</p>
+        <h1>{{ t().suggest.title }}</h1>
+        <p class="muted">{{ t().suggest.lead }}</p>
       </header>
 
       <section class="surface form">
         <div class="field">
-          <span class="field__label" id="time-label">Süre</span>
-          <lq-segmented ariaLabel="Süre" [options]="timeOptions" [(value)]="minutes" />
+          <span class="field__label" id="time-label">{{ t().suggest.duration }}</span>
+          <lq-segmented [ariaLabel]="t().suggest.duration" [options]="timeOptions" [(value)]="minutes" />
         </div>
         <div class="field">
-          <span class="field__label">Bütçe</span>
-          <lq-segmented ariaLabel="Bütçe" [options]="costOptions" [(value)]="cost" />
+          <span class="field__label">{{ t().suggest.budget }}</span>
+          <lq-segmented [ariaLabel]="t().suggest.budget" [options]="costOptions" [(value)]="cost" />
         </div>
         <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="suggest()">
-          <lq-icon name="sparkles" [size]="18" /> Öner
+          <lq-icon name="sparkles" [size]="18" /> {{ t().suggest.submit }}
         </button>
       </section>
 
@@ -43,16 +44,16 @@ import { APP_PATHS } from '../../core/routing/app-paths';
         <lq-skeleton [height]="150" />
         <lq-skeleton [height]="150" />
       } @else if (limitReached()) {
-        <lq-empty-state icon="hourglass" title="Bugünlük bu kadar" message="Bugünkü bağlamsal öneri hakkını kullandın. Günün önerileri seni bekliyor.">
-          <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Bugünün önerileri</a>
+        <lq-empty-state icon="hourglass" [title]="t().suggest.limitTitle" [message]="t().suggest.limitMessage">
+          <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">{{ t().suggest.todays }}</a>
         </lq-empty-state>
       } @else if (result(); as list) {
         <section class="stack" aria-live="polite">
-          <h2 class="section-title">Sana özel öneriler</h2>
+          <h2 class="section-title">{{ t().suggest.forYou }}</h2>
           @for (quest of list.quests; track quest.id) {
             <lq-quest-card [quest]="quest" />
           } @empty {
-            <lq-empty-state icon="compass" title="Uygun öneri bulamadık" [message]="list.message" />
+            <lq-empty-state icon="compass" [title]="t().suggest.noneTitle" [message]="list.message" />
           }
         </section>
       }
@@ -68,13 +69,9 @@ export class SuggestPage {
   private readonly quests = inject(QuestsApi);
   private readonly toast = inject(ToastService);
 
-  protected readonly timeOptions: SegmentOption<number>[] = [
-    { value: 30, label: '30 dk' },
-    { value: 60, label: '1 sa' },
-    { value: 120, label: '2 sa' },
-    { value: 180, label: '3 sa+' },
-  ];
-  protected readonly costOptions: SegmentOption<CostBand>[] = COST_ORDER.map((c) => ({ value: c, label: COST_LABELS[c].label }));
+  protected readonly t = t;
+  protected readonly timeOptions: SegmentOption<number>[] = ([30, 60, 120, 180] as const).map((m) => option(m, (d) => d.suggest.options[m]));
+  protected readonly costOptions: SegmentOption<CostBand>[] = COST_ORDER.map((c) => option(c, () => COST_LABELS[c].label));
 
   protected readonly minutes = signal(120);
   protected readonly cost = signal<CostBand>(inject(ProfileStore).profile()?.budget ?? 'Low');

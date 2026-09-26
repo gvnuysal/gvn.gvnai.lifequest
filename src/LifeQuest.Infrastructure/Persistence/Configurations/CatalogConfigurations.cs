@@ -12,6 +12,7 @@ internal sealed class InterestConfiguration : IEntityTypeConfiguration<Interest>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Code).HasMaxLength(64).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.NameEn).HasMaxLength(100);
         builder.HasIndex(x => x.Code).IsUnique();
     }
 }
@@ -37,6 +38,8 @@ internal sealed class QuestTemplateConfiguration : IEntityTypeConfiguration<Ques
         builder.Property(x => x.Code).HasMaxLength(64).IsRequired();
         builder.Property(x => x.Title).HasMaxLength(150).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(1000).IsRequired();
+        builder.Property(x => x.TitleEn).HasMaxLength(150);
+        builder.Property(x => x.DescriptionEn).HasMaxLength(1000);
         builder.Property(x => x.DeletedBy).HasMaxLength(100);
         builder.HasIndex(x => x.Code).IsUnique();
         builder.HasIndex(x => new { x.IsActive, x.Safety });

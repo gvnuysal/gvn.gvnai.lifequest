@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProfileApi } from '../api/api-clients';
 import { Profile } from '../api/models';
 import { AuthStore } from '../auth/auth.store';
+import { Lang, setLang } from '../i18n/lang';
 
 /** Oturumdaki kullanıcının profili; kabuk, guard'lar ve ekranlar arasında paylaşılır. */
 @Injectable({ providedIn: 'root' })
@@ -34,14 +35,16 @@ export class ProfileStore {
   async reload(): Promise<Profile | null> {
     try {
       const profile = await firstValueFrom(this.api.get());
-      this.profile.set(profile);
+      this.set(profile);
       return profile;
     } catch {
       return null;
     }
   }
 
+  /** Girişten sonra hesabın dili geçerlidir (push ve haftalık özet de o dilde gider). */
   set(profile: Profile): void {
     this.profile.set(profile);
+    if (profile.language === 'tr' || profile.language === 'en') setLang(profile.language as Lang);
   }
 }

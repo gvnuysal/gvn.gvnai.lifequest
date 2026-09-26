@@ -2,6 +2,7 @@ using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Common;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Catalog;
 
@@ -16,6 +17,10 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
     public string Code { get; private set; } = default!;
     public string Title { get; private set; } = default!;
     public string Description { get; private set; } = default!;
+
+    /// <summary>İngilizce başlık ve açıklama; boşsa İngilizce kullanıcı Türkçesini görür.</summary>
+    public string? TitleEn { get; private set; }
+    public string? DescriptionEn { get; private set; }
     public QuestType Type { get; private set; }
     public Difficulty Difficulty { get; private set; }
     public LifeCategory Category { get; private set; }
@@ -71,7 +76,7 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
     /// <returns>Değişiklik olduysa <c>true</c>.</returns>
     public bool ApplyEditorial(QuestTemplateSpec spec)
     {
-        Guard.True(spec.Code == Code, "Template kodu değiştirilemez.");
+        Guard.True(spec.Code == Code, Text.Of("Template kodu değiştirilemez.", "The template code can't be changed."));
         var sameInterests = spec.InterestIds.Distinct().OrderBy(i => i).SequenceEqual(InterestIds.OrderBy(i => i));
         if (sameInterests && ToSpec() with { InterestIds = spec.InterestIds } == spec)
             return false;
@@ -101,16 +106,31 @@ public sealed class QuestTemplate : AggregateRoot, ISoftDeletable
 
     public QuestTemplateSpec ToSpec() => new(
         Code, Title, Description, Type, Difficulty, Category, SecondaryCategory, MinMinutes, MaxMinutes,
-        Cost, DayParts, RequiresCity, IsOutdoor, CooldownDays, RiskScore, InterestIds, Effort, IsStarter);
+        Cost, DayParts, RequiresCity, IsOutdoor, CooldownDays, RiskScore, InterestIds, Effort, IsStarter, TitleEn, DescriptionEn);
+
+    /// <summary>
+    /// Yöneticinin düzenlediği (seed senkronundan çıkmış) template'e seed'deki İngilizce çeviriyi yalnızca boşsa ekler;
+    /// yöneticinin Türkçe metnine dokunmaz.
+    /// </summary>
+    public bool FillMissingEnglish(string? titleEn, string? descriptionEn)
+    {
+        if (!string.IsNullOrWhiteSpace(TitleEn) || string.IsNullOrWhiteSpace(titleEn) || string.IsNullOrWhiteSpace(descriptionEn))
+            return false;
+        TitleEn = titleEn.Trim();
+        DescriptionEn = descriptionEn.Trim();
+        return true;
+    }
 
     private void Apply(QuestTemplateSpec spec)
     {
-        Guard.True(spec.MinMinutes > 0 && spec.MinMinutes <= spec.MaxMinutes, "Süre aralığı geçersiz.");
-        Guard.True(spec.SecondaryCategory != spec.Category, "İkincil kategori birincil kategoriyle aynı olamaz.");
-        Guard.True(spec.DayParts != DayPart.None, "En az bir gün dilimi seçilmelidir.");
+        Guard.True(spec.MinMinutes > 0 && spec.MinMinutes <= spec.MaxMinutes, Text.Of("Süre aralığı geçersiz.", "The duration range is invalid."));
+        Guard.True(spec.SecondaryCategory != spec.Category, Text.Of("İkincil kategori birincil kategoriyle aynı olamaz.", "The secondary category can't be the same as the primary."));
+        Guard.True(spec.DayParts != DayPart.None, Text.Of("En az bir gün dilimi seçilmelidir.", "Pick at least one part of the day."));
 
         Title = Guard.NotNullOrWhiteSpace(spec.Title, nameof(spec.Title));
         Description = Guard.NotNullOrWhiteSpace(spec.Description, nameof(spec.Description));
+        TitleEn = string.IsNullOrWhiteSpace(spec.TitleEn) ? null : spec.TitleEn.Trim();
+        DescriptionEn = string.IsNullOrWhiteSpace(spec.DescriptionEn) ? null : spec.DescriptionEn.Trim();
         Type = spec.Type;
         Difficulty = spec.Difficulty;
         Category = spec.Category;

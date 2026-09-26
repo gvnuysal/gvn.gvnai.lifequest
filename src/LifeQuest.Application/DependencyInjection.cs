@@ -1,4 +1,3 @@
-using System.Globalization;
 using FluentValidation;
 using Gvn.GvnFramework.Application.Configuration;
 using Gvn.GvnFramework.Application.DependencyInjection;
@@ -25,7 +24,8 @@ public static class DependencyInjection
         services.Configure<PipelineLoggingOptions>(configuration.GetSection(PipelineLoggingOptions.SectionName));
         services.Configure<PerformanceOptions>(configuration.GetSection(PerformanceOptions.SectionName));
 
-        ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("tr");
+        // Doğrulama mesajları istek kültüründe (Accept-Language → tr/en) üretilir; sabit kültür yok.
+        ValidatorOptions.Global.LanguageManager.Culture = null;
 
         services.Configure<QuestOptions>(configuration.GetSection(QuestOptions.SectionName));
         services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));

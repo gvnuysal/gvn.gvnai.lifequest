@@ -2,6 +2,7 @@ using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Repositories;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.RealWorld;
 
@@ -98,19 +99,19 @@ public sealed record LocalPlaceDraft(
 
 public static class LocalPlaceErrors
 {
-    public static readonly Error NotFound = Error.NotFound("PLACE_NOT_FOUND", "Mekân veya etkinlik bulunamadı.");
+    public static Error NotFound => Error.NotFound("PLACE_NOT_FOUND", Text.Of("Mekân veya etkinlik bulunamadı.", "Place or event not found."));
 
-    public static readonly Error NameAndCityRequired = Error.Validation("Name", "Ad ve şehir zorunlu.");
+    public static Error NameAndCityRequired => Error.Validation("Name", Text.Of("Ad ve şehir zorunlu.", "Name and city are required."));
 
-    public static readonly Error TemplatesRequired =
-        Error.Validation("TemplateIds", $"En az 1, en fazla {LocalPlace.MaxTemplates} göreve bağlanmalı.");
+    public static Error TemplatesRequired =>
+        Error.Validation("TemplateIds", Text.Of($"En az 1, en fazla {LocalPlace.MaxTemplates} göreve bağlanmalı.", $"Link it to at least 1 and at most {LocalPlace.MaxTemplates} quests."));
 
-    public static readonly Error InvalidUrl = Error.Validation("Url", "Bağlantı https:// ile başlamalı.");
+    public static Error InvalidUrl => Error.Validation("Url", Text.Of("Bağlantı https:// ile başlamalı.", "The link must start with https://."));
 
-    public static readonly Error EventNeedsDates =
-        Error.Validation("StartsAt", "Etkinliğin başlangıç ve bitiş zamanı olmalı; bitiş başlangıçtan önce olamaz.");
+    public static Error EventNeedsDates =>
+        Error.Validation("StartsAt", Text.Of("Etkinliğin başlangıç ve bitiş zamanı olmalı; bitiş başlangıçtan önce olamaz.", "An event needs a start and an end; the end can't be before the start."));
 
-    public static readonly Error EventTooLong = Error.Validation("EndsAt", "Etkinlik en fazla 60 gün sürebilir.");
+    public static Error EventTooLong => Error.Validation("EndsAt", Text.Of("Etkinlik en fazla 60 gün sürebilir.", "An event can last at most 60 days."));
 }
 
 public interface ILocalPlaceRepository : IRepository<LocalPlace>

@@ -1,3 +1,5 @@
+import { option, t } from '../../core/i18n/i18n';
+import { ideaFlagLabel } from './admin-labels';
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -24,15 +26,15 @@ import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
   template: `
     <section class="section">
       <header class="stack">
-        <h1>Topluluk fikirleri</h1>
-        <p class="muted">Kullanıcıların önerdiği deneyimler. Gönderenin kimliği gösterilmez; reddetme notu kullanıcıya iletilir.</p>
-        <lq-segmented ariaLabel="Durum" [options]="statuses" [value]="status()" (valueChange)="setStatus($event)" />
+        <h1>{{ t().adminIdeas.title }}</h1>
+        <p class="muted">{{ t().adminIdeas.lead }}</p>
+        <lq-segmented [ariaLabel]="t().adminIdeas.status" [options]="statuses" [value]="status()" (valueChange)="setStatus($event)" />
       </header>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Fikirler yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminIdeas.loadFailed" [message]="error()" />
       } @else if (page(); as p) {
-        <p class="muted small">{{ p.totalCount }} fikir</p>
+        <p class="muted small">{{ t().adminIdeas.count(p.totalCount) }}</p>
         @for (idea of p.items; track idea.id) {
           <article class="surface idea">
             <div class="idea__head">
@@ -40,33 +42,33 @@ import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
               <span class="muted small">{{ date(idea.submittedAt) }}</span>
             </div>
             <p>{{ idea.description }}</p>
-            <p class="muted small">{{ catLabel(idea) }} · ~{{ idea.minutes }} dk · {{ costLabel(idea) }}{{ idea.isOutdoor ? ' · açık hava' : '' }}</p>
+            <p class="muted small">{{ catLabel(idea) }} · {{ t().adminIdeas.minutes(idea.minutes) }} · {{ costLabel(idea) }}{{ idea.isOutdoor ? ' · ' + t().adminIdeas.outdoor : '' }}</p>
             @if (idea.flags.length) {
               <div class="row wrap">
-                @for (f of idea.flags; track f) { <span class="pill pill--warning">{{ f }}</span> }
+                @for (f of idea.flags; track f) { <span class="pill pill--warning">{{ flagLabel(f) }}</span> }
               </div>
             }
             @if (idea.status === 'Pending') {
               <div class="actions">
-                <a lq-button size="sm" [routerLink]="paths.admin.newTemplate" [queryParams]="{ idea: idea.id }">Template'e dönüştür</a>
-                <button lq-button variant="soft" size="sm" (click)="openReject(idea)">Reddet</button>
+                <a lq-button size="sm" [routerLink]="paths.admin.newTemplate" [queryParams]="{ idea: idea.id }">{{ t().adminIdeas.toTemplate }}</a>
+                <button lq-button variant="soft" size="sm" (click)="openReject(idea)">{{ t().adminIdeas.reject }}</button>
               </div>
             } @else {
               <p class="small review">
-                {{ idea.status === 'Accepted' ? 'Kataloğa eklendi' : 'Reddedildi' }} · {{ idea.reviewedBy }}
+                {{ idea.status === 'Accepted' ? t().adminIdeas.accepted : t().adminIdeas.rejected }} · {{ idea.reviewedBy }}
                 @if (idea.reviewNote) { · “{{ idea.reviewNote }}” }
-                @if (idea.templateId) { · <a [routerLink]="templatePath(idea.templateId)">template'i aç</a> }
+                @if (idea.templateId) { · <a [routerLink]="templatePath(idea.templateId)">{{ t().adminIdeas.openTemplate }}</a> }
               </p>
             }
           </article>
         } @empty {
-          <lq-empty-state icon="sparkles" title="Bu durumda fikir yok" message="Yeni fikirler geldiğinde burada sıralanır." />
+          <lq-empty-state icon="sparkles" [title]="t().adminIdeas.noneTitle" [message]="t().adminIdeas.noneHint" />
         }
         @if (p.totalPages > 1) {
-          <nav class="pager" aria-label="Sayfalar">
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">Önceki</button>
+          <nav class="pager" [attr.aria-label]="t().adminUsers.pages">
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">{{ t().adminUsers.previous }}</button>
             <span class="muted small">{{ p.pageNumber }} / {{ p.totalPages }}</span>
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">Sonraki</button>
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">{{ t().adminUsers.next }}</button>
           </nav>
         }
       } @else {
@@ -74,17 +76,17 @@ import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
       }
     </section>
 
-    <lq-sheet title="Fikri reddet" [open]="!!rejecting()" (openChange)="$event || rejecting.set(null)">
+    <lq-sheet [title]="t().adminIdeas.rejectTitle" [open]="!!rejecting()" (openChange)="$event || rejecting.set(null)">
       @if (rejecting(); as idea) {
         <div class="stack">
           <p><strong>{{ idea.title }}</strong></p>
           <div class="field">
-            <label for="reject-note">Kullanıcıya not</label>
+            <label for="reject-note">{{ t().adminIdeas.note }}</label>
             <textarea id="reject-note" class="input" rows="3" maxlength="300" [(ngModel)]="note"
-                      placeholder="Nazik ve yönlendirici ol: neden eklenmediğini ve nasıl bir versiyonun uygun olacağını yaz."></textarea>
+                      [placeholder]="t().adminIdeas.notePlaceholder"></textarea>
           </div>
           @if (rejectError()) { <p class="field__error" role="alert">{{ rejectError() }}</p> }
-          <button lq-button [block]="true" [loading]="busy()" [disabled]="!note.trim()" (click)="reject(idea)">Reddet ve notu gönder</button>
+          <button lq-button [block]="true" [loading]="busy()" [disabled]="!note.trim()" (click)="reject(idea)">{{ t().adminIdeas.rejectSend }}</button>
         </div>
       }
     </lq-sheet>
@@ -101,16 +103,15 @@ import { APP_PATHS, templatePath } from '../../core/routing/app-paths';
   `,
 })
 export class AdminIdeasPage {
+  protected readonly t = t;
+  protected readonly flagLabel = ideaFlagLabel;
   protected readonly paths = APP_PATHS;
   protected readonly templatePath = templatePath;
   private readonly api = inject(AdminApi);
   private readonly toast = inject(ToastService);
 
-  protected readonly statuses: SegmentOption<IdeaStatus>[] = [
-    { value: 'Pending', label: 'Bekleyen' },
-    { value: 'Accepted', label: 'Eklenen' },
-    { value: 'Rejected', label: 'Reddedilen' },
-  ];
+  protected readonly statuses: SegmentOption<IdeaStatus>[] = (['Pending', 'Accepted', 'Rejected'] as const).map((s) =>
+    option<IdeaStatus>(s, (d) => d.adminIdeas.statuses[s]));
   protected readonly status = signal<IdeaStatus>('Pending');
   protected readonly pageNumber = signal(1);
   protected readonly page = signal<PagedResult<AdminIdea> | null>(null);
@@ -153,7 +154,7 @@ export class AdminIdeasPage {
       next: () => {
         this.busy.set(false);
         this.rejecting.set(null);
-        this.toast.success('Fikir reddedildi; not kullanıcıya iletildi.');
+        this.toast.success(t().adminIdeas.rejectedToast);
         this.load(this.status(), this.pageNumber());
       },
       error: (err: unknown) => {

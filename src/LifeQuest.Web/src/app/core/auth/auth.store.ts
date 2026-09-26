@@ -5,6 +5,7 @@ import { AuthApi } from '../api/api-clients';
 import { AuthSession, LoginRequest, RegisterRequest } from '../api/models';
 import { ToastService } from '../state/toast.service';
 import { APP_PATHS } from '../routing/app-paths';
+import { t } from '../i18n/i18n';
 
 /** Eski sürümün refresh token'ı sakladığı anahtar; açılışta bir kez çereze taşınıp silinir. */
 const LEGACY_REFRESH_KEY = 'lq.refresh';
@@ -87,8 +88,8 @@ export class AuthStore {
   sessionExpired(reason: 'expired' | 'suspended' = 'expired'): void {
     if (!this.isAuthenticated() && !this.hasSession()) return;
     this.clear();
-    if (reason === 'suspended') this.toast.error('Hesabın askıya alındı. Destek ekibiyle iletişime geçebilirsin.');
-    else this.toast.show('Oturumun sona erdi. Lütfen tekrar giriş yap.');
+    if (reason === 'suspended') this.toast.error(t().errors.suspended);
+    else this.toast.show(t().errors.sessionExpired);
     void this.router.navigate([APP_PATHS.login], { queryParams: { returnUrl: this.router.url } });
   }
 

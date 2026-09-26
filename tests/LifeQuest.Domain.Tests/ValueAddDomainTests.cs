@@ -104,7 +104,7 @@ public sealed class QuestIdeaTests
 {
     private static QuestIdea NewIdea() => QuestIdea.Submit(Guid.NewGuid(), "Mahalle kütüphanesi turu",
         "Mahallendeki kütüphaneyi ziyaret et ve bir rafı baştan sona incele.", LifeCategory.Learning, 45, CostBand.Free,
-        false, ["Riskli ifade içeriyor", "Riskli ifade içeriyor"], UtcNow);
+        false, ["risky_content", "risky_content"], UtcNow);
 
     [Fact]
     public void An_idea_is_reviewed_once()

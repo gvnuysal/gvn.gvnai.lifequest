@@ -5,6 +5,7 @@ using Gvn.GvnFramework.Domain.Aggregates;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Domain.Recommendations;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Experiments;
 
@@ -58,7 +59,7 @@ public sealed class Experiment : AggregateRoot
     public Result Start(DateTime nowUtc)
     {
         if (Status != ExperimentStatus.Draft)
-            return Result.Fail(ExperimentErrors.InvalidTransition(Status, "başlat"));
+            return Result.Fail(ExperimentErrors.InvalidTransition(Status, "start"));
 
         Status = ExperimentStatus.Running;
         StartedAt = nowUtc;
@@ -68,7 +69,7 @@ public sealed class Experiment : AggregateRoot
     public Result Stop(DateTime nowUtc)
     {
         if (Status != ExperimentStatus.Running)
-            return Result.Fail(ExperimentErrors.InvalidTransition(Status, "durdur"));
+            return Result.Fail(ExperimentErrors.InvalidTransition(Status, "stop"));
 
         Status = ExperimentStatus.Stopped;
         EndedAt = nowUtc;
@@ -127,22 +128,24 @@ public enum ExperimentOutcome
 
 public static class ExperimentErrors
 {
-    public static readonly Error NotFound = Error.NotFound("EXPERIMENT_NOT_FOUND", "Deney bulunamadı.");
+    public static Error NotFound => Error.NotFound("EXPERIMENT_NOT_FOUND", Text.Of("Deney bulunamadı.", "Experiment not found."));
 
-    public static readonly Error AnotherRunning =
-        Error.Conflict("EXPERIMENT_ALREADY_RUNNING", "Aynı anda yalnızca bir deney çalışabilir. Önce çalışan deneyi durdur.");
+    public static Error AnotherRunning =>
+        Error.Conflict("EXPERIMENT_ALREADY_RUNNING", Text.Of("Aynı anda yalnızca bir deney çalışabilir. Önce çalışan deneyi durdur.", "Only one experiment can run at a time. Stop the running experiment first."));
 
-    public static readonly Error NoChanges =
-        Error.Validation("TreatmentOverrides", "Deneme grubunda en az bir ağırlık farklı olmalı.");
+    public static Error NoChanges =>
+        Error.Validation("TreatmentOverrides", Text.Of("Deneme grubunda en az bir ağırlık farklı olmalı.", "At least one weight must differ in the treatment group."));
 
-    public static readonly Error InvalidShare =
-        Error.Validation("TreatmentShare", $"Deneme payı %{Experiment.MinShare * 100:0} ile %{Experiment.MaxShare * 100:0} arasında olmalı.");
+    public static Error InvalidShare =>
+        Error.Validation("TreatmentShare", Text.Of($"Deneme payı %{Experiment.MinShare * 100:0} ile %{Experiment.MaxShare * 100:0} arasında olmalı.", $"Treatment share must be between {Experiment.MinShare * 100:0}% and {Experiment.MaxShare * 100:0}%."));
 
-    public static readonly Error MustStopFirst =
-        Error.Conflict("EXPERIMENT_NOT_STOPPED", "Sonuç ancak durdurulmuş ve henüz karara bağlanmamış bir deney için verilebilir.");
+    public static Error MustStopFirst =>
+        Error.Conflict("EXPERIMENT_NOT_STOPPED", Text.Of("Sonuç ancak durdurulmuş ve henüz karara bağlanmamış bir deney için verilebilir.", "An outcome can only be set for a stopped experiment without a decision yet."));
 
     public static Error InvalidTransition(ExperimentStatus from, string action) =>
-        Error.Conflict("EXPERIMENT_INVALID_TRANSITION", $"{from} durumundaki deney için '{action}' yapılamaz.");
+        Error.Conflict("EXPERIMENT_INVALID_TRANSITION", Text.Of(
+            $"{from} durumundaki deney {(action == "start" ? "başlatılamaz" : "durdurulamaz")}.",
+            $"An experiment that is {from} can't be {(action == "start" ? "started" : "stopped")}."));
 }
 
 public interface IExperimentRepository : IRepository<Experiment>

@@ -95,3 +95,43 @@ public sealed class CatalogSeedTests(ITestOutputHelper output)
         Assert.All(LifeCategories.All, c => Assert.Contains(accessible, s => s.Category == c));
     }
 }
+
+/// <summary>Yerelleştirme kapısı: her template ve ilgi alanının İngilizcesi var, dolu, Türkçeden farklı ve güvenli.</summary>
+public sealed class CatalogTranslationTests
+{
+    [Fact]
+    public void Every_template_and_interest_has_an_english_translation()
+    {
+        var templateCodes = CatalogSeedData.Templates.Select(t => t.Code).ToHashSet();
+        Assert.Empty(templateCodes.Except(CatalogSeedTranslations.Templates.Keys));
+        Assert.Empty(CatalogSeedTranslations.Templates.Keys.Except(templateCodes));
+
+        var interestCodes = CatalogSeedData.Interests.Select(i => i.Code).ToHashSet();
+        Assert.Empty(interestCodes.Except(CatalogSeedTranslations.InterestNames.Keys));
+    }
+
+    [Fact]
+    public void English_texts_are_real_translations_within_limits_and_safe()
+    {
+        foreach (var seed in CatalogSeedData.Templates)
+        {
+            var (title, description) = CatalogSeedTranslations.Templates[seed.Code];
+            Assert.False(string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description), seed.Code);
+            Assert.NotEqual(seed.Title, title);
+            Assert.NotEqual(seed.Description, description);
+            Assert.InRange(title.Length, CatalogSafetyRules.MinTitleLength, CatalogSafetyRules.MaxTitleLength);
+            Assert.InRange(description.Length, CatalogSafetyRules.MinDescriptionLength, CatalogSafetyRules.MaxDescriptionLength);
+            Assert.False(LifeQuest.Application.Safety.ContentScreen.ContainsRiskyContent($"{title} {description}"), seed.Code);
+            Assert.DoesNotMatch("[ğüşıöçĞÜŞİÖÇ]", title + description);
+        }
+    }
+
+    [Fact]
+    public void Seed_spec_carries_both_languages()
+    {
+        var ids = CatalogSeedData.Interests.ToDictionary(i => i.Code, _ => Guid.NewGuid());
+        var spec = CatalogSeeder.ToSpec(CatalogSeedData.Templates[0], ids);
+        Assert.Equal(CatalogSeedTranslations.Templates[spec.Code].Title, spec.TitleEn);
+        Assert.Equal(CatalogSeedTranslations.Templates[spec.Code].Description, spec.DescriptionEn);
+    }
+}

@@ -1,6 +1,7 @@
 using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Domain.Entities;
 using LifeQuest.Domain.Common;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Catalog;
 
@@ -9,18 +10,31 @@ public sealed class Interest : Entity
 {
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
+    public string? NameEn { get; private set; }
     public LifeCategory Category { get; private set; }
     public bool IsActive { get; private set; } = true;
 
     private Interest() { }
 
-    public static Interest Create(string code, string name, LifeCategory category)
+    public static Interest Create(string code, string name, LifeCategory category, string? nameEn = null)
         => new()
         {
             Code = Guard.NotNullOrWhiteSpace(code, nameof(code)),
             Name = Guard.NotNullOrWhiteSpace(name, nameof(name)),
+            NameEn = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim(),
             Category = category
         };
+
+    public LocalizedText LocalizedName => LocalizedText.WithFallback(Name, NameEn);
+
+    /// <returns>Değiştiyse <c>true</c>.</returns>
+    public bool SetEnglishName(string? nameEn)
+    {
+        var value = string.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim();
+        if (value == NameEn) return false;
+        NameEn = value;
+        return true;
+    }
 }
 
 public enum InterestRelationType
@@ -58,7 +72,7 @@ public sealed class InterestRelation : Entity
         Guid fromInterestId, Guid toInterestId, InterestRelationType type,
         double weight, double confidence, RelationSource source)
     {
-        Guard.True(fromInterestId != toInterestId, "Bir ilgi alanı kendisiyle ilişkilendirilemez.");
+        Guard.True(fromInterestId != toInterestId, Text.Of("Bir ilgi alanı kendisiyle ilişkilendirilemez.", "An interest can't be related to itself."));
 
         return new InterestRelation
         {

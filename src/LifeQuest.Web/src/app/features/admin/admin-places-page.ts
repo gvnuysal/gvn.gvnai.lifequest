@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
@@ -37,102 +38,102 @@ function toLocalInput(iso: string | null): string {
     <section class="section">
       <header class="head">
         <div class="stack">
-          <h1>Mekânlar ve etkinlikler</h1>
-          <p class="muted">Şehirdeki kullanıcı bağlı görevin detayında görür. Bu hafta etkinliği olan görevler önerilerde öne çıkar.</p>
+          <h1>{{ t().adminPlaces.title }}</h1>
+          <p class="muted">{{ t().adminPlaces.lead }}</p>
         </div>
-        <button lq-button size="sm" (click)="openEditor()">Yeni ekle</button>
+        <button lq-button size="sm" (click)="openEditor()">{{ t().adminPlaces.add }}</button>
       </header>
 
-      <input class="input" type="search" placeholder="Şehre göre filtrele" aria-label="Şehir filtresi"
+      <input class="input" type="search" [placeholder]="t().adminPlaces.filter" [attr.aria-label]="t().adminPlaces.filterAria"
              [ngModel]="cityFilter()" (ngModelChange)="filter($event)" />
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Liste yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminPlaces.loadFailed" [message]="error()" />
       } @else if (places(); as list) {
         @for (p of list; track p.id) {
           <article class="surface item" [class.item--muted]="!p.isActive || p.isPast">
             <div class="item__head">
               <strong>{{ p.name }}</strong>
-              <span class="pill">{{ p.kind === 'Event' ? 'Etkinlik' : 'Mekân' }}</span>
+              <span class="pill">{{ p.kind === 'Event' ? t().adminPlaces.event : t().adminPlaces.venue }}</span>
             </div>
             <p class="small">
               {{ p.city }}
               @if (p.startsAt) { · {{ when(p.startsAt) }} – {{ when(p.endsAt!) }} }
-              @if (p.isPast) { · <strong>geçti</strong> }
-              @if (!p.isActive) { · <strong>pasif</strong> }
+              @if (p.isPast) { · <strong>{{ t().adminPlaces.past }}</strong> }
+              @if (!p.isActive) { · <strong>{{ t().adminPlaces.inactive }}</strong> }
             </p>
-            <p class="muted small">Görevler: {{ titles(p) }}</p>
+            <p class="muted small">{{ t().adminPlaces.quests(titles(p)) }}</p>
             <div class="actions">
-              <button type="button" class="link" (click)="openEditor(p)">Düzenle</button>
-              <button type="button" class="link link--danger" (click)="remove(p)">Sil</button>
+              <button type="button" class="link" (click)="openEditor(p)">{{ t().adminPlaces.edit }}</button>
+              <button type="button" class="link link--danger" (click)="remove(p)">{{ t().adminPlaces.remove }}</button>
             </div>
           </article>
         } @empty {
-          <lq-empty-state icon="map-pin" title="Henüz kayıt yok"
-            message="Örneğin İstanbul için bir park ekleyip yürüyüş görevlerine bağlayabilirsin." />
+          <lq-empty-state icon="map-pin" [title]="t().adminPlaces.noneTitle"
+            [message]="t().adminPlaces.noneHint" />
         }
       } @else {
         <lq-skeleton [height]="120" />
       }
     </section>
 
-    <lq-sheet [title]="editingId() ? 'Düzenle' : 'Yeni mekân / etkinlik'" [(open)]="editorOpen">
+    <lq-sheet [title]="editingId() ? t().adminPlaces.edit : t().adminPlaces.newTitle" [(open)]="editorOpen">
       <form class="stack" (ngSubmit)="save()">
         <div class="field">
-          <span class="field__label">Tür</span>
-          <div class="kinds" role="radiogroup" aria-label="Tür">
-            <label><input type="radio" name="kind" value="Venue" [(ngModel)]="kind" /> Mekân</label>
-            <label><input type="radio" name="kind" value="Event" [(ngModel)]="kind" /> Etkinlik</label>
+          <span class="field__label">{{ t().adminPlaces.kind }}</span>
+          <div class="kinds" role="radiogroup" [attr.aria-label]="t().adminPlaces.kind">
+            <label><input type="radio" name="kind" value="Venue" [(ngModel)]="kind" /> {{ t().adminPlaces.venue }}</label>
+            <label><input type="radio" name="kind" value="Event" [(ngModel)]="kind" /> {{ t().adminPlaces.event }}</label>
           </div>
         </div>
         <div class="field">
-          <label for="place-city">Şehir</label>
-          <input id="place-city" class="input" name="city" maxlength="80" [(ngModel)]="city" placeholder="İstanbul" />
+          <label for="place-city">{{ t().adminPlaces.city }}</label>
+          <input id="place-city" class="input" name="city" maxlength="80" [(ngModel)]="city" [placeholder]="t().adminPlaces.cityPlaceholder" />
         </div>
         <div class="field">
-          <label for="place-name">Ad</label>
+          <label for="place-name">{{ t().adminPlaces.name }}</label>
           <input id="place-name" class="input" name="name" maxlength="120" [(ngModel)]="name" />
         </div>
         @if (kind === 'Event') {
           <div class="row">
             <div class="field">
-              <label for="place-start">Başlangıç</label>
+              <label for="place-start">{{ t().adminPlaces.start }}</label>
               <input id="place-start" class="input" type="datetime-local" name="startsAt" [(ngModel)]="startsAt" />
             </div>
             <div class="field">
-              <label for="place-end">Bitiş</label>
+              <label for="place-end">{{ t().adminPlaces.end }}</label>
               <input id="place-end" class="input" type="datetime-local" name="endsAt" [(ngModel)]="endsAt" />
             </div>
           </div>
         }
         <div class="field">
-          <label for="place-address">Adres <span class="muted">(isteğe bağlı)</span></label>
+          <label for="place-address">{{ t().adminPlaces.address }} <span class="muted">{{ t().adminPlaces.optional }}</span></label>
           <input id="place-address" class="input" name="address" maxlength="200" [(ngModel)]="address" />
         </div>
         <div class="field">
-          <label for="place-url">Bağlantı <span class="muted">(https)</span></label>
+          <label for="place-url">{{ t().adminPlaces.url }} <span class="muted">(https)</span></label>
           <input id="place-url" class="input" type="url" name="url" maxlength="500" [(ngModel)]="url" />
         </div>
         <div class="field">
-          <label for="place-note">Kullanıcıya not <span class="muted">(isteğe bağlı)</span></label>
+          <label for="place-note">{{ t().adminPlaces.note }} <span class="muted">{{ t().adminPlaces.optional }}</span></label>
           <textarea id="place-note" class="input" rows="2" name="note" maxlength="300" [(ngModel)]="note"></textarea>
         </div>
         <div class="field">
-          <span class="field__label">Bağlı görevler ({{ picked().length }})</span>
-          @for (t of picked(); track t.id) {
-            <div class="picked"><span>{{ t.title }} <span class="muted small">{{ t.code }}</span></span>
-              <button type="button" class="link" (click)="unpick(t)" [attr.aria-label]="t.title + ' bağlantısını kaldır'">Kaldır</button></div>
+          <span class="field__label">{{ t().adminPlaces.linked(picked().length) }}</span>
+          @for (tpl of picked(); track tpl.id) {
+            <div class="picked"><span>{{ tpl.title }} <span class="muted small">{{ tpl.code }}</span></span>
+              <button type="button" class="link" (click)="unpick(tpl)" [attr.aria-label]="t().adminPlaces.unlinkAria(tpl.title)">{{ t().adminPlaces.unlink }}</button></div>
           }
-          <input class="input" type="search" placeholder="Görev ara (başlık veya kod)" aria-label="Görev ara"
+          <input class="input" type="search" [placeholder]="t().adminPlaces.search" [attr.aria-label]="t().adminPlaces.searchAria"
                  [ngModel]="templateQuery()" (ngModelChange)="searchTemplates($event)" name="templateQuery" />
-          @for (t of templateResults(); track t.id) {
-            <button type="button" class="result" (click)="pick(t)">{{ t.title }} <span class="muted small">{{ t.code }}</span></button>
+          @for (tpl of templateResults(); track tpl.id) {
+            <button type="button" class="result" (click)="pick(tpl)">{{ tpl.title }} <span class="muted small">{{ tpl.code }}</span></button>
           }
         </div>
-        <label class="check"><input type="checkbox" name="isActive" [(ngModel)]="isActive" /> Kullanıcılara göster</label>
+        <label class="check"><input type="checkbox" name="isActive" [(ngModel)]="isActive" /> {{ t().adminPlaces.visible }}</label>
         @if (saveError()) { <p class="field__error" role="alert">{{ saveError() }}</p> }
         <button lq-button type="submit" [block]="true" [loading]="busy()"
-                [disabled]="!city.trim() || !name.trim() || !picked().length">Kaydet</button>
+                [disabled]="!city.trim() || !name.trim() || !picked().length">{{ t().adminPlaces.save }}</button>
       </form>
     </lq-sheet>
   `,
@@ -155,6 +156,7 @@ function toLocalInput(iso: string | null): string {
   `,
 })
 export class AdminPlacesPage {
+  protected readonly t = t;
   private readonly api = inject(AdminApi);
   private readonly toast = inject(ToastService);
 
@@ -268,7 +270,7 @@ export class AdminPlacesPage {
         next: () => {
           this.busy.set(false);
           this.editorOpen.set(false);
-          this.toast.success('Kaydedildi.');
+          this.toast.success(t().adminPlaces.saved);
           this.load();
         },
         error: (err: unknown) => {
@@ -279,10 +281,10 @@ export class AdminPlacesPage {
   }
 
   protected remove(place: AdminPlace): void {
-    if (!confirm(`"${place.name}" silinsin mi?`)) return;
+    if (!confirm(t().adminPlaces.confirmDelete(place.name))) return;
     this.api.deletePlace(place.id).subscribe({
       next: () => {
-        this.toast.show('Silindi.');
+        this.toast.show(t().adminPlaces.deleted);
         this.load();
       },
       error: (err: unknown) => this.toast.error(firstErrorMessage(err)),

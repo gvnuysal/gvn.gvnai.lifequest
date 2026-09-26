@@ -115,6 +115,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
                     b.HasKey("Id")
                         .HasName("pk_interests");
 
@@ -227,6 +232,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description_en");
+
                     b.Property<string>("Difficulty")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -312,6 +322,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
                         .HasColumnName("title");
+
+                    b.Property<string>("TitleEn")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("title_en");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -630,6 +645,14 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("failed_login_count");
 
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("tr")
+                        .HasColumnName("language");
+
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login_at");
@@ -764,6 +787,10 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("integer[]")
                         .HasColumnName("new_categories");
+
+                    b.Property<int>("OpenAcceptedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("open_accepted_count");
 
                     b.Property<DateTime?>("ReadAt")
                         .HasColumnType("timestamp with time zone")
@@ -1087,6 +1114,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("description");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("description_en");
+
                     b.Property<int>("LifeXp")
                         .HasColumnType("integer")
                         .HasColumnName("life_xp");
@@ -1205,6 +1237,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description_en");
+
                     b.Property<string>("Difficulty")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1241,6 +1278,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("explanation");
+
+                    b.Property<string>("ExplanationEn")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("explanation_en");
 
                     b.Property<DateTime?>("FeedbackAt")
                         .HasColumnType("timestamp with time zone")
@@ -1352,6 +1394,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
                         .HasColumnName("title");
+
+                    b.Property<string>("TitleEn")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("title_en");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -1699,6 +1746,11 @@ namespace LifeQuest.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("quest_title");
+
+                    b.Property<string>("QuestTitleEn")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("quest_title_en");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
