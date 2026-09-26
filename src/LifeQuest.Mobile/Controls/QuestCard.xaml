@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Görev kartı (web: ui/quest-card): kategori ikonu, tür, başlık, XP, açıklama ve süre/maliyet/kalan süre. -->
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+        xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+        xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+        x:Class="LifeQuest.Mobile.Controls.QuestCard"
+        x:DataType="vm:QuestItem"
+        Style="{StaticResource Card}"
+        SemanticProperties.Description="{Binding AccessibleName}">
+    <VerticalStackLayout Spacing="10">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+            <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="46" />
+            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{Binding Kicker}" Style="{StaticResource Kicker}" />
+                    <Label IsVisible="{Binding IsExploration}" Text="{c:Tr Quest.Exploration}" Style="{StaticResource Kicker}"
+                           TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding Title}" FontFamily="NunitoExtraBold" FontSize="17" />
+            </VerticalStackLayout>
+            <Border Grid.Column="2" Style="{StaticResource Pill}" VerticalOptions="Start"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource XpSoftLight}, Dark={StaticResource XpSoftDark}}">
+                <HorizontalStackLayout Spacing="2">
+                    <c:IconView Name="zap" Size="14" Stroke="2.6" Color="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                    <Label Text="{Binding Xp}" FontFamily="NunitoBlack" FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                </HorizontalStackLayout>
+            </Border>
+        </Grid>
+
+        <Label x:Name="Why" Text="{Binding Explanation}" Style="{StaticResource Muted}" />
+
+        <FlexLayout Wrap="Wrap" AlignItems="Center">
+            <HorizontalStackLayout Spacing="4" Margin="0,0,14,0">
+                <c:IconView Name="clock" Size="15" />
+                <Label Text="{Binding Duration}" Style="{StaticResource Muted}" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4" Margin="0,0,14,0">
+                <c:IconView Name="coins" Size="15" />
+                <Label Text="{Binding Cost}" Style="{StaticResource Muted}" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4" IsVisible="{Binding IsPlanned}">
+                <c:IconView Name="flag" Size="15" />
+                <Label Text="{Binding Planned}" Style="{StaticResource Muted}" FontFamily="NunitoBold" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="4" IsVisible="{Binding ShowRemaining}">
+                <c:IconView Name="hourglass" Size="15" />
+                <Label Text="{Binding Remaining}" Style="{StaticResource Muted}" FontFamily="NunitoBold" />
+            </HorizontalStackLayout>
+            <Border Style="{StaticResource Pill}" IsVisible="{Binding ShowStatus}">
+                <Label Text="{Binding Status}" FontSize="12" FontFamily="NunitoBold" />
+            </Border>
+        </FlexLayout>
+    </VerticalStackLayout>
+</Border>

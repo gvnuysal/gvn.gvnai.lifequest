@@ -80,7 +80,10 @@ public sealed partial class ProfileViewModel(
     {
         get
         {
-            if (profile.Current is not { } p) return false;
+            if (profile.Current is not { } p || !IsLoaded) return false;
+            if (!Radii.Any(c => c.IsSelected) || !Budgets.Any(c => c.IsSelected) || !WeeklyTimes.Any(c => c.IsSelected)
+                || !Efforts.Any(c => c.IsSelected) || !Notifications.Any(c => c.IsSelected))
+                return false;
             return p.DiscoveryRadius != Selected(Radii)
                    || p.Budget != Selected(Budgets)
                    || p.WeeklyAvailableMinutes != Selected(WeeklyTimes)

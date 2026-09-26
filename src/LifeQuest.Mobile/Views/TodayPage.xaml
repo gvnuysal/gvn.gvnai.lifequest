@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+             xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+             x:Class="LifeQuest.Mobile.Views.TodayPage"
+             x:DataType="vm:TodayViewModel"
+             x:Name="Root">
+    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16,20,120" Spacing="18">
+                <!-- Başlık: tarih, selam, seviye rozeti -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding DateLabel}" Style="{StaticResource Kicker}" />
+                        <Label Text="{Binding Greeting}" Style="{StaticResource H1}" />
+                    </VerticalStackLayout>
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12,8" VerticalOptions="Center"
+                            SemanticProperties.Description="{Binding LevelShort}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoProgressCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="4" WidthRequest="96">
+                            <Label Text="{Binding LevelShort}" FontFamily="NunitoBlack" FontSize="15" />
+                            <c:BarView Value="{Binding LevelProgress}" HeightRequest="6" />
+                            <Label Text="{Binding XpText}" Style="{StaticResource Small}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Hava -->
+                <Border Style="{StaticResource Pill}" HorizontalOptions="Start" IsVisible="{Binding HasWeather}" Padding="12,6">
+                    <HorizontalStackLayout Spacing="6">
+                        <c:IconView Name="{Binding WeatherIcon}" Size="16" />
+                        <Label Text="{Binding WeatherText}" FontSize="14" FontFamily="NunitoBold" />
+                    </HorizontalStackLayout>
+                </Border>
+                <Label Text="{Binding WeatherAdvice}" Style="{StaticResource Muted}" IsVisible="{Binding WeatherAdvice, Converter={StaticResource HasValue}}" Margin="0,-8,0,0" />
+
+                <!-- Haftalık özet -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasSummary}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource XpSoftLight}, Dark={StaticResource XpSoftDark}}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Summary.Title}" Style="{StaticResource H2}" />
+                            <Label Text="{Binding Summary.Message}" Style="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <c:IconView Grid.Column="1" Name="x" Size="20" VerticalOptions="Start" InputTransparent="False"
+                                    SemanticProperties.Description="{c:Tr Today.CloseSummary}">
+                            <c:IconView.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding DismissSummaryCommand}" />
+                            </c:IconView.GestureRecognizers>
+                        </c:IconView>
+                    </Grid>
+                </Border>
+
+                <!-- Şeritler: devam eden ve sonra yaparım -->
+                <Border Style="{StaticResource Soft}" IsVisible="{Binding HasActive}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoActiveCommand}" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <c:IconView Name="hourglass" Size="18" />
+                        <Label Grid.Column="1" Text="{Binding ActiveStrip}" FontFamily="NunitoBold" VerticalOptions="Center" />
+                        <c:IconView Grid.Column="2" Name="chevron-right" Size="18" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Soft}" IsVisible="{Binding HasSaved}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoSavedCommand}" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <c:IconView Name="heart" Size="18" />
+                        <Label Grid.Column="1" Text="{Binding SavedStrip}" FontFamily="NunitoBold" VerticalOptions="Center" />
+                        <c:IconView Grid.Column="2" Name="chevron-right" Size="18" />
+                    </Grid>
+                </Border>
+
+                <!-- Öneriler -->
+                <Label Text="{c:Tr Today.Suggestions}" Style="{StaticResource H2}" IsVisible="{Binding HasOpenQuests}" />
+                <c:EmptyState IsVisible="{Binding LoadError, Converter={StaticResource HasValue}}" Icon="info"
+                              Title="{c:Tr Today.LoadFailed}" Message="{Binding LoadError}"
+                              ActionText="{c:Tr Mobile.Retry}" ActionCommand="{Binding RefreshCommand}" />
+                <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding OpenQuests}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Null}">
+                            <c:QuestCard>
+                                <c:QuestCard.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenQuestCommand, Source={RelativeSource AncestorType={x:Type vm:TodayViewModel}}}"
+                                                          CommandParameter="{Binding .}" />
+                                </c:QuestCard.GestureRecognizers>
+                            </c:QuestCard>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <c:EmptyState IsVisible="{Binding AllDone}" Icon="check" Title="{c:Tr Today.AllDone}" Message="{Binding AllDoneHint}" />
+                <c:EmptyState IsVisible="{Binding NoSuggestions}" Icon="compass" Title="{c:Tr Today.None}" Message="{Binding ServerMessage}"
+                              ActionText="{c:Tr Today.EditPreferences}" ActionCommand="{Binding GoProfileCommand}" />
+
+                <!-- Bugün tamamlananlar -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasCompletedToday}">
+                    <Label Text="{c:Tr Today.CompletedToday}" Style="{StaticResource H2}" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding CompletedToday}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:QuestCard ShowExplanation="False">
+                                    <c:QuestCard.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenQuestCommand, Source={RelativeSource AncestorType={x:Type vm:TodayViewModel}}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </c:QuestCard.GestureRecognizers>
+                                </c:QuestCard>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Boş vakit -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding IsLoaded}">
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <c:IconView Name="clock" Size="20" />
+                            <Label Text="{c:Tr Today.FreeTime}" Style="{StaticResource H2}" />
+                        </HorizontalStackLayout>
+                        <Label Text="{c:Tr Today.FreeTimeHint}" Style="{StaticResource Muted}" />
+                        <Button Text="{c:Tr Suggest.Submit}" Style="{StaticResource SoftButton}" Command="{Binding GoSuggestCommand}" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

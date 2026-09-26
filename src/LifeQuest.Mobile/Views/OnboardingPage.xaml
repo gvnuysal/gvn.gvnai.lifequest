@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+             xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+             x:Class="LifeQuest.Mobile.Views.OnboardingPage"
+             x:DataType="vm:OnboardingViewModel"
+             x:Name="Root">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Adım göstergesi -->
+        <VerticalStackLayout Padding="24,12,24,8" Spacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="{Binding StepLabel}" Style="{StaticResource Kicker}" VerticalOptions="Center" />
+                <c:LanguageSwitch Grid.Column="1" />
+            </Grid>
+            <c:BarView Value="{Binding Progress}" HeightRequest="6"
+                       Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+            <Label Text="{Binding StepTitle}" Style="{StaticResource Small}" />
+        </VerticalStackLayout>
+
+        <ScrollView Grid.Row="1" x:Name="Scroller">
+            <Grid Padding="24,8,24,24">
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsLoaded, Converter={StaticResource Not}}" VerticalOptions="Start" />
+                <c:EmptyState IsVisible="{Binding LoadError, Converter={StaticResource HasValue}}" Icon="info" Title="{Binding LoadError}"
+                              ActionText="{c:Tr Mobile.Retry}" ActionCommand="{Binding LoadCommand}" />
+
+                <!-- 1: Hedefler -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Step, Converter={StaticResource Is}, ConverterParameter=0}">
+                    <Label Text="{Binding Greeting}" Style="{StaticResource H1}" />
+                    <Label Text="{c:Tr Onboarding.GoalsLead}" Style="{StaticResource Muted}" FontSize="16" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Goals}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" Icon="{Binding Icon}" ColorKey="{Binding ColorKey}"
+                                              IsSelected="{Binding IsSelected}"
+                                              Command="{Binding ToggleGoalCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- 2: İlgi alanları -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Step, Converter={StaticResource Is}, ConverterParameter=1}">
+                    <Label Text="{c:Tr Onboarding.InterestsTitle}" Style="{StaticResource H1}" />
+                    <Label Text="{c:Tr Onboarding.InterestsLead}" Style="{StaticResource Muted}" FontSize="16" />
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="{c:Tr Ui.InterestLegendOnce}" Style="{StaticResource Small}" />
+                        <Label Text="{c:Tr Ui.InterestLegendTwice}" Style="{StaticResource Small}" />
+                    </HorizontalStackLayout>
+                    <VerticalStackLayout Spacing="16" BindableLayout.ItemsSource="{Binding InterestGroups}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <c:IconView Name="{Binding Icon}" Size="18" Color="{Binding ColorKey, Converter={StaticResource ThemeColor}, ConverterParameter=Cat*}" />
+                                        <Label Text="{Binding Label}" Style="{StaticResource Strong}" />
+                                    </HorizontalStackLayout>
+                                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding .}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="{x:Null}">
+                                                <c:ChoiceView Kind="Chip" Text="{Binding Name}" IsSelected="{Binding IsSelected}"
+                                                              Icon="{Binding IsLoved, Converter={StaticResource LoveIcon}}"
+                                                              Command="{Binding CycleInterestCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- 3: Başlangıç kartları -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Step, Converter={StaticResource Is}, ConverterParameter=2}">
+                    <Label Text="{c:Tr Onboarding.CardsTitle}" Style="{StaticResource H1}" />
+                    <Label Text="{c:Tr Onboarding.CardsLead}" Style="{StaticResource Muted}" FontSize="16" />
+                    <Border Style="{StaticResource Card}" Padding="20" IsVisible="{Binding HasCard}" x:Name="StarterCard">
+                        <Border.GestureRecognizers>
+                            <PanGestureRecognizer PanUpdated="OnCardPan" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="12">
+                            <c:CategoryIcon Icon="{Binding CardCategory.Icon}" ColorKey="{Binding CardCategory.ColorKey}" Diameter="52" />
+                            <Label Text="{Binding CardCategory.Label}" Style="{StaticResource Kicker}" />
+                            <Label Text="{Binding CurrentCard.Title}" Style="{StaticResource H2}" FontSize="22" />
+                            <Label Text="{Binding CurrentCard.Description}" Style="{StaticResource Muted}" FontSize="16" />
+                            <HorizontalStackLayout Spacing="14">
+                                <HorizontalStackLayout Spacing="4">
+                                    <c:IconView Name="clock" Size="15" />
+                                    <Label Text="{Binding CardDuration}" Style="{StaticResource Muted}" />
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="4">
+                                    <c:IconView Name="coins" Size="15" />
+                                    <Label Text="{Binding CardCost}" Style="{StaticResource Muted}" />
+                                </HorizontalStackLayout>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding HasCard}">
+                        <Button Text="{c:Tr Onboarding.NotForMe}" Style="{StaticResource Secondary}" Command="{Binding DislikeCommand}" />
+                        <Button Grid.Column="1" Text="{c:Tr Onboarding.ForMe}" Command="{Binding LikeCommand}" />
+                    </Grid>
+                    <Button Text="{c:Tr Onboarding.SkipCard}" Style="{StaticResource Ghost}" Command="{Binding SkipCardCommand}" IsVisible="{Binding HasCard}" />
+                    <Border Style="{StaticResource Soft}" IsVisible="{Binding CardsDone}" Padding="18">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{c:Tr Onboarding.Thanks}" Style="{StaticResource H2}" />
+                            <Label Text="{Binding LikedText}" Style="{StaticResource Muted}" />
+                            <Button Text="{c:Tr Onboarding.Restart}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding RestartCardsCommand}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- 4: Zaman, bütçe, hareket -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Step, Converter={StaticResource Is}, ConverterParameter=3}">
+                    <Label Text="{c:Tr Onboarding.TimeTitle}" Style="{StaticResource H1}" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding WeeklyTimes}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" Icon="{Binding Icon}" IsSelected="{Binding IsSelected}"
+                                              Command="{Binding PickWeeklyTimeCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Label Text="{c:Tr Onboarding.BudgetTitle}" Style="{StaticResource H2}" Margin="0,10,0,0" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Budgets}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" Icon="{Binding Icon}" IsSelected="{Binding IsSelected}"
+                                              Command="{Binding PickBudgetCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Label Text="{c:Tr Onboarding.EffortTitle}" Style="{StaticResource H2}" Margin="0,10,0,0" />
+                    <Label Text="{c:Tr Onboarding.EffortLead}" Style="{StaticResource Muted}" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Efforts}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" Icon="{Binding Icon}" IsSelected="{Binding IsSelected}"
+                                              Command="{Binding PickEffortCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- 5: Keşif modu ve şehir -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Step, Converter={StaticResource Is}, ConverterParameter=4}">
+                    <Label Text="{c:Tr Onboarding.RadiusTitle}" Style="{StaticResource H1}" />
+                    <Label Text="{c:Tr Onboarding.RadiusLead}" Style="{StaticResource Muted}" FontSize="16" />
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Radii}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" Icon="{Binding Icon}" IsSelected="{Binding IsSelected}"
+                                              Command="{Binding PickRadiusCommand, Source={RelativeSource AncestorType={x:Type vm:OnboardingViewModel}}}" CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="6" Margin="0,8,0,0">
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{c:Tr Onboarding.City}" Style="{StaticResource FieldLabel}" />
+                            <Label Text="{c:Tr Onboarding.Optional}" Style="{StaticResource Small}" />
+                        </HorizontalStackLayout>
+                        <Border Style="{StaticResource Input}">
+                            <Entry Text="{Binding City}" Placeholder="{c:Tr Onboarding.CityPlaceholder}" MaxLength="80" />
+                        </Border>
+                        <Label Text="{c:Tr Onboarding.CityHint}" Style="{StaticResource Small}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+
+        <!-- Gezinme -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="24,10,24,24"
+              BackgroundColor="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+            <Button Text="{c:Tr Common.Back}" Style="{StaticResource Secondary}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" />
+            <Button Grid.Column="1" Text="{Binding NextLabel}" Command="{Binding NextCommand}" IsEnabled="{Binding CanContinue}" Clicked="OnNextClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

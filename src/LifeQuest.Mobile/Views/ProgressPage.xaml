@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:LoadingPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+               xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+               xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+               x:Class="LifeQuest.Mobile.Views.ProgressPage"
+               x:DataType="vm:ProgressViewModel">
+    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16,20,120" Spacing="18">
+                <Label Text="{c:Tr Progress.Title}" Style="{StaticResource H1}" />
+                <c:EmptyState IsVisible="{Binding LoadError, Converter={StaticResource HasValue}}" Icon="info" Title="{c:Tr Progress.LoadFailed}"
+                              Message="{Binding LoadError}" ActionText="{c:Tr Mobile.Retry}" ActionCommand="{Binding RefreshCommand}" />
+
+                <VerticalStackLayout Spacing="18" IsVisible="{Binding IsLoaded}">
+                    <Border Style="{StaticResource Card}" Padding="20">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="18">
+                            <c:LevelRingView Level="{Binding Level}" Progress="{Binding LevelProgress}" WidthRequest="120" HeightRequest="120" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                <Label Text="Life XP" Style="{StaticResource Kicker}" />
+                                <Label FontFamily="NunitoBlack" FontSize="30">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding LifeXp}" />
+                                            <Span Text=" XP" FontSize="16" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <Label Text="{Binding ToNext}" Style="{StaticResource Muted}" />
+                                <HorizontalStackLayout Spacing="6">
+                                    <c:IconView Name="check" Size="16" />
+                                    <Label Text="{Binding Experiences}" FontFamily="NunitoBold" FontSize="14" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Life Profile" Style="{StaticResource H2}" />
+                        <Label Text="{c:Tr Progress.ProfileLead}" Style="{StaticResource Muted}" />
+                        <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Categories}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CategoryProgressItem">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="40" />
+                                        <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding Label}" FontFamily="NunitoBold" />
+                                                <Label Grid.Column="1" Text="{Binding Line}" Style="{StaticResource Small}" />
+                                            </Grid>
+                                            <c:BarView Value="{Binding Ratio}" HeightRequest="8"
+                                                       Color="{Binding ColorKey, Converter={StaticResource ThemeColor}, ConverterParameter=Cat*}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="10">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="{c:Tr Progress.Achievements}" Style="{StaticResource H2}" />
+                            <Label Text="{Binding AchievementCount}" Style="{StaticResource Small}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <FlexLayout Wrap="Wrap" JustifyContent="SpaceBetween" BindableLayout.ItemsSource="{Binding Achievements}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:AchievementItem">
+                                    <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,10" FlexLayout.Basis="48.5%"
+                                            Opacity="{Binding Unlocked, Converter={StaticResource LockedOpacity}}">
+                                        <VerticalStackLayout Spacing="6">
+                                            <c:IconView Name="{Binding Icon}" Size="24" Color="{AppThemeBinding Light={StaticResource XpLight}, Dark={StaticResource XpDark}}" />
+                                            <Label Text="{Binding Title}" FontFamily="NunitoBold" />
+                                            <Label Text="{Binding Description}" Style="{StaticResource Small}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding HasRecent}">
+                        <Label Text="{c:Tr Progress.Recent}" Style="{StaticResource H2}" />
+                        <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Recent}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:XpFeedItem">
+                                    <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="8">
+                                        <Label Text="{Binding Xp}" FontFamily="NunitoBlack"
+                                               TextColor="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                                        <Label Grid.Column="1" Text="{Binding Text}" FontSize="14" />
+                                        <Label Grid.Column="2" Text="{Binding Date}" Style="{StaticResource Small}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</v:LoadingPage>

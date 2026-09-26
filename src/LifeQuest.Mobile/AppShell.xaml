@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:l="clr-namespace:LifeQuest.Mobile.Controls"
+       xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+       x:Class="LifeQuest.Mobile.AppShell"
+       Shell.FlyoutBehavior="Disabled">
+    <!-- Web'deki alt gezinme çubuğu: Bugün, Görevlerim, İlerleme, Profil. -->
+    <TabBar>
+        <ShellContent Route="today" Title="{l:Tr Nav.Today}" Icon="tab_today.png" ContentTemplate="{DataTemplate v:TodayPage}" />
+        <ShellContent Route="quests" Title="{l:Tr Nav.Quests}" Icon="tab_quests.png" ContentTemplate="{DataTemplate v:MyQuestsPage}" />
+        <ShellContent Route="progress" Title="{l:Tr Nav.Progress}" Icon="tab_progress.png" ContentTemplate="{DataTemplate v:ProgressPage}" />
+        <ShellContent Route="profile" Title="{l:Tr Nav.Profile}" Icon="tab_profile.png" ContentTemplate="{DataTemplate v:ProfilePage}" />
+    </TabBar>
+</Shell>

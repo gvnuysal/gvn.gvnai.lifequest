@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:LoadingPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+               xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+               xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+               x:Class="LifeQuest.Mobile.Views.ProfilePage"
+               x:DataType="vm:ProfileViewModel"
+               x:Name="Root">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16,20,120" Spacing="18">
+                <!-- Kimlik -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                    <Border WidthRequest="60" HeightRequest="60" StrokeThickness="0" StrokeShape="RoundRectangle 30"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimarySoftLight}, Dark={StaticResource PrimarySoftDark}}">
+                        <Label Text="{Binding Initial}" FontFamily="NunitoBlack" FontSize="26" HorizontalOptions="Center" VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding DisplayName}" Style="{StaticResource H1}" FontSize="24" />
+                        <Label Text="{Binding Email}" Style="{StaticResource Muted}" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Keşif tercihleri -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="{c:Tr Profile.Discovery}" Style="{StaticResource H2}" />
+                        <Label Text="{c:Tr Profile.Mode}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6" x:Name="RadiusRow" BindableLayout.ItemsSource="{Binding Radii}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+                        <Label Text="{Binding RadiusDescription}" Style="{StaticResource Small}" />
+
+                        <Label Text="{c:Tr Profile.Budget}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" x:Name="BudgetRow" BindableLayout.ItemsSource="{Binding Budgets}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+
+                        <Label Text="{c:Tr Profile.WeeklyTime}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" x:Name="TimeRow" BindableLayout.ItemsSource="{Binding WeeklyTimes}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+
+                        <Label Text="{c:Tr Profile.Movement}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6" x:Name="EffortRow" BindableLayout.ItemsSource="{Binding Efforts}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+                        <Label Text="{c:Tr Profile.MovementHint}" Style="{StaticResource Small}" />
+
+                        <Label Text="{c:Tr Profile.Notifications}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6" x:Name="NotificationRow" BindableLayout.ItemsSource="{Binding Notifications}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+
+                        <Label Text="{c:Tr Profile.Goals}" Style="{StaticResource FieldLabel}" />
+                        <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Goals}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Chip" Text="{Binding Label}" Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{c:Tr Profile.City}" Style="{StaticResource FieldLabel}" />
+                            <Label Text="{c:Tr Profile.Optional}" Style="{StaticResource Small}" />
+                        </HorizontalStackLayout>
+                        <Border Style="{StaticResource Input}">
+                            <Entry Text="{Binding City}" Placeholder="{c:Tr Profile.CityPlaceholder}" MaxLength="80" />
+                        </Border>
+                        <Button Text="{c:Tr Common.Save}" Command="{Binding SavePreferencesCommand}" IsVisible="{Binding Dirty}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- İlgi alanları -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{c:Tr Profile.Interests}" Style="{StaticResource H2}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="{c:Tr Common.Edit}" Style="{StaticResource Ghost}" Command="{Binding OpenInterestsCommand}" />
+                        </Grid>
+                        <Label Text="{c:Tr Profile.InterestsHint}" Style="{StaticResource Small}" />
+                        <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Interests}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ProfileInterestItem">
+                                    <Grid ColumnDefinitions="*,Auto,90" ColumnSpacing="10">
+                                        <Label Text="{Binding Name}" FontFamily="NunitoBold" VerticalOptions="Center" />
+                                        <Border Grid.Column="1" Style="{StaticResource Pill}" IsVisible="{Binding Learned}" VerticalOptions="Center">
+                                            <Label Text="{c:Tr Profile.Learned}" FontSize="11" FontFamily="NunitoBold" />
+                                        </Border>
+                                        <c:BarView Grid.Column="2" Value="{Binding Weight}" HeightRequest="6" VerticalOptions="Center"
+                                                   Color="{Binding ColorKey, Converter={StaticResource ThemeColor}, ConverterParameter=Cat*}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Hatırlatma -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{c:Tr Reminder.Title}" Style="{StaticResource H2}" />
+                        <Label Text="{Binding ReminderText}" Style="{StaticResource Muted}" />
+                        <Label Text="{c:Tr Reminder.Hour}" Style="{StaticResource FieldLabel}" />
+                        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                            <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ReminderHours}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Null}">
+                                        <c:ChoiceView Kind="Chip" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                      Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+                        <Label Text="{c:Tr Mobile.ReminderLocalHint}" Style="{StaticResource Small}" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="{c:Tr Reminder.Enable}" Style="{StaticResource SmallButton}" Command="{Binding EnableReminderCommand}"
+                                    IsVisible="{Binding ReminderOn, Converter={StaticResource Not}}" />
+                            <Button Text="{c:Tr Reminder.SaveTime}" Style="{StaticResource SmallButton}" Command="{Binding EnableReminderCommand}" IsVisible="{Binding ReminderOn}" />
+                            <Button Text="{c:Tr Reminder.Disable}" Style="{StaticResource Ghost}" Command="{Binding DisableReminderCommand}" IsVisible="{Binding ReminderOn}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Dil ve görünüm -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{c:Tr Profile.Appearance}" Style="{StaticResource H2}" />
+                        <Label Text="{c:Tr Common.Language}" Style="{StaticResource FieldLabel}" />
+                        <c:LanguageSwitch Model="{Binding Language}" HorizontalOptions="Start" />
+                        <Label Text="{c:Tr Profile.LanguageHint}" Style="{StaticResource Small}" />
+                        <Label Text="{c:Tr Profile.Theme}" Style="{StaticResource FieldLabel}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6" x:Name="ThemeRow" BindableLayout.ItemsSource="{Binding Themes}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                                  Command="{Binding PickCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Hesap -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="{c:Tr Profile.Account}" Style="{StaticResource H2}" Margin="0,0,0,6" />
+                        <Button Text="{c:Tr Profile.SavedList}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding GoSavedCommand}" />
+                        <Button Text="{c:Tr Profile.SuggestIdea}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding GoIdeasCommand}" />
+                        <Button Text="{c:Tr Profile.ExportData}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding ExportCommand}" />
+                        <Label Text="{c:Tr Profile.ExportHint}" Style="{StaticResource Small}" Margin="12,0,0,6" />
+                        <Button Text="{c:Tr Profile.Logout}" Style="{StaticResource Secondary}" Command="{Binding LogoutCommand}" Margin="0,6,0,0" />
+                        <Button Text="{c:Tr Profile.DeleteAccount}" Style="{StaticResource Ghost}" Command="{Binding OpenDeleteCommand}"
+                                TextColor="{AppThemeBinding Light={StaticResource DangerLight}, Dark={StaticResource DangerDark}}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- İlgi alanlarını düzenle -->
+        <c:Sheet Title="{c:Tr Profile.EditInterests}" IsOpen="{Binding InterestsOpen}">
+            <VerticalStackLayout Spacing="14">
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="{c:Tr Ui.InterestLegendOnce}" Style="{StaticResource Small}" />
+                    <Label Text="{c:Tr Ui.InterestLegendTwice}" Style="{StaticResource Small}" />
+                </HorizontalStackLayout>
+                <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding InterestDraft}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Null}">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Label}" Style="{StaticResource Strong}" />
+                                <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding .}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="{x:Null}">
+                                            <c:ChoiceView Kind="Chip" Text="{Binding Name}" IsSelected="{Binding IsSelected}"
+                                                          Icon="{Binding IsLoved, Converter={StaticResource LoveIcon}}"
+                                                          Command="{Binding CycleInterestCommand, Source={RelativeSource AncestorType={x:Type vm:ProfileViewModel}}}" CommandParameter="{Binding .}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Button Text="{c:Tr Common.Save}" Command="{Binding SaveInterestsCommand}" />
+            </VerticalStackLayout>
+        </c:Sheet>
+
+        <!-- Hesabı sil -->
+        <c:Sheet Title="{c:Tr Profile.DeleteTitle}" IsOpen="{Binding DeleteOpen}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{c:Tr Profile.DeleteWarning}" Style="{StaticResource Muted}" />
+                <Label Text="{c:Tr Profile.DeletePassword}" Style="{StaticResource FieldLabel}" />
+                <Border Style="{StaticResource Input}">
+                    <Entry Text="{Binding DeletePassword}" IsPassword="True" />
+                </Border>
+                <Button Text="{c:Tr Profile.DeleteForever}" Style="{StaticResource DangerButton}" Command="{Binding DeleteAccountCommand}" />
+            </VerticalStackLayout>
+        </c:Sheet>
+    </Grid>
+</v:LoadingPage>

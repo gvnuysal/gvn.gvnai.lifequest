@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:LoadingPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+               xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+               xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+               x:Class="LifeQuest.Mobile.Views.SavedPage"
+               x:DataType="vm:SavedViewModel"
+               x:Name="Root">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,12,20,120" Spacing="16">
+            <Button Text="{c:Tr Common.Back}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Clicked="OnBack" Padding="0,8" />
+            <Label Text="{c:Tr Saved.Title}" Style="{StaticResource H1}" />
+            <Label Text="{c:Tr Saved.Lead}" Style="{StaticResource Muted}" FontSize="16" />
+            <c:EmptyState IsVisible="{Binding LoadError, Converter={StaticResource HasValue}}" Icon="info" Title="{c:Tr Saved.LoadFailed}"
+                          Message="{Binding LoadError}" ActionText="{c:Tr Mobile.Retry}" ActionCommand="{Binding RefreshCommand}" />
+            <c:EmptyState IsVisible="{Binding IsEmpty}" Icon="heart" Title="{c:Tr Saved.EmptyTitle}" Message="{c:Tr Saved.EmptyHint}"
+                          ActionText="{c:Tr Saved.Browse}" ActionCommand="{Binding BrowseCommand}" />
+            <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Items}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Null}">
+                        <Border Style="{StaticResource Card}" Opacity="{Binding IsAvailable, Converter={StaticResource LockedOpacity}}">
+                            <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                    <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="42" />
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="{Binding Kicker}" Style="{StaticResource Kicker}" />
+                                        <Label Text="{Binding Title}" FontFamily="NunitoExtraBold" FontSize="17" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Label Text="{Binding Description}" Style="{StaticResource Muted}" />
+                                <HorizontalStackLayout Spacing="14">
+                                    <Label Text="{Binding Duration}" Style="{StaticResource Muted}" />
+                                    <Label Text="{Binding Cost}" Style="{StaticResource Muted}" />
+                                </HorizontalStackLayout>
+                                <Label Text="{c:Tr Saved.Unavailable}" Style="{StaticResource Small}" IsVisible="{Binding IsUnavailable}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Text="{c:Tr Saved.StartNow}" Style="{StaticResource SmallButton}" IsVisible="{Binding IsAvailable}"
+                                            Command="{Binding StartCommand, Source={RelativeSource AncestorType={x:Type vm:SavedViewModel}}}" CommandParameter="{Binding .}" />
+                                    <Button Text="{c:Tr Common.Remove}" Style="{StaticResource Ghost}"
+                                            Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:SavedViewModel}}}" CommandParameter="{Binding .}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</v:LoadingPage>

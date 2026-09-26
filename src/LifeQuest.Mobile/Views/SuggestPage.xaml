@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:LoadingPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+               xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+               xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+               x:Class="LifeQuest.Mobile.Views.SuggestPage"
+               x:DataType="vm:SuggestViewModel"
+               x:Name="Root">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,12,20,120" Spacing="16">
+            <Button Text="{c:Tr Common.Back}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding BackCommand}" Padding="0,8" />
+            <Label Text="{c:Tr Suggest.Title}" Style="{StaticResource H1}" />
+            <Label Text="{c:Tr Suggest.Lead}" Style="{StaticResource Muted}" FontSize="16" />
+
+            <Label Text="{c:Tr Suggest.Duration}" Style="{StaticResource FieldLabel}" />
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" BindableLayout.ItemsSource="{Binding Durations}" x:Name="DurationRow">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Null}">
+                        <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                      Command="{Binding PickDurationCommand, Source={RelativeSource AncestorType={x:Type vm:SuggestViewModel}}}" CommandParameter="{Binding .}" />
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </Grid>
+
+            <Label Text="{c:Tr Suggest.Budget}" Style="{StaticResource FieldLabel}" />
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6" BindableLayout.ItemsSource="{Binding Costs}" x:Name="CostRow">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Null}">
+                        <c:ChoiceView Kind="Segment" Text="{Binding Label}" IsSelected="{Binding IsSelected}"
+                                      Command="{Binding PickCostCommand, Source={RelativeSource AncestorType={x:Type vm:SuggestViewModel}}}" CommandParameter="{Binding .}" />
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </Grid>
+
+            <Grid>
+                <Button Text="{c:Tr Suggest.Submit}" Command="{Binding SuggestCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="End" Margin="0,0,16,0" Color="White" />
+            </Grid>
+
+            <c:EmptyState IsVisible="{Binding LimitReached}" Icon="hourglass" Title="{c:Tr Suggest.LimitTitle}" Message="{c:Tr Suggest.LimitMessage}" />
+            <c:EmptyState IsVisible="{Binding NoResults}" Icon="compass" Title="{c:Tr Suggest.NoneTitle}" Message="{Binding ServerMessage}" />
+
+            <Label Text="{c:Tr Suggest.ForYou}" Style="{StaticResource H2}" IsVisible="{Binding HasResults}" />
+            <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding Results}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Null}">
+                        <c:QuestCard>
+                            <c:QuestCard.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenQuestCommand, Source={RelativeSource AncestorType={x:Type vm:SuggestViewModel}}}" CommandParameter="{Binding .}" />
+                            </c:QuestCard.GestureRecognizers>
+                        </c:QuestCard>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</v:LoadingPage>

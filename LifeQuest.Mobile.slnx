@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LifeQuest.Mobile/LifeQuest.Mobile.csproj" />
+    <Project Path="src/LifeQuest.Mobile.Core/LifeQuest.Mobile.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LifeQuest.Mobile.Tests/LifeQuest.Mobile.Tests.csproj" />
+  </Folder>
+</Solution>
