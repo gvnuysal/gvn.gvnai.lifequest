@@ -79,7 +79,7 @@
                             <PanGestureRecognizer PanUpdated="OnCardPan" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="12">
-                            <c:CategoryIcon Icon="{Binding CardCategory.Icon}" ColorKey="{Binding CardCategory.ColorKey}" Diameter="52" />
+                            <c:CategoryIcon Icon="{Binding CardCategory.Icon}" ColorKey="{Binding CardCategory.ColorKey}" Diameter="52" HorizontalOptions="Start" />
                             <Label Text="{Binding CardCategory.Label}" Style="{StaticResource Kicker}" />
                             <Label Text="{Binding CurrentCard.Title}" Style="{StaticResource H2}" FontSize="22" />
                             <Label Text="{Binding CurrentCard.Description}" Style="{StaticResource Muted}" FontSize="16" />

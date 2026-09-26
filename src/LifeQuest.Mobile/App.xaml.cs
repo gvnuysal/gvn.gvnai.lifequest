@@ -16,6 +16,28 @@ public partial class App : Application
         _theme = theme;
         // Hatırlatma metni kurulduğu dilde saklanır: dil değişince yeniden kurulur.
         Lang.Changed += (_, _) => _ = reminders.RescheduleAsync(completedToday: false);
+        // Kodla boyanan bileşenler (seçim kutuları, ikonlar, halkalar) temayı oluşturulurken okur: tema değişince
+        // ekran yeni temayla yeniden kurulur.
+        RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildForTheme);
+    }
+
+    private void RebuildForTheme()
+    {
+        if (Windows.FirstOrDefault() is not { Page: { } page } window
+            || IPlatformApplication.Current?.Services is not { } services)
+            return;
+
+        if (page is AppShell shell)
+        {
+            var tab = shell.CurrentState?.Location.OriginalString.TrimStart('/').Split('/').FirstOrDefault();
+            var fresh = services.GetRequiredService<AppShell>();
+            window.Page = fresh;
+            if (!string.IsNullOrEmpty(tab)) _ = fresh.GoToAsync("//" + tab);
+            return;
+        }
+
+        if (services.GetService(page.GetType()) is Page replacement)
+            window.Page = replacement;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

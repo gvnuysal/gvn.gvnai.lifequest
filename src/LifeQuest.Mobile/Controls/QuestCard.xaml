@@ -12,11 +12,9 @@
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
             <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="46" />
             <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                <HorizontalStackLayout Spacing="8">
-                    <Label Text="{Binding Kicker}" Style="{StaticResource Kicker}" />
-                    <Label IsVisible="{Binding IsExploration}" Text="{c:Tr Quest.Exploration}" Style="{StaticResource Kicker}"
-                           TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
-                </HorizontalStackLayout>
+                <Label Text="{Binding Kicker}" Style="{StaticResource Kicker}" />
+                <Label IsVisible="{Binding IsExploration}" Text="{c:Tr Quest.Exploration}" Style="{StaticResource Kicker}"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
                 <Label Text="{Binding Title}" FontFamily="NunitoExtraBold" FontSize="17" />
             </VerticalStackLayout>
             <Border Grid.Column="2" Style="{StaticResource Pill}" VerticalOptions="Start"

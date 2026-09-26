@@ -143,8 +143,10 @@ public sealed partial class LanguageSwitchViewModel(ProfileState profile) : View
     {
         if (!Lang.TryParse(code, out var language) || language == Lang.Current)
             return;
-        profile.ApplyLanguage(language);
+        // Giriş yapılmışsa önce hesaba yazılır; sunucudan dönen profil dili uygular. Aksi halde yeniden yüklenen
+        // profil henüz eski dili taşıyıp seçimi geri alabilirdi.
         if (Persist is not null) await Persist(language);
+        else profile.ApplyLanguage(language);
     }
 
     protected internal override void OnLanguageChanged()

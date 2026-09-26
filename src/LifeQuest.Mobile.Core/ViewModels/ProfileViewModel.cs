@@ -237,6 +237,7 @@ public sealed partial class ProfileViewModel(
     {
         try
         {
+            // profile.Set dili uygular (ve dil olayıyla ekran yeni dilde yeniden yüklenir).
             profile.Set(await api.UpdatePreferencesAsync(new PreferencesRequest { Language = Lang.ToCode(language) }));
             await reminders.RescheduleAsync(completedToday: false);
         }

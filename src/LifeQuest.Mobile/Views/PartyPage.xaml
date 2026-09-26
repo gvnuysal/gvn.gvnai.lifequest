@@ -14,7 +14,7 @@
                           Message="{Binding LoadError}" ActionText="{c:Tr Party.BackToToday}" ActionCommand="{Binding GoTodayCommand}" />
             <Border Style="{StaticResource Card}" Padding="20" IsVisible="{Binding IsLoaded}">
                 <VerticalStackLayout Spacing="12">
-                    <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="56" />
+                    <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="56" HorizontalOptions="Start" />
                     <Label Text="{Binding Heading}" Style="{StaticResource Kicker}" />
                     <Label Text="{Binding QuestTitle}" Style="{StaticResource H1}" />
                     <Label Text="{Binding CategoryLabel}" Style="{StaticResource Muted}" />
