@@ -12,6 +12,7 @@ import { Icon } from '../../ui/icon';
 import { ProgressBar } from '../../ui/progress';
 import { QuestCard } from '../../ui/quest-card';
 import { EmptyState, Skeleton } from '../../ui/states';
+import { t } from '../../core/i18n/i18n';
 import { APP_PATHS, questPath } from '../../core/routing/app-paths';
 
 @Component({
@@ -23,12 +24,12 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
       <header class="hello">
         <div>
           <p class="eyebrow">{{ dateLabel() }}</p>
-          <h1>{{ greeting }}{{ name() ? ', ' + name() : '' }}</h1>
+          <h1>{{ greeting() }}{{ name() ? ', ' + name() : '' }}</h1>
         </div>
         @if (progress(); as p) {
-          <a class="level" [routerLink]="paths.progress" [attr.aria-label]="'Seviye ' + p.lifeLevel + ', ilerlemeyi gör'">
-            <span class="level__badge"><lq-icon name="star" [size]="14" [strokeWidth]="2.6" /> Sv. {{ p.lifeLevel }}</span>
-            <lq-progress-bar [value]="p.levelProgress" [height]="6" label="Sonraki seviyeye ilerleme" />
+          <a class="level" [routerLink]="paths.progress" [attr.aria-label]="t().today.levelAria(p.lifeLevel)">
+            <span class="level__badge"><lq-icon name="star" [size]="14" [strokeWidth]="2.6" /> {{ t().today.levelShort(p.lifeLevel) }}</span>
+            <lq-progress-bar [value]="p.levelProgress" [height]="6" [label]="t().today.nextLevel" />
             <span class="level__xp">{{ p.lifeXp }} / {{ p.nextLevelXp }} XP</span>
           </a>
         }
@@ -41,7 +42,7 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
           <div class="summary__head">
             <span class="summary__icon"><lq-icon name="sparkles" [size]="20" /></span>
             <h2 id="summary-title">{{ s.title }}</h2>
-            <button type="button" class="summary__close" (click)="dismissSummary(s.id)" aria-label="Özeti kapat">
+            <button type="button" class="summary__close" (click)="dismissSummary(s.id)" [attr.aria-label]="t().today.closeSummary">
               <lq-icon name="x" [size]="16" />
             </button>
           </div>
@@ -52,27 +53,27 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
       @if (activeCount() > 0) {
         <a class="active-strip" [routerLink]="paths.quests">
           <lq-icon name="flag" [size]="18" />
-          <span><strong>{{ activeCount() }}</strong> görevin devam ediyor</span>
+          <span>{{ t().today.activeStrip(activeCount()) }}</span>
           <lq-icon name="chevron-right" [size]="18" />
         </a>
       }
       @if (savedCount() > 0) {
         <a class="active-strip saved-strip" [routerLink]="paths.saved">
           <lq-icon name="heart" [size]="18" />
-          <span>"Sonra yaparım" listende <strong>{{ savedCount() }}</strong> deneyim var</span>
+          <span>{{ t().today.savedStrip(savedCount()) }}</span>
           <lq-icon name="chevron-right" [size]="18" />
         </a>
       }
 
       <section class="stack">
-        <h2 class="section-title">Bugünün önerileri</h2>
+        <h2 class="section-title">{{ t().today.suggestions }}</h2>
         @if (loading()) {
           <lq-skeleton [height]="150" />
           <lq-skeleton [height]="150" />
           <lq-skeleton [height]="150" />
         } @else if (error()) {
-          <lq-empty-state icon="info" title="Öneriler yüklenemedi" [message]="error()">
-            <button lq-button variant="secondary" size="sm" (click)="load()"><lq-icon name="refresh" [size]="16" /> Tekrar dene</button>
+          <lq-empty-state icon="info" [title]="t().today.loadFailed" [message]="error()">
+            <button lq-button variant="secondary" size="sm" (click)="load()"><lq-icon name="refresh" [size]="16" /> {{ t().common.retry }}</button>
           </lq-empty-state>
         } @else if (openQuests().length) {
           @for (quest of openQuests(); track quest.id) {
@@ -82,20 +83,20 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
           <div class="all-done">
             <lq-icon name="check" [size]="22" />
             <div>
-              <strong>Bugünün önerilerini tamamladın</strong>
-              <p class="muted">Yeni öneriler yarın sabah {{ dayStart }}:00'da gelir. Beklemek istemezsen aşağıdan boş vaktine göre öneri alabilirsin.</p>
+              <strong>{{ t().today.allDone }}</strong>
+              <p class="muted">{{ t().today.allDoneHint(dayStart) }}</p>
             </div>
           </div>
         } @else {
-          <lq-empty-state icon="compass" title="Bugün için öneri yok" [message]="today()?.message ?? null">
-            <a lq-button variant="secondary" size="sm" [routerLink]="paths.profile">Tercihlerimi düzenle</a>
+          <lq-empty-state icon="compass" [title]="t().today.none" [message]="today()?.message ?? null">
+            <a lq-button variant="secondary" size="sm" [routerLink]="paths.profile">{{ t().today.editPreferences }}</a>
           </lq-empty-state>
         }
       </section>
 
       @if (!loading() && completedToday().length) {
         <section class="stack">
-          <h2 class="section-title">Bugün tamamladıkların</h2>
+          <h2 class="section-title">{{ t().today.completedToday }}</h2>
           <ul class="done">
             @for (quest of completedToday(); track quest.id) {
               <li>
@@ -113,8 +114,8 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
       <a class="cta" [routerLink]="paths.suggest">
         <span class="cta__icon"><lq-icon name="clock" [size]="24" /></span>
         <span class="cta__text">
-          <strong>Boş vaktin mi var?</strong>
-          <span>Ne kadar zamanın olduğunu söyle, ona göre önerelim.</span>
+          <strong>{{ t().today.freeTime }}</strong>
+          <span>{{ t().today.freeTimeHint }}</span>
         </span>
         <lq-icon name="chevron-right" />
       </a>
@@ -170,7 +171,8 @@ export class TodayPage {
   private readonly quests = inject(QuestsApi);
   private readonly progressApi = inject(ProgressApi);
 
-  protected readonly greeting = greeting();
+  protected readonly t = t;
+  protected readonly greeting = computed(() => greeting());
   protected readonly name = inject(ProfileStore).firstName;
 
   protected readonly loading = signal(true);

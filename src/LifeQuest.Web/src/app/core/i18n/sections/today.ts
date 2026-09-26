@@ -1,0 +1,38 @@
+import { section } from '../dictionary';
+
+export const today = section(
+  {
+    levelAria: (level: number) => `Seviye ${level}, ilerlemeyi gör`,
+    levelShort: (level: number) => `Sv. ${level}`,
+    nextLevel: 'Sonraki seviyeye ilerleme',
+    closeSummary: 'Özeti kapat',
+    activeStrip: (n: number) => `${n} görevin devam ediyor`,
+    savedStrip: (n: number) => `"Sonra yaparım" listende ${n} deneyim var`,
+    suggestions: 'Bugünün önerileri',
+    loadFailed: 'Öneriler yüklenemedi',
+    allDone: 'Bugünün önerilerini tamamladın',
+    allDoneHint: (hour: string) => `Yeni öneriler yarın sabah ${hour}:00'da gelir. Beklemek istemezsen aşağıdan boş vaktine göre öneri alabilirsin.`,
+    none: 'Bugün için öneri yok',
+    editPreferences: 'Tercihlerimi düzenle',
+    completedToday: 'Bugün tamamladıkların',
+    freeTime: 'Boş vaktin mi var?',
+    freeTimeHint: 'Ne kadar zamanın olduğunu söyle, ona göre önerelim.',
+  },
+  {
+    levelAria: (level: number) => `Level ${level}, see progress`,
+    levelShort: (level: number) => `Lv. ${level}`,
+    nextLevel: 'Progress to next level',
+    closeSummary: 'Close summary',
+    activeStrip: (n: number) => `${n} ${n === 1 ? 'quest' : 'quests'} in progress`,
+    savedStrip: (n: number) => `${n} ${n === 1 ? 'experience' : 'experiences'} on your "Later" list`,
+    suggestions: "Today's suggestions",
+    loadFailed: "Couldn't load suggestions",
+    allDone: "You've done today's suggestions",
+    allDoneHint: (hour: string) => `New suggestions arrive tomorrow at ${hour}:00. If you don't want to wait, get suggestions for your free time below.`,
+    none: 'No suggestions for today',
+    editPreferences: 'Edit my preferences',
+    completedToday: 'Completed today',
+    freeTime: 'Got some free time?',
+    freeTimeHint: "Tell us how much time you have and we'll suggest something.",
+  },
+);

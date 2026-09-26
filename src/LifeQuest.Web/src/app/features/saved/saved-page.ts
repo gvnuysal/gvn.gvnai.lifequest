@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SavedApi } from '../../core/api/api-clients';
@@ -20,12 +21,12 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
   template: `
     <div class="page">
       <header class="stack">
-        <h1>Sonra yaparım</h1>
-        <p class="muted">Şimdi olmasa da kaçırmak istemediğin deneyimler. Başlattığında aktif görevlerine eklenir.</p>
+        <h1>{{ t().saved.title }}</h1>
+        <p class="muted">{{ t().saved.lead }}</p>
       </header>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Liste yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().saved.loadFailed" [message]="error()" />
       } @else if (items(); as list) {
         <ul class="list">
           @for (item of list; track item.templateId) {
@@ -44,20 +45,20 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
                   <span><lq-icon name="coins" [size]="15" /> {{ cost(item) }}</span>
                 </div>
               } @else {
-                <p class="small off">Bu deneyim şu an katalogda sunulmuyor.</p>
+                <p class="small off">{{ t().saved.unavailable }}</p>
               }
               <div class="actions">
                 @if (item.isAvailable) {
                   <button lq-button size="sm" [loading]="busy() === item.templateId" [disabled]="!!busy()" (click)="start(item)">
-                    <lq-icon name="check" [size]="16" /> Şimdi başla
+                    <lq-icon name="check" [size]="16" /> {{ t().saved.startNow }}
                   </button>
                 }
-                <button lq-button variant="ghost" size="sm" [disabled]="!!busy()" (click)="remove(item)">Kaldır</button>
+                <button lq-button variant="ghost" size="sm" [disabled]="!!busy()" (click)="remove(item)">{{ t().common.remove }}</button>
               </div>
             </li>
           } @empty {
-            <lq-empty-state icon="heart" title="Listen boş" message="Bir önerinin detayında &quot;Sonra yaparım&quot;a dokunarak buraya ekleyebilirsin.">
-              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Önerilere göz at</a>
+            <lq-empty-state icon="heart" [title]="t().saved.emptyTitle" [message]="t().saved.emptyHint">
+              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">{{ t().saved.browse }}</a>
             </lq-empty-state>
           }
         </ul>
@@ -82,6 +83,7 @@ import { APP_PATHS, questPath } from '../../core/routing/app-paths';
   `,
 })
 export class SavedPage {
+  protected readonly t = t;
   protected readonly paths = APP_PATHS;
   private readonly api = inject(SavedApi);
   private readonly router = inject(Router);
@@ -119,7 +121,7 @@ export class SavedPage {
     this.api.start(item.templateId).subscribe({
       next: (quest) => {
         this.busy.set(null);
-        this.toast.success('Başladı! Aktif görevlerine eklendi.');
+        this.toast.success(t().saved.started);
         void this.router.navigate(questPath(quest.id));
       },
       error: (err: unknown) => {

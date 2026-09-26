@@ -1,3 +1,4 @@
+import { t } from '../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Quest } from '../core/api/models';
@@ -20,7 +21,7 @@ import { questPath } from '../core/routing/app-paths';
           <span class="kicker">
             {{ categoryLabel() }} · {{ typeLabel() }}
             @if (quest().isExploration) {
-              <span class="explore"><lq-icon name="sparkles" [size]="12" [strokeWidth]="2.6" /> Keşif önerisi</span>
+              <span class="explore"><lq-icon name="sparkles" [size]="12" [strokeWidth]="2.6" /> {{ t().quest.exploration }}</span>
             }
           </span>
           <h3>{{ quest().title }}</h3>
@@ -104,6 +105,7 @@ import { questPath } from '../core/routing/app-paths';
   `,
 })
 export class QuestCard {
+  protected readonly t = t;
   protected readonly questPath = questPath;
   protected readonly planned = computed(() => {
     const at = this.quest().plannedAt;

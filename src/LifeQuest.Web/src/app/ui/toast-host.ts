@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastService } from '../core/state/toast.service';
 import { Icon } from './icon';
+import { t } from '../core/i18n/i18n';
 
 @Component({
   selector: 'lq-toast-host',
@@ -12,7 +13,7 @@ import { Icon } from './icon';
         <div class="toast" [class]="'toast toast--' + toast.kind">
           <lq-icon [name]="toast.kind === 'success' ? 'check' : toast.kind === 'error' ? 'info' : 'sparkles'" />
           <span>{{ toast.message }}</span>
-          <button type="button" (click)="toasts.dismiss(toast.id)" aria-label="Bildirimi kapat">
+          <button type="button" (click)="toasts.dismiss(toast.id)" [attr.aria-label]="t().ui.closeToast">
             <lq-icon name="x" [size]="16" />
           </button>
         </div>
@@ -54,5 +55,6 @@ import { Icon } from './icon';
   `,
 })
 export class ToastHost {
+  protected readonly t = t;
   protected readonly toasts = inject(ToastService);
 }

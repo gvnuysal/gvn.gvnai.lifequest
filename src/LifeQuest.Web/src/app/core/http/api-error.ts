@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiError } from '../api/models';
+import { t } from '../i18n/i18n';
 
 /**
  * Backend üç farklı hata gövdesi döndürebilir:
@@ -10,15 +11,15 @@ import { ApiError } from '../api/models';
  */
 export function parseApiErrors(error: unknown): ApiError[] {
   if (!(error instanceof HttpErrorResponse)) {
-    return [{ code: 'UNKNOWN', message: 'Beklenmeyen bir hata oluştu.', type: 'Failure' }];
+    return [{ code: 'UNKNOWN', message: t().errors.unknown, type: 'Failure' }];
   }
 
   if (error.status === 0) {
-    return [{ code: 'NETWORK', message: 'Sunucuya ulaşılamıyor. Bağlantını kontrol et.', type: 'Failure' }];
+    return [{ code: 'NETWORK', message: t().errors.network, type: 'Failure' }];
   }
 
   if (error.status === 429) {
-    return [{ code: 'RATE_LIMITED', message: 'Çok fazla istek gönderildi. Biraz sonra tekrar dene.', type: 'Failure' }];
+    return [{ code: 'RATE_LIMITED', message: t().errors.rateLimited, type: 'Failure' }];
   }
 
   const body = error.error;
@@ -42,10 +43,10 @@ export function parseApiErrors(error: unknown): ApiError[] {
   }
 
   if (error.status >= 500) {
-    return [{ code: 'SERVER', message: 'Sunucuda bir sorun oluştu. Lütfen tekrar dene.', type: 'Failure' }];
+    return [{ code: 'SERVER', message: t().errors.server, type: 'Failure' }];
   }
 
-  return [{ code: `HTTP_${error.status}`, message: 'İstek tamamlanamadı.', type: typeForStatus(error.status) }];
+  return [{ code: `HTTP_${error.status}`, message: t().errors.request, type: typeForStatus(error.status) }];
 }
 
 /** Kullanıcıya gösterilecek tek satırlık mesaj. */

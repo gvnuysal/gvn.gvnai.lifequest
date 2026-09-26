@@ -9,38 +9,38 @@
     </header>
 
     <section class="surface card stack">
-      <h2 class="section-title">Keşif tercihleri</h2>
+      <h2 class="section-title">{{ t().profile.discovery }}</h2>
 
       <div class="field">
-        <span class="field__label">Keşif modu</span>
-        <lq-segmented ariaLabel="Keşif modu" [options]="radiusOptions" [(value)]="radius" />
+        <span class="field__label">{{ t().profile.mode }}</span>
+        <lq-segmented [ariaLabel]="t().profile.mode" [options]="radiusOptions" [(value)]="radius" />
         <span class="field__hint">{{ radiusDescription() }}</span>
       </div>
 
       <div class="field">
-        <span class="field__label">Bütçe</span>
-        <lq-segmented ariaLabel="Bütçe" [options]="costOptions" [(value)]="budget" />
+        <span class="field__label">{{ t().profile.budget }}</span>
+        <lq-segmented [ariaLabel]="t().profile.budget" [options]="costOptions" [(value)]="budget" />
       </div>
 
       <div class="field">
-        <span class="field__label">Haftalık zaman</span>
-        <lq-segmented ariaLabel="Haftalık zaman" [options]="timeOptions" [(value)]="weeklyMinutes" />
+        <span class="field__label">{{ t().profile.weeklyTime }}</span>
+        <lq-segmented [ariaLabel]="t().profile.weeklyTime" [options]="timeOptions" [(value)]="weeklyMinutes" />
       </div>
 
       <div class="field">
-        <span class="field__label">Hareket tercihi</span>
-        <lq-segmented ariaLabel="Hareket tercihi" [options]="effortOptions" [(value)]="maxEffort" />
-        <span class="field__hint">Bu seviyenin üzerindeki hareket gerektiren quest'ler önerilmez.</span>
+        <span class="field__label">{{ t().profile.movement }}</span>
+        <lq-segmented [ariaLabel]="t().profile.movement" [options]="effortOptions" [(value)]="maxEffort" />
+        <span class="field__hint">{{ t().profile.movementHint }}</span>
       </div>
 
       <div class="field">
-        <span class="field__label">Bildirimler</span>
-        <lq-segmented ariaLabel="Bildirimler" [options]="notificationOptions" [(value)]="notifications" />
-        <span class="field__hint">Haftalık özet uygulamada görünür; bildirim izni verdiysen telefonuna da gelir.</span>
+        <span class="field__label">{{ t().profile.notifications }}</span>
+        <lq-segmented [ariaLabel]="t().profile.notifications" [options]="notificationOptions" [(value)]="notifications" />
+        <span class="field__hint">{{ t().profile.notificationsHint }}</span>
       </div>
 
       <div class="field">
-        <span class="field__label">Hedef alanların</span>
+        <span class="field__label">{{ t().profile.goals }}</span>
         <div class="chips">
           @for (category of categories; track category) {
             <button lq-chip [selected]="goals().includes(category)" (click)="toggleGoal(category)">
@@ -51,12 +51,12 @@
       </div>
 
       <div class="field">
-        <label for="city">Şehir <span class="muted">(isteğe bağlı)</span></label>
-        <input id="city" class="input" [ngModel]="city()" (ngModelChange)="city.set($event)" maxlength="80" placeholder="Ör. İzmir" />
+        <label for="city">{{ t().profile.city }} <span class="muted">{{ t().profile.optional }}</span></label>
+        <input id="city" class="input" [ngModel]="city()" (ngModelChange)="city.set($event)" maxlength="80" [placeholder]="t().profile.cityPlaceholder" />
       </div>
 
       <button lq-button [block]="true" [disabled]="!dirty() || savingPreferences()" [loading]="savingPreferences()" (click)="savePreferences()">
-        Kaydet
+        {{ t().common.save }}
       </button>
     </section>
 
@@ -64,19 +64,19 @@
 
     <section class="surface card stack">
       <div class="section-title">
-        <h2>İlgi alanların</h2>
-        <button lq-button variant="soft" size="sm" (click)="openInterests()">Düzenle</button>
+        <h2>{{ t().profile.interests }}</h2>
+        <button lq-button variant="soft" size="sm" (click)="openInterests()">{{ t().common.edit }}</button>
       </div>
-      <p class="muted small">Geri bildirimlerinden öğrendiklerimiz "öğrenildi" olarak işaretlenir.</p>
+      <p class="muted small">{{ t().profile.interestsHint }}</p>
       <ul class="interests">
         @for (interest of p.interests; track interest.code) {
           <li>
             <lq-category-badge [category]="interest.category" [iconOnly]="true" [compact]="true" />
             <span class="name">{{ interest.name }}</span>
             @if (interest.source === 'Learned') {
-              <span class="learned"><lq-icon name="sparkles" [size]="12" /> öğrenildi</span>
+              <span class="learned"><lq-icon name="sparkles" [size]="12" /> {{ t().profile.learned }}</span>
             }
-            <span class="meter" [attr.aria-label]="'İlgi düzeyi yüzde ' + (interest.weight * 100).toFixed(0)">
+            <span class="meter" [attr.aria-label]="t().profile.interestLevel((interest.weight * 100).toFixed(0))">
               <span [style.width.%]="interest.weight * 100"></span>
             </span>
           </li>
@@ -85,44 +85,49 @@
     </section>
 
     <section class="surface card stack">
-      <h2 class="section-title">Görünüm</h2>
-      <lq-segmented ariaLabel="Tema" [options]="themeOptions" [value]="theme.preference()" (valueChange)="theme.preference.set($event)" />
+      <h2 class="section-title">{{ t().profile.appearance }}</h2>
+      <div class="field">
+        <span class="field__label">{{ t().common.language }}</span>
+        <lq-language-switch (changed)="saveLanguage($event)" />
+        <span class="field__hint">{{ t().profile.languageHint }}</span>
+      </div>
+      <lq-segmented [ariaLabel]="t().profile.theme" [options]="themeOptions" [value]="theme.preference()" (valueChange)="theme.preference.set($event)" />
     </section>
 
     <section class="surface card stack">
-      <h2 class="section-title">Hesap</h2>
-      <a lq-button variant="soft" [block]="true" [routerLink]="paths.saved"><lq-icon name="heart" [size]="18" /> Sonra yaparım listem</a>
-      <a lq-button variant="soft" [block]="true" [routerLink]="paths.ideas"><lq-icon name="sparkles" [size]="18" /> Bir deneyim öner</a>
+      <h2 class="section-title">{{ t().profile.account }}</h2>
+      <a lq-button variant="soft" [block]="true" [routerLink]="paths.saved"><lq-icon name="heart" [size]="18" /> {{ t().profile.savedList }}</a>
+      <a lq-button variant="soft" [block]="true" [routerLink]="paths.ideas"><lq-icon name="sparkles" [size]="18" /> {{ t().profile.suggestIdea }}</a>
       <button lq-button variant="secondary" [block]="true" [loading]="exporting()" (click)="exportData()">
-        <lq-icon name="list" [size]="18" /> Verilerimi indir
+        <lq-icon name="list" [size]="18" /> {{ t().profile.exportData }}
       </button>
-      <p class="muted export-hint">Tüm verilerin (profil, görevler, XP, özetler) JSON dosyası olarak iner. Saatte en fazla 3 kez.</p>
+      <p class="muted export-hint">{{ t().profile.exportHint }}</p>
       @if (isAdmin()) {
-        <a lq-button variant="soft" [block]="true" [routerLink]="paths.admin.root"><lq-icon name="trophy" [size]="18" /> Yönetim paneli</a>
+        <a lq-button variant="soft" [block]="true" [routerLink]="paths.admin.root"><lq-icon name="trophy" [size]="18" /> {{ t().profile.admin }}</a>
       }
-      <button lq-button variant="secondary" [block]="true" (click)="logout()"><lq-icon name="logout" [size]="18" /> Çıkış yap</button>
+      <button lq-button variant="secondary" [block]="true" (click)="logout()"><lq-icon name="logout" [size]="18" /> {{ t().profile.logout }}</button>
       <button lq-button variant="danger" [block]="true" (click)="deletePassword.set(''); deleteOpen.set(true)">
-        <lq-icon name="trash" [size]="18" /> Hesabımı sil
+        <lq-icon name="trash" [size]="18" /> {{ t().profile.deleteAccount }}
       </button>
     </section>
 
-    <lq-sheet title="İlgi alanlarını düzenle" [(open)]="interestsOpen">
+    <lq-sheet [title]="t().profile.editInterests" [(open)]="interestsOpen">
       <div class="stack">
         <lq-interest-picker [interests]="catalog()" [(selection)]="interestDraft" />
-        <button lq-button [block]="true" [loading]="savingInterests()" [disabled]="savingInterests()" (click)="saveInterests()">Kaydet</button>
+        <button lq-button [block]="true" [loading]="savingInterests()" [disabled]="savingInterests()" (click)="saveInterests()">{{ t().common.save }}</button>
       </div>
     </lq-sheet>
 
-    <lq-sheet title="Hesabını sil" [(open)]="deleteOpen">
+    <lq-sheet [title]="t().profile.deleteTitle" [(open)]="deleteOpen">
       <form class="stack" (ngSubmit)="deleteAccount()">
-        <p>Hesabın, quest geçmişin, XP'lerin ve tüm tercihlerin <strong>kalıcı olarak</strong> silinecek. Bu işlem geri alınamaz.</p>
+        <p>{{ t().profile.deleteWarning }}</p>
         <div class="field">
-          <label for="delete-password">Onaylamak için şifreni gir</label>
+          <label for="delete-password">{{ t().profile.deletePassword }}</label>
           <input id="delete-password" name="password" class="input" type="password" autocomplete="current-password"
             [ngModel]="deletePassword()" (ngModelChange)="deletePassword.set($event)" />
         </div>
         <button lq-button variant="danger" type="submit" [block]="true" [loading]="deleting()" [disabled]="!deletePassword() || deleting()">
-          Kalıcı olarak sil
+          {{ t().profile.deleteForever }}
         </button>
       </form>
     </lq-sheet>

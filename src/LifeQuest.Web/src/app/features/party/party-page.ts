@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PartiesApi } from '../../core/api/api-clients';
@@ -19,26 +20,26 @@ import { EmptyState, Skeleton } from '../../ui/states';
   template: `
     <div class="page">
       @if (error()) {
-        <lq-empty-state icon="users" title="Davet açılamadı" [message]="error()">
-          <a lq-button variant="secondary" [routerLink]="paths.today">Bugüne dön</a>
+        <lq-empty-state icon="users" [title]="t().party.openFailed" [message]="error()">
+          <a lq-button variant="secondary" [routerLink]="paths.today">{{ t().party.backToToday }}</a>
         </lq-empty-state>
       } @else if (invite(); as i) {
         <section class="surface card stack invite">
           <span class="eyebrow"><lq-icon name="users" [size]="16" /> Quest Party</span>
-          <h1>{{ i.hostName }} seni birlikte yapmaya çağırıyor</h1>
+          <h1>{{ t().party.invites(i.hostName) }}</h1>
           <p class="quest"><strong>{{ i.questTitle }}</strong> · {{ category() }}</p>
           <p class="muted">
-            {{ i.memberCount }}/{{ i.maxMembers }} kişi · {{ expires() }} tarihine kadar.
-            Herkes kendi görevini kendi yapar; partide kalan herkes tamamlayınca tamamlayanlar ekstra "birlikte" XP'si kazanır.
+            {{ t().party.summary(i.memberCount, i.maxMembers, expires()) }}
+            {{ t().party.rules }}
           </p>
 
           @if (i.isMember && i.myQuestId) {
-            <a lq-button [block]="true" [routerLink]="questPath(i.myQuestId)">Görevine git</a>
+            <a lq-button [block]="true" [routerLink]="questPath(i.myQuestId)">{{ t().party.goToQuest }}</a>
           } @else if (i.isJoinable) {
-            <button lq-button [block]="true" [loading]="busy()" (click)="join(i.inviteCode)">Katıl</button>
-            <p class="muted small">Katılınca görev aktif görevlerine eklenir. Diğer üyeler yalnızca görünen adını ve görevi tamamlayıp tamamlamadığını görür.</p>
+            <button lq-button [block]="true" [loading]="busy()" (click)="join(i.inviteCode)">{{ t().party.join }}</button>
+            <p class="muted small">{{ t().party.joinHint }}</p>
           } @else {
-            <p class="closed">Bu parti artık katılıma açık değil.</p>
+            <p class="closed">{{ t().party.closed }}</p>
           }
         </section>
       } @else {
@@ -56,6 +57,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class PartyPage {
+  protected readonly t = t;
   readonly code = input.required<string>();
 
   protected readonly paths = APP_PATHS;
@@ -90,7 +92,7 @@ export class PartyPage {
     this.busy.set(true);
     this.api.join(code).subscribe({
       next: (invite) => {
-        this.toast.success('Partiye katıldın. Görev aktif görevlerine eklendi.');
+        this.toast.success(t().party.joined);
         void this.router.navigate(questPath(invite.myQuestId!));
       },
       error: (err: unknown) => {

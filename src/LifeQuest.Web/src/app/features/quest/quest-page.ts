@@ -27,6 +27,7 @@ import { Sheet } from '../../ui/sheet';
 import { EmptyState, Skeleton } from '../../ui/states';
 import { Celebration, FeedbackSubmission } from './celebration';
 import { PartyCard } from './party-card';
+import { t } from '../../core/i18n/i18n';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 @Component({
@@ -57,6 +58,7 @@ export class QuestPage {
   protected readonly planOpen = signal(false);
   protected readonly planValue = signal('');
 
+  protected readonly t = t;
   protected readonly skipReasons = SKIP_REASONS;
   protected readonly scoreComponents = SCORE_COMPONENTS;
 
@@ -70,11 +72,11 @@ export class QuestPage {
     const q = this.quest();
     if (!q) return [];
     return [
-      { icon: 'clock' as const, label: 'Süre', value: formatDuration(q.minMinutes, q.maxMinutes) },
-      { icon: 'coins' as const, label: 'Maliyet', value: COST_LABELS[q.cost].label },
-      { icon: 'target' as const, label: 'Zorluk', value: DIFFICULTY_LABELS[q.difficulty] },
-      { icon: 'flag' as const, label: 'Tür', value: QUEST_TYPE_LABELS[q.type] },
-      { icon: 'activity' as const, label: 'Efor', value: EFFORT_LABELS[q.effort].label },
+      { icon: 'clock' as const, label: t().quest.facts.duration, value: formatDuration(q.minMinutes, q.maxMinutes) },
+      { icon: 'coins' as const, label: t().quest.facts.cost, value: COST_LABELS[q.cost].label },
+      { icon: 'target' as const, label: t().quest.facts.difficulty, value: DIFFICULTY_LABELS[q.difficulty] },
+      { icon: 'flag' as const, label: t().quest.facts.type, value: QUEST_TYPE_LABELS[q.type] },
+      { icon: 'activity' as const, label: t().quest.facts.effort, value: EFFORT_LABELS[q.effort].label },
     ];
   });
   protected readonly statusLabel = computed(() => (this.quest() ? STATUS_LABELS[this.quest()!.status] : ''));
@@ -104,7 +106,7 @@ export class QuestPage {
   protected accept(): void {
     this.run(this.api.accept(this.quest()!.id), (quest) => {
       this.patchQuest(quest);
-      this.toast.success('Quest kabul edildi. Keyfini çıkar!');
+      this.toast.success(t().quest.toastAccepted);
     });
   }
 
@@ -121,13 +123,13 @@ export class QuestPage {
     this.run(this.api.skip(this.quest()!.id, reason), (quest) => {
       this.patchQuest(quest);
       this.skipOpen.set(false);
-      this.toast.show('Geçildi. Geri bildirimin sonraki önerileri şekillendirecek.');
+      this.toast.show(t().quest.toastSkipped);
     });
   }
 
   protected saveForLater(): void {
     this.run(this.api.save(this.quest()!.id), () =>
-      this.toast.success('"Sonra yaparım" listene eklendi. Hazır olduğunda oradan başlatabilirsin.'));
+      this.toast.success(t().quest.toastSaved));
   }
 
   protected openPlan(): void {
@@ -142,7 +144,7 @@ export class QuestPage {
     this.run(this.api.plan(this.quest()!.id, this.planValue()), (quest) => {
       this.patchQuest(quest);
       this.planOpen.set(false);
-      this.toast.success('Planlandı. "Takvime ekle" ile kendi takvimine koyabilirsin.');
+      this.toast.success(t().quest.toastPlanned);
     });
   }
 
@@ -177,7 +179,7 @@ export class QuestPage {
       this.patchQuest(result.quest);
       after?.();
       const achievement = result.newAchievements[0];
-      this.toast.success(achievement ? `Yeni başarım: ${achievement.title}` : 'Teşekkürler! Önerilerin buna göre gelişecek.');
+      this.toast.success(achievement ? t().quest.toastAchievement(achievement.title) : t().quest.toastThanks);
     });
   }
 

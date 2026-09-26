@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { ProgressApi } from '../../core/api/api-clients';
@@ -16,24 +17,24 @@ import { EmptyState, Skeleton } from '../../ui/states';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <h1>İlerleme</h1>
+      <h1>{{ t().progress.title }}</h1>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="İlerleme yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().progress.loadFailed" [message]="error()" />
       } @else if (progress(); as p) {
         <section class="hero surface">
           <lq-level-ring [level]="p.lifeLevel" [progress]="p.levelProgress" [size]="132" />
           <div class="hero__text">
             <p class="eyebrow" lang="en">Life XP</p>
             <p class="xp">{{ p.lifeXp }} <span>XP</span></p>
-            <p class="muted">Sonraki seviyeye {{ p.nextLevelXp - p.lifeXp }} XP</p>
-            <p class="stat"><lq-icon name="check" [size]="16" /> {{ p.totalCompleted }} gerçek deneyim</p>
+            <p class="muted">{{ t().progress.toNext(p.nextLevelXp - p.lifeXp) }}</p>
+            <p class="stat"><lq-icon name="check" [size]="16" /> {{ t().progress.experiences(p.totalCompleted) }}</p>
           </div>
         </section>
 
         <section class="stack">
           <h2 class="section-title">Life Profile</h2>
-          <p class="muted small">Seviyeler bir kişilik testi değil; yalnızca yaşadığın deneyimleri yansıtır.</p>
+          <p class="muted small">{{ t().progress.profileLead }}</p>
           <ul class="categories">
             @for (c of p.categories; track c.category) {
               <li [style.--c]="color(c)">
@@ -41,9 +42,9 @@ import { EmptyState, Skeleton } from '../../ui/states';
                 <div class="cat">
                   <div class="cat__head">
                     <strong>{{ label(c) }}</strong>
-                    <span>Sv. {{ c.level }} · {{ c.xp }} / {{ c.nextLevelXp }} XP</span>
+                    <span>{{ t().progress.levelLine(c.level, c.xp, c.nextLevelXp) }}</span>
                   </div>
-                  <lq-progress-bar [value]="c.nextLevelXp ? c.xp / c.nextLevelXp : 0" [color]="color(c)" [height]="8" [label]="label(c) + ' ilerlemesi'" />
+                  <lq-progress-bar [value]="c.nextLevelXp ? c.xp / c.nextLevelXp : 0" [color]="color(c)" [height]="8" [label]="t().progress.categoryProgress(label(c))" />
                 </div>
               </li>
             }
@@ -51,10 +52,10 @@ import { EmptyState, Skeleton } from '../../ui/states';
         </section>
 
         <section class="stack">
-          <h2 class="section-title">Başarımlar <span class="muted small">{{ unlockedCount() }} / {{ achievements().length }}</span></h2>
+          <h2 class="section-title">{{ t().progress.achievements }} <span class="muted small">{{ unlockedCount() }} / {{ achievements().length }}</span></h2>
           <ul class="achievements">
             @for (a of achievements(); track a.code) {
-              <li [class.locked]="!a.unlocked" [attr.aria-label]="a.title + (a.unlocked ? ', açıldı' : ', kilitli')">
+              <li [class.locked]="!a.unlocked" [attr.aria-label]="a.title + ', ' + (a.unlocked ? t().progress.unlocked : t().progress.locked)">
                 <span class="medal"><lq-icon [name]="a.unlocked ? 'trophy' : 'lock'" [size]="22" /></span>
                 <strong>{{ a.title }}</strong>
                 <span>{{ a.description }}</span>
@@ -65,7 +66,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
 
         @if (p.recentXp.length) {
           <section class="stack">
-            <h2 class="section-title">Son kazanımlar</h2>
+            <h2 class="section-title">{{ t().progress.recent }}</h2>
             <ul class="feed">
               @for (entry of p.recentXp; track entry.at) {
                 <li>
@@ -114,6 +115,7 @@ import { EmptyState, Skeleton } from '../../ui/states';
   `,
 })
 export class ProgressPage {
+  protected readonly t = t;
   protected readonly progress = signal<Progress | null>(null);
   protected readonly achievements = signal<Achievement[]>([]);
   protected readonly error = signal<string | null>(null);

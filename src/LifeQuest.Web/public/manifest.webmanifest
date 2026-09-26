@@ -60,8 +60,7 @@
       "purpose": "maskable any"
     }
   ],
-  "description": "Gerçek hayatı oyunlaştıran kişisel keşif platformu",
-  "lang": "tr",
+  "description": "Gerçek hayatı oyunlaştıran kişisel keşif platformu · A personal discovery game for real life",
   "theme_color": "#F26B4F",
   "background_color": "#FFF8F1",
   "orientation": "portrait"

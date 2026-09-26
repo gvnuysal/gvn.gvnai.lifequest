@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { QuestsApi } from '../../core/api/api-clients';
@@ -21,27 +22,27 @@ type Tab = 'active' | 'history';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <h1>Görevlerim</h1>
-      <lq-segmented ariaLabel="Görev listesi" [options]="tabs" [value]="tab()" (valueChange)="switchTab($event)" />
+      <h1>{{ t().quests.title }}</h1>
+      <lq-segmented [ariaLabel]="t().quests.listAria" [options]="tabs" [value]="tab()" (valueChange)="switchTab($event)" />
 
       @if (tab() === 'active') {
         @if (loadingActive()) {
           <lq-skeleton [height]="140" />
           <lq-skeleton [height]="140" />
         } @else if (error()) {
-          <lq-empty-state icon="info" title="Görevler yüklenemedi" [message]="error()" />
+          <lq-empty-state icon="info" [title]="t().quests.loadFailed" [message]="error()" />
         } @else {
           @for (quest of active(); track quest.id) {
             <lq-quest-card [quest]="quest" [showExplanation]="false" />
           } @empty {
-            <lq-empty-state icon="flag" title="Devam eden görevin yok" message="Bugünün önerilerinden birini kabul ederek başlayabilirsin.">
-              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Önerilere göz at</a>
+            <lq-empty-state icon="flag" [title]="t().quests.noneActive" [message]="t().quests.noneActiveHint">
+              <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">{{ t().quests.browse }}</a>
             </lq-empty-state>
           }
         }
       } @else {
-        <div class="filters" role="group" aria-label="Duruma göre filtrele">
-          @for (filter of filters; track filter.label) {
+        <div class="filters" role="group" [attr.aria-label]="t().quests.filterAria">
+          @for (filter of filters; track filter.value) {
             <button lq-chip [selected]="status() === filter.value" (click)="setStatus(filter.value)">{{ filter.label }}</button>
           }
         </div>
@@ -64,9 +65,9 @@ type Tab = 'active' | 'history';
         @if (loadingHistory()) {
           <lq-skeleton [height]="64" />
         } @else if (!history().length) {
-          <lq-empty-state icon="list" title="Henüz kayıt yok" />
+          <lq-empty-state icon="list" [title]="t().quests.noHistory" />
         } @else if (hasMore()) {
-          <button lq-button variant="secondary" [block]="true" (click)="loadHistory(page() + 1)">Daha fazla yükle</button>
+          <button lq-button variant="secondary" [block]="true" (click)="loadHistory(page() + 1)">{{ t().quests.loadMore }}</button>
         }
       }
     </div>
@@ -91,15 +92,16 @@ export class ActivePage {
   protected readonly questPath = questPath;
   private readonly api = inject(QuestsApi);
 
+  protected readonly t = t;
   protected readonly tabs: SegmentOption<Tab>[] = [
-    { value: 'active', label: 'Devam eden' },
-    { value: 'history', label: 'Geçmiş' },
+    option<Tab>('active', (d) => d.quests.tabActive),
+    option<Tab>('history', (d) => d.quests.tabHistory),
   ];
-  protected readonly filters: { value: QuestStatus | null; label: string }[] = [
-    { value: null, label: 'Tümü' },
-    { value: 'Completed', label: 'Tamamlanan' },
-    { value: 'Skipped', label: 'Geçilen' },
-    { value: 'Expired', label: 'Süresi dolan' },
+  protected readonly filters: { value: QuestStatus | null; readonly label: string }[] = [
+    option<QuestStatus | null>(null, (d) => d.quests.filterAll),
+    option<QuestStatus | null>('Completed', (d) => d.quests.filterCompleted),
+    option<QuestStatus | null>('Skipped', (d) => d.quests.filterSkipped),
+    option<QuestStatus | null>('Expired', (d) => d.quests.filterExpired),
   ];
 
   protected readonly tab = signal<Tab>('active');

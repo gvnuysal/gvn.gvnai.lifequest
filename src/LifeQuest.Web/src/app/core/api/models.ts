@@ -36,6 +36,8 @@ export interface RegisterRequest {
   password: string;
   displayName: string;
   birthYear: number;
+  /** Arayüz dili; hesaba yazılır. */
+  language?: 'tr' | 'en';
 }
 
 export interface LoginRequest {
@@ -72,6 +74,8 @@ export interface Profile {
   /** Günlük push hatırlatmasının yerel saati (7–22); null = kapalı. */
   dailyReminderHour: number | null;
   interests: ProfileInterest[];
+  /** Hesap dili: arayüz, push ve haftalık özet. */
+  language: 'tr' | 'en';
 }
 
 export interface InterestSelection {
@@ -118,6 +122,7 @@ export interface PreferencesRequest {
   notificationPreference?: NotificationPreference | null;
   dailyReminderHour?: number | null;
   clearDailyReminder?: boolean | null;
+  language?: 'tr' | 'en' | null;
 }
 
 export interface PushSettings {
@@ -232,6 +237,8 @@ export interface WeatherInfo {
   outdoor: OutdoorWeather;
   /** Hava açık hava için uygun değilse kısa açıklama. */
   advice: string | null;
+  /** WMO hava kodu. */
+  code: number;
 }
 
 export type LocalPlaceKind = 'Venue' | 'Event';

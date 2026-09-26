@@ -6,33 +6,35 @@ import { firstErrorMessage } from '../../core/http/api-error';
 import { Button } from '../../ui/button';
 import { AuthLayout } from './auth-layout';
 import { APP_PATHS, HOME_PATH } from '../../core/routing/app-paths';
+import { t } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'lq-login-page',
   imports: [ReactiveFormsModule, RouterLink, Button, AuthLayout],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <lq-auth-layout heading="Tekrar hoş geldin" lead="Bugün gerçek hayatta seni bekleyen küçük maceralar var.">
+    <lq-auth-layout [heading]="t().auth.loginHeading" [lead]="t().auth.loginLead">
       <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="email">E-posta</label>
+          <label for="email">{{ t().auth.email }}</label>
           <input id="email" class="input" type="email" formControlName="email" autocomplete="email" inputmode="email" />
         </div>
         <div class="field">
-          <label for="password">Şifre</label>
+          <label for="password">{{ t().auth.password }}</label>
           <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
         </div>
         @if (error()) {
           <p class="field__error" role="alert">{{ error() }}</p>
         }
-        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Giriş yap</button>
+        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">{{ t().auth.login }}</button>
       </form>
-      <p footer class="switch">Hesabın yok mu? <a [routerLink]="paths.register" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">Kayıt ol</a></p>
+      <p footer class="switch">{{ t().auth.noAccount }} <a [routerLink]="paths.register" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">{{ t().auth.signUp }}</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,
 })
 export class LoginPage {
+  protected readonly t = t;
   protected readonly paths = APP_PATHS;
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
@@ -49,7 +51,7 @@ export class LoginPage {
   protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error.set('E-posta ve şifreni gir.');
+      this.error.set(t().auth.enterCredentials);
       return;
     }
 

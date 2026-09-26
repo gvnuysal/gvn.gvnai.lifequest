@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Icon } from './icon';
+import { t } from '../core/i18n/i18n';
 
 /**
  * Alttan açılan panel (mobil) / ortalanmış diyalog (geniş ekran). Yerel <dialog> kullanır:
@@ -22,7 +23,7 @@ import { Icon } from './icon';
       <div class="panel">
         <header>
           <h2>{{ title() }}</h2>
-          <button type="button" class="close" (click)="open.set(false)" aria-label="Kapat">
+          <button type="button" class="close" (click)="open.set(false)" [attr.aria-label]="t().common.close">
             <lq-icon name="x" />
           </button>
         </header>
@@ -67,6 +68,7 @@ import { Icon } from './icon';
 })
 export class Sheet {
   readonly open = model(false);
+  protected readonly t = t;
   readonly title = input.required<string>();
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');

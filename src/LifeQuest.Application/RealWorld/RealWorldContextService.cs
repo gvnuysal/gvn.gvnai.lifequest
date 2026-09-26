@@ -65,7 +65,7 @@ public sealed class RealWorldContextService(
             : null;
 
         return new RealWorldContext(verdict.Outdoor, events, new WeatherDto(
-            snapshot.City, (int)Math.Round(snapshot.TemperatureC), WeatherAssessment.Describe(snapshot.WeatherCode),
+            profile.City.Trim(), (int)Math.Round(snapshot.TemperatureC), WeatherAssessment.Describe(snapshot.WeatherCode),
             verdict.Outdoor, advice, snapshot.WeatherCode));
     }
 

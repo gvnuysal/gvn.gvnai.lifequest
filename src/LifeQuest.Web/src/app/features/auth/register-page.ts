@@ -7,6 +7,8 @@ import { Button } from '../../ui/button';
 import { AuthLayout } from './auth-layout';
 import { APP_PATHS } from '../../core/routing/app-paths';
 import { rememberDestination } from '../../core/routing/pending-destination';
+import { t } from '../../core/i18n/i18n';
+import { currentLang } from '../../core/i18n/lang';
 
 const currentYear = new Date().getFullYear();
 
@@ -20,47 +22,48 @@ function strongPassword(control: AbstractControl<string>): ValidationErrors | nu
   imports: [ReactiveFormsModule, RouterLink, Button, AuthLayout],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <lq-auth-layout heading="Maceraya katıl" lead="Ekran başında değil, gerçek hayatta ilerlediğin bir oyun.">
+    <lq-auth-layout [heading]="t().auth.registerHeading" [lead]="t().auth.registerLead">
       <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="displayName">Sana nasıl hitap edelim?</label>
+          <label for="displayName">{{ t().auth.displayName }}</label>
           <input id="displayName" class="input" formControlName="displayName" autocomplete="given-name" [attr.aria-invalid]="invalid('displayName')" />
           @if (invalid('displayName')) {
-            <span class="field__error">{{ serverErrors()['displayName'] ?? 'En az 2 karakter olmalı.' }}</span>
+            <span class="field__error">{{ serverErrors()['displayName'] ?? t().auth.displayNameError }}</span>
           }
         </div>
         <div class="field">
-          <label for="email">E-posta</label>
+          <label for="email">{{ t().auth.email }}</label>
           <input id="email" class="input" type="email" formControlName="email" autocomplete="email" inputmode="email" [attr.aria-invalid]="invalid('email')" />
           @if (invalid('email')) {
-            <span class="field__error">{{ serverErrors()['email'] ?? 'Geçerli bir e-posta gir.' }}</span>
+            <span class="field__error">{{ serverErrors()['email'] ?? t().auth.emailError }}</span>
           }
         </div>
         <div class="field">
-          <label for="password">Şifre</label>
+          <label for="password">{{ t().auth.password }}</label>
           <input id="password" class="input" type="password" formControlName="password" autocomplete="new-password" [attr.aria-invalid]="invalid('password')" />
           @if (invalid('password')) {
-            <span class="field__error">{{ serverErrors()['password'] ?? 'En az 8 karakter; harf ve rakam içermeli.' }}</span>
+            <span class="field__error">{{ serverErrors()['password'] ?? t().auth.passwordRule }}</span>
           } @else {
-            <span class="field__hint">En az 8 karakter; harf ve rakam içermeli.</span>
+            <span class="field__hint">{{ t().auth.passwordRule }}</span>
           }
         </div>
         <div class="field">
-          <label for="birthYear">Doğum yılın</label>
+          <label for="birthYear">{{ t().auth.birthYear }}</label>
           <input id="birthYear" class="input" type="number" inputmode="numeric" formControlName="birthYear" [attr.aria-invalid]="invalid('birthYear')" />
-          <span class="field__hint">LifeQuest 18 yaş ve üzeri içindir. Yalnızca doğum yılını saklıyoruz.</span>
+          <span class="field__hint">{{ t().auth.birthYearHint }}</span>
         </div>
         @if (error()) {
           <p class="field__error" role="alert">{{ error() }}</p>
         }
-        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">Hesap oluştur</button>
+        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="busy()">{{ t().auth.createAccount }}</button>
       </form>
-      <p footer class="switch">Zaten hesabın var mı? <a [routerLink]="paths.login" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">Giriş yap</a></p>
+      <p footer class="switch">{{ t().auth.haveAccount }} <a [routerLink]="paths.login" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}">{{ t().auth.login }}</a></p>
     </lq-auth-layout>
   `,
   styles: `.switch { text-align: center; color: var(--ink-2); }`,
 })
 export class RegisterPage {
+  protected readonly t = t;
   /** Davet bağlantısından gelindiyse kayıt ve onboarding sonrası dönülecek adres. */
   readonly returnUrl = input<string>();
   protected readonly paths = APP_PATHS;
@@ -91,7 +94,7 @@ export class RegisterPage {
 
     this.busy.set(true);
     this.error.set(null);
-    this.auth.register(this.form.getRawValue()).subscribe({
+    this.auth.register({ ...this.form.getRawValue(), language: currentLang() }).subscribe({
       next: () => {
         rememberDestination(this.returnUrl());
         void this.router.navigate([APP_PATHS.onboarding]);
