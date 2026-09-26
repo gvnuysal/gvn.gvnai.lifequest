@@ -73,6 +73,10 @@ public static class Language
 /// </summary>
 public static class Text
 {
+    /// <summary>İngilizce belirsiz tanımlık: "an Exploration quest", "a Culture quest".</summary>
+    public static string Article(string word)
+        => word.Length > 0 && "AEIOUaeiou".Contains(word[0]) ? "an" : "a";
+
     public static string Of(string tr, string en) => Language.IsCurrentEnglish ? en : tr;
 
     /// <summary>O anki dilin kültürüyle biçimlenen metin (tarih/sayı içeren mesajlar).</summary>

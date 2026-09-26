@@ -23,6 +23,7 @@ public partial class App : Application
 
     private void RebuildForTheme()
     {
+        UpdateStatusBar();
         if (Windows.FirstOrDefault() is not { Page: { } page } window
             || IPlatformApplication.Current?.Services is not { } services)
             return;
@@ -44,7 +45,11 @@ public partial class App : Application
     {
         _theme.Apply(_theme.Current);
         var window = new Window(new ContentPage { Content = new ActivityIndicator { IsRunning = true, VerticalOptions = LayoutOptions.Center } });
-        window.Created += async (_, _) => await _flow.StartAsync(CultureInfo.CurrentUICulture.Name);
+        window.Created += async (_, _) =>
+        {
+            UpdateStatusBar();
+            await _flow.StartAsync(CultureInfo.CurrentUICulture.Name);
+        };
         return window;
     }
 
@@ -53,5 +58,17 @@ public partial class App : Application
     {
         if (IPlatformApplication.Current?.Services.GetService<AppFlow>() is { } flow)
             MainThread.BeginInvokeOnMainThread(() => _ = flow.OpenLinkAsync(uri));
+    }
+
+    /// <summary>Android: durum çubuğu simgeleri açık temada koyu, koyu temada açık (sayfa zemini üzerinde okunur).</summary>
+    private void UpdateStatusBar()
+    {
+#if ANDROID
+        if (Platform.CurrentActivity?.Window is not { } window) return;
+        var dark = RequestedTheme == Microsoft.Maui.ApplicationModel.AppTheme.Dark;
+        var controller = AndroidX.Core.View.WindowCompat.GetInsetsController(window, window.DecorView);
+        controller.AppearanceLightStatusBars = !dark;
+        controller.AppearanceLightNavigationBars = !dark;
+#endif
     }
 }

@@ -83,6 +83,9 @@ xcrun simctl install booted src/LifeQuest.Mobile/bin/Debug/net10.0-ios/iossimula
 dotnet build src/LifeQuest.Mobile -f net10.0-android -t:Run
 ```
 
+> Android Debug derlemesi "fast deployment" kullanır: derlemeler APK'nın içinde değil, `-t:Run` / `-t:Install` ile ayrıca
+> gönderilir. APK'yı `adb install` ile elle kurmak uygulamanın açılışta kapanmasına yol açar.
+
 Farklı bir API için derleme parametresi: `-p:LifeQuestApiBaseUrl=https://…` (davet bağlantıları için
 `-p:LifeQuestWebBaseUrl=https://…`).
 

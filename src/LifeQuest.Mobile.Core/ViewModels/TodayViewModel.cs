@@ -42,7 +42,7 @@ public sealed partial class TodayViewModel(
 
     public string LevelShort => Progress is { } p ? S.Today.LevelShort(p.LifeLevel) : "";
     public double LevelProgress => Progress?.LevelProgress ?? 0;
-    public string XpText => Progress is { } p ? $"{p.CurrentLevelXp} / {p.NextLevelXp} XP" : "";
+    public string XpText => Progress is { } p ? $"{p.LifeXp} / {p.NextLevelXp} XP" : "";
 
     public bool HasWeather => Today?.Weather is not null;
     public string WeatherIcon => Today?.Weather is { } w ? Labels.WeatherIcon(w.Code) : "sun";
