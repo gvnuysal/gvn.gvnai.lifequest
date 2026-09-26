@@ -59,7 +59,10 @@ public enum AdminAction
     ExperimentAdopted = 33,
     ExperimentDiscarded = 34,
     IdeaRejected = 40,
-    IdeaAccepted = 41
+    IdeaAccepted = 41,
+    PlaceCreated = 50,
+    PlaceUpdated = 51,
+    PlaceDeleted = 52
 }
 
 public enum AdminTargetType
@@ -68,7 +71,8 @@ public enum AdminTargetType
     QuestTemplate = 2,
     RecommendationSettings = 3,
     Experiment = 4,
-    QuestIdea = 5
+    QuestIdea = 5,
+    LocalPlace = 6
 }
 
 public static class EmailMask

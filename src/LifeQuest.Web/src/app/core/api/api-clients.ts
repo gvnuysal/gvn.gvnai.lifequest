@@ -8,6 +8,8 @@ import {
   ExperimentAction,
   ExperimentDetail,
   ExperimentPreset,
+  AdminPlace,
+  AdminPlaceRequest,
   PushSettings,
   PushSubscriptionRequest,
   IdeaRequest,
@@ -357,6 +359,21 @@ export class AdminApi {
 
   resetWeights(revision: number, keys: string[] | null, reason: string | null) {
     return this.http.post<RecommendationWeights>(`${API}/admin/recommendation-weights/reset`, { revision, keys, reason });
+  }
+
+  // Mekânlar ve etkinlikler
+  places(city?: string) {
+    return this.http.get<AdminPlace[]>(`${API}/admin/places`, { params: city ? { city } : {} });
+  }
+
+  savePlace(request: AdminPlaceRequest, id?: string) {
+    return id
+      ? this.http.put<AdminPlace>(`${API}/admin/places/${id}`, request)
+      : this.http.post<AdminPlace>(`${API}/admin/places`, request);
+  }
+
+  deletePlace(id: string) {
+    return this.http.delete<void>(`${API}/admin/places/${id}`);
   }
 
   // Deneyler

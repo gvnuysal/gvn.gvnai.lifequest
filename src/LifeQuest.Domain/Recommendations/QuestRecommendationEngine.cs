@@ -2,6 +2,7 @@ using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.RealWorld;
 
 namespace LifeQuest.Domain.Recommendations;
 
@@ -91,6 +92,10 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         if (isNight && c.IsOutdoor && (c.Type == QuestType.Daily || context.AvailableMinutes is not null))
             return "outdoor_at_night";
 
+        // Aynı kural hava için: yağmur/fırtına/aşırı sıcaklıkta "şimdi" yapılacak açık hava görevi önerilmez.
+        if (context.Weather == OutdoorWeather.Poor && c.IsOutdoor && (c.Type == QuestType.Daily || context.AvailableMinutes is not null))
+            return "bad_weather";
+
         var rejected = history.Items.Any(i => i.TemplateId == c.TemplateId && (
             (i.SkipReason == SkipReason.NotInterested &&
              i.LastActivityAt > context.UtcNow.AddDays(-weights.NotInterestedBlockDays)) ||
@@ -112,7 +117,7 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
             c,
             interest,
             Novelty(c, history),
-            Context(c, context),
+            Context(c, context) + RealWorldBonus(c, context),
             GoalFit(c, profile),
             FeedbackFit(c, history),
             Repetition(c, history, context),
@@ -172,6 +177,18 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
 
         return dayFit * 0.5 + timeFit * 0.3 + weekendFit * 0.2;
     }
+
+    /// <summary>Gerçek dünya bağlamı: şehirde etkinlik ve güzel hava. Veri yoksa 0 (simülasyon ve şehirsiz kullanıcı).</summary>
+    private double RealWorldBonus(QuestCandidate c, RecommendationContext context)
+    {
+        var bonus = context.HasLocalEvent(c.TemplateId) ? weights.LocalEventBoost : 0;
+        if (IsGoodWeatherOutdoor(c, context))
+            bonus += weights.GoodWeatherOutdoorBoost;
+        return bonus;
+    }
+
+    private static bool IsGoodWeatherOutdoor(QuestCandidate c, RecommendationContext context)
+        => c.IsOutdoor && context.Weather == OutdoorWeather.Good && DayParts.FromHour(context.LocalNow.Hour) != DayPart.Night;
 
     private static double GoalFit(QuestCandidate c, RecommendationProfile profile)
     {
@@ -382,6 +399,12 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
 
         if (context.AvailableMinutes is { } available && c.MaxMinutes <= available)
             reasons.Add(new(ReasonCode.FitsAvailableTime, $"ayırdığın {available} dakikaya sığdığı"));
+
+        if (context.HasLocalEvent(c.TemplateId))
+            reasons.Insert(0, new(ReasonCode.LocalEvent, "şehrinde bu hafta ilgili bir etkinlik olduğu"));
+
+        if (IsGoodWeatherOutdoor(c, context))
+            reasons.Add(new(ReasonCode.GoodWeather, "hava açık hava için çok uygun olduğu"));
 
         if (c.Cost == CostBand.Free)
             reasons.Add(new(ReasonCode.Free, "ücretsiz olduğu"));

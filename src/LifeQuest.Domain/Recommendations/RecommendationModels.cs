@@ -42,6 +42,8 @@ public sealed record RecommendationProfile(
 /// <param name="AvailableMinutes">"Bu akşam 2 saatim var" gibi bağlamsal süre.</param>
 /// <param name="MaxCost">Bağlamsal bütçe; verilmezse profil bütçesi kullanılır.</param>
 /// <param name="RequireShortQuest">İlk slota mümkünse kısa (Daily) bir quest koy: ilk 5 dakikada uygulanabilir bir görev.</param>
+/// <param name="Weather">Öneri penceresinde açık hava için havanın uygunluğu (şehir yoksa ya da alınamadıysa Unknown).</param>
+/// <param name="LocalEventTemplateIds">Kullanıcının şehrinde yaklaşan etkinliklere bağlı template'ler.</param>
 public sealed record RecommendationContext(
     DateTime LocalNow,
     DateTime UtcNow,
@@ -49,7 +51,12 @@ public sealed record RecommendationContext(
     int Seed,
     int? AvailableMinutes = null,
     CostBand? MaxCost = null,
-    bool RequireShortQuest = true);
+    bool RequireShortQuest = true,
+    RealWorld.OutdoorWeather Weather = RealWorld.OutdoorWeather.Unknown,
+    IReadOnlySet<Guid>? LocalEventTemplateIds = null)
+{
+    public bool HasLocalEvent(Guid templateId) => LocalEventTemplateIds?.Contains(templateId) == true;
+}
 
 public sealed record QuestHistoryItem(
     Guid TemplateId,
@@ -75,7 +82,9 @@ public enum ReasonCode
     GoalFit,
     FitsAvailableTime,
     Free,
-    LovedBefore
+    LovedBefore,
+    LocalEvent,
+    GoodWeather
 }
 
 public sealed record RecommendationReason(ReasonCode Code, string Text);

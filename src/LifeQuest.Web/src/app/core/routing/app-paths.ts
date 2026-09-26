@@ -20,6 +20,7 @@ export const APP_PATHS = {
     newTemplate: '/admin/catalog/new',
     ideas: '/admin/ideas',
     experiments: '/admin/experiments',
+    places: '/admin/places',
     recommendationSettings: '/admin/recommendation-settings',
     auditLog: '/admin/audit-log',
   },

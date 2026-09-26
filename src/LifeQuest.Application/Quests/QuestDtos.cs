@@ -35,9 +35,12 @@ public sealed record QuestDto(
     DateTime? PlannedAt);
 
 /// <summary>"Neden bunu önerdim?" detayı: skor bileşenleri ve gerekçe kodları.</summary>
-public sealed record QuestDetailDto(QuestDto Quest, ScoreBreakdown Score, IReadOnlyList<string> ReasonCodes);
+/// <param name="NearbyPlaces">Kullanıcının şehrinde bu göreve bağlı mekân ve yaklaşan etkinlikler.</param>
+public sealed record QuestDetailDto(
+    QuestDto Quest, ScoreBreakdown Score, IReadOnlyList<string> ReasonCodes, IReadOnlyList<RealWorld.NearbyPlaceDto> NearbyPlaces);
 
-public sealed record QuestListDto(DateOnly Date, IReadOnlyList<QuestDto> Quests, string? Message);
+/// <param name="Weather">Kullanıcının şehrinde hava; şehir yoksa ya da alınamadıysa null.</param>
+public sealed record QuestListDto(DateOnly Date, IReadOnlyList<QuestDto> Quests, string? Message, RealWorld.WeatherDto? Weather = null);
 
 public sealed record QuestCompletionDto(
     QuestDto Quest,

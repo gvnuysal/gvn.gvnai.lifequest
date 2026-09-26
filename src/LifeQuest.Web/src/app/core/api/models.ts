@@ -183,12 +183,39 @@ export interface QuestDetail {
   quest: Quest;
   score: ScoreBreakdown;
   reasonCodes: string[];
+  /** Kullanıcının şehrinde bu göreve bağlı mekân ve yaklaşan etkinlikler (yalnızca açık görevlerde). */
+  nearbyPlaces: NearbyPlace[];
+}
+
+export type OutdoorWeather = 'Unknown' | 'Good' | 'Poor';
+
+export interface WeatherInfo {
+  city: string;
+  temperatureC: number;
+  summary: string;
+  outdoor: OutdoorWeather;
+  /** Hava açık hava için uygun değilse kısa açıklama. */
+  advice: string | null;
+}
+
+export type LocalPlaceKind = 'Venue' | 'Event';
+
+export interface NearbyPlace {
+  id: string;
+  kind: LocalPlaceKind;
+  name: string;
+  address: string | null;
+  url: string | null;
+  note: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
 }
 
 export interface QuestList {
   date: string;
   quests: Quest[];
   message: string | null;
+  weather: WeatherInfo | null;
 }
 
 export interface Achievement {
@@ -315,8 +342,33 @@ export type AdminAction =
   | 'ExperimentAdopted'
   | 'ExperimentDiscarded'
   | 'IdeaRejected'
-  | 'IdeaAccepted';
-export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings' | 'Experiment' | 'QuestIdea';
+  | 'IdeaAccepted'
+  | 'PlaceCreated'
+  | 'PlaceUpdated'
+  | 'PlaceDeleted';
+export type AdminTargetType = 'User' | 'QuestTemplate' | 'RecommendationSettings' | 'Experiment' | 'QuestIdea' | 'LocalPlace';
+
+export interface AdminPlace extends NearbyPlace {
+  city: string;
+  isActive: boolean;
+  isPast: boolean;
+  templates: { id: string; code: string; title: string }[];
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface AdminPlaceRequest {
+  kind: LocalPlaceKind;
+  city: string;
+  name: string;
+  address: string | null;
+  url: string | null;
+  note: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  templateIds: string[];
+  isActive: boolean;
+}
 export type WeightGroup = 'Interest' | 'Novelty' | 'Score' | 'Penalty' | 'TasteGraph' | 'Exploration' | 'Windows';
 
 export interface AdminUser {

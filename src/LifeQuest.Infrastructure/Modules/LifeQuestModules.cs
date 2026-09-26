@@ -22,6 +22,8 @@ using LifeQuest.Domain.Quests;
 using LifeQuest.Infrastructure.Catalog;
 using LifeQuest.Infrastructure.Jobs;
 using LifeQuest.Infrastructure.Notifications;
+using LifeQuest.Infrastructure.RealWorld;
+using LifeQuest.Domain.RealWorld;
 using LifeQuest.Infrastructure.Persistence;
 using LifeQuest.Infrastructure.Persistence.Repositories;
 using LifeQuest.Infrastructure.Persistence.Seed;
@@ -114,6 +116,11 @@ public sealed class NotificationModule : IModule
         services.AddScoped<DailyReminderJob>();
 
         services.AddOptions<PushOptions>().BindConfiguration(PushOptions.SectionName);
+
+        // Gerçek dünya bağlamı: hava durumu (Open-Meteo) ve yöneticinin girdiği mekân/etkinlikler.
+        services.AddScoped<ILocalPlaceRepository, LocalPlaceRepository>();
+        services.AddOptions<WeatherOptions>().BindConfiguration(WeatherOptions.SectionName);
+        services.AddHttpClient<IWeatherProvider, OpenMeteoWeatherProvider>(client => client.Timeout = TimeSpan.FromSeconds(4));
         services.AddHttpClient<IPushSender, WebPushSender>(client => client.Timeout = TimeSpan.FromSeconds(15));
     }
 

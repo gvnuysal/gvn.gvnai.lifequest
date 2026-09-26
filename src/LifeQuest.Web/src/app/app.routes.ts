@@ -112,6 +112,11 @@ export const routes: Routes = [
             loadComponent: () => import('./features/admin/admin-experiment-page').then((m) => m.AdminExperimentPage),
           },
           {
+            path: 'places',
+            title: 'Mekânlar ve etkinlikler · Yönetim',
+            loadComponent: () => import('./features/admin/admin-places-page').then((m) => m.AdminPlacesPage),
+          },
+          {
             path: 'recommendation-settings',
             title: 'Öneri ayarları · Yönetim',
             loadComponent: () => import('./features/admin/admin-weights-page').then((m) => m.AdminWeightsPage),

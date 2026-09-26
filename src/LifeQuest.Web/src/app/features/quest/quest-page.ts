@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { QuestsApi } from '../../core/api/api-clients';
 import { saveResponse } from '../../core/http/download';
-import { QuestCompletion, QuestDetail, SkipReason } from '../../core/api/models';
+import { NearbyPlace, QuestCompletion, QuestDetail, SkipReason } from '../../core/api/models';
 import { firstErrorMessage } from '../../core/http/api-error';
 import { formatDate, formatDuration, formatRemaining } from '../../core/labels/format';
 import {
@@ -193,6 +193,15 @@ export class QuestPage {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Bağlam skoru gerçek dünya payıyla 1'i aşabilir; çubuk tam genişlikte durur. */
+  protected barWidth(value: number): number {
+    return Math.min(Math.max(value, 0), 1) * 100;
+  }
+
+  protected eventWhen(place: NearbyPlace): string {
+    return formatDate(place.startsAt!, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   }
 
   private patchQuest(quest: QuestDetail['quest']): void {

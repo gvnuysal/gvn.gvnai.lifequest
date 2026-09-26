@@ -5,9 +5,11 @@ using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Application.Diagnostics;
 using LifeQuest.Application.Narration;
+using LifeQuest.Application.RealWorld;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
+using LifeQuest.Domain.RealWorld;
 using LifeQuest.Domain.Quests;
 using LifeQuest.Domain.Recommendations;
 using Microsoft.Extensions.Logging;
@@ -15,7 +17,7 @@ using Microsoft.Extensions.Options;
 
 namespace LifeQuest.Application.Quests;
 
-public sealed record QuestOffers(DateOnly Date, IReadOnlyList<UserQuest> Quests, string? Message);
+public sealed record QuestOffers(DateOnly Date, IReadOnlyList<UserQuest> Quests, string? Message, WeatherDto? Weather = null);
 
 /// <summary>
 /// Öneri orkestrasyonu: profil, geçmiş ve katalogdan engine girdisini hazırlar, sonuçları ödülleri
@@ -31,6 +33,7 @@ public sealed class QuestOfferService(
     IRecommendationWeightsProvider weights,
     LifeQuestMetrics metrics,
     QuestNarrationService narration,
+    RealWorldContextService realWorld,
     TimeProvider clock,
     ILogger<QuestOfferService> logger)
 {
@@ -51,12 +54,14 @@ public sealed class QuestOfferService(
             return Result<QuestOffers>.Fail(ProfileErrors.OnboardingRequired);
 
         var (nowUtc, localNow, today, timeZone) = Now(profile);
+        var (from, to) = WeatherAssessment.DailyWindow(localNow);
+        var world = await realWorld.ForAsync(profile, nowUtc, from, to, cancellationToken);
 
         var existing = await quests.GetOffersAsync(userId, today, QuestSource.Daily, cancellationToken);
         if (existing.Count > 0)
-            return Result<QuestOffers>.Ok(new QuestOffers(today, existing, null));
+            return Result<QuestOffers>.Ok(new QuestOffers(today, existing, null, world.WeatherDto));
 
-        var context = new RecommendationContext(localNow, nowUtc, Options.DailyOfferCount, Seed(userId, today));
+        var context = WithWorld(new RecommendationContext(localNow, nowUtc, Options.DailyOfferCount, Seed(userId, today)), world);
         var offers = await CreateOffersAsync(profile, context, QuestSource.Daily, today, slotOffset: 0,
             TimeZones.EndOfQuestDayUtc(today, timeZone, DayStartHour), cancellationToken);
 
@@ -69,10 +74,10 @@ public sealed class QuestOfferService(
             // Aynı gün için eşzamanlı üretim (ör. job ve kullanıcı isteği): benzersiz indeks ikinciyi reddeder.
             logger.LogInformation("Daily offers for {UserId} on {Date} were created concurrently; reloading.", userId, today);
             existing = await quests.GetOffersAsync(userId, today, QuestSource.Daily, cancellationToken);
-            return Result<QuestOffers>.Ok(new QuestOffers(today, existing, null));
+            return Result<QuestOffers>.Ok(new QuestOffers(today, existing, null, world.WeatherDto));
         }
 
-        return Result<QuestOffers>.Ok(new QuestOffers(today, offers, offers.Count == 0 ? NoMatchMessage : null));
+        return Result<QuestOffers>.Ok(new QuestOffers(today, offers, offers.Count == 0 ? NoMatchMessage : null, world.WeatherDto));
     }
 
     /// <summary>
@@ -98,15 +103,17 @@ public sealed class QuestOfferService(
         foreach (var quest in previous)
             quest.Withdraw(nowUtc);
 
-        var context = new RecommendationContext(
+        var world = await realWorld.ForAsync(
+            profile, nowUtc, localNow, localNow.AddMinutes(Math.Max(60, availableMinutes ?? 180)), cancellationToken);
+        var context = WithWorld(new RecommendationContext(
             localNow, nowUtc, Options.SuggestionCount, Seed(userId, today) + round + 1,
-            availableMinutes, maxCost, RequireShortQuest: availableMinutes is null);
+            availableMinutes, maxCost, RequireShortQuest: availableMinutes is null), world);
 
         var offers = await CreateOffersAsync(profile, context, QuestSource.OnDemand, today, slotOffset: round * 10,
             nowUtc.AddHours(Options.SuggestionTtlHours), cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<QuestOffers>.Ok(new QuestOffers(today, offers, offers.Count == 0 ? NoMatchMessage : null));
+        return Result<QuestOffers>.Ok(new QuestOffers(today, offers, offers.Count == 0 ? NoMatchMessage : null, world.WeatherDto));
     }
 
     /// <summary>
@@ -130,7 +137,8 @@ public sealed class QuestOfferService(
         if (candidate is null)
             return Result<UserQuest>.Fail(QuestErrors.TemplateUnavailable);
 
-        var context = new RecommendationContext(localNow, nowUtc, 1, Seed(userId, today), RequireShortQuest: false);
+        var world = await realWorld.ForAsync(profile, nowUtc, localNow, localNow.AddHours(3), cancellationToken);
+        var context = WithWorld(new RecommendationContext(localNow, nowUtc, 1, Seed(userId, today), RequireShortQuest: false), world);
         var result = new QuestRecommendationEngine(input.Weights.Weights)
             .Recommend([candidate], input.Profile, input.History, input.Graph, context);
         if (result.IsEmpty)
@@ -220,6 +228,9 @@ public sealed class QuestOfferService(
             quest.AssignExperiment(experimentId, variant);
         return quest;
     }
+
+    private static RecommendationContext WithWorld(RecommendationContext context, RealWorldContext world)
+        => context with { Weather = world.Weather, LocalEventTemplateIds = world.EventTemplateIds };
 
     private sealed record EngineInput(
         Guid UserId,

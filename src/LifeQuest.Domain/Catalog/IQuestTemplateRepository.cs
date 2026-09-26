@@ -14,6 +14,8 @@ public interface IQuestTemplateRepository : IRepository<QuestTemplate>
     Task<IReadOnlyList<QuestTemplateSpec>> GetOfferableSpecsAsync(CancellationToken cancellationToken = default);
 
     Task<int> CountBySafetyAsync(SafetyLevel safety, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<QuestTemplate>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 }
 
 public sealed record TemplateSearch(

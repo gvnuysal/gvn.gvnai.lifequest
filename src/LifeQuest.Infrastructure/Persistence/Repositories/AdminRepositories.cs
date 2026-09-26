@@ -65,6 +65,9 @@ internal sealed class QuestTemplateRepository(LifeQuestDbContext context)
         return (items, total);
     }
 
+    public async Task<IReadOnlyList<QuestTemplate>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+        => ids.Count == 0 ? [] : await DbSet.AsNoTracking().Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<QuestTemplateSpec>> GetOfferableSpecsAsync(CancellationToken cancellationToken = default)
         => (await DbSet.AsNoTracking().Where(t => t.IsActive && t.Safety == SafetyLevel.Safe).ToListAsync(cancellationToken))
             .Select(t => t.ToSpec())

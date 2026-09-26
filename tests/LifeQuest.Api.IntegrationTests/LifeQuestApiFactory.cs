@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using LifeQuest.Application.Abstractions;
+using LifeQuest.Domain.RealWorld;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,8 +50,15 @@ public sealed class LifeQuestApiFactory : WebApplicationFactory<Program>, IAsync
         builder.UseSetting("BackgroundJobs:Enabled", "false");
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
         builder.UseSetting("Admin:BootstrapEmails:0", AdminEmail);
-        builder.ConfigureTestServices(services => services.AddSingleton<IPushSender>(Push));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IPushSender>(Push);
+            services.AddSingleton<IWeatherProvider>(Weather);
+        });
     }
+
+    /// <summary>Dış servis yerine şehir adına göre sabit hava döner; tanımsız şehir için null.</summary>
+    public FakeWeatherProvider Weather { get; } = new();
 
     /// <summary>Gerçek push servisi yerine gönderilenleri kaydeder.</summary>
     public FakePushSender Push { get; } = new();
@@ -160,6 +168,24 @@ public sealed class FakePushSender : IPushSender
         _sent.Enqueue((target.Endpoint, notification));
         return Task.FromResult(PushDelivery.Sent);
     }
+}
+
+public sealed class FakeWeatherProvider : IWeatherProvider
+{
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, WeatherSnapshot> _byCity = new();
+
+    /// <summary>Şehir için önümüzdeki 48 saat boyunca aynı koşullar.</summary>
+    public void Set(string city, double temperatureC, int precipitationProbability, int weatherCode)
+    {
+        var start = DateTime.UtcNow.Date.AddDays(-1);
+        var hours = Enumerable.Range(0, 96)
+            .Select(h => new HourlyWeather(start.AddHours(h), temperatureC, precipitationProbability, weatherCode, 10))
+            .ToList();
+        _byCity[CityKey.Normalize(city)] = new WeatherSnapshot(city, DateTime.UtcNow, temperatureC, weatherCode, 10, true, hours);
+    }
+
+    public Task<WeatherSnapshot?> GetAsync(string city, CancellationToken cancellationToken)
+        => Task.FromResult(_byCity.TryGetValue(CityKey.Normalize(city), out var snapshot) ? snapshot : null);
 }
 
 [CollectionDefinition(Name)]
