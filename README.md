@@ -9,8 +9,8 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Gvn.GvnFramework](https://img.shields.io/badge/Gvn.GvnFramework-1.1.0--preview-F26B4F?style=for-the-badge)](https://github.com/gvnuysal/gvn.gvnframework)
 
-[![Tests](https://img.shields.io/badge/backend%20tests-327%20passing-22A559?style=flat-square)](#testler)
-[![Web tests](https://img.shields.io/badge/web%20tests-42%20passing-22A559?style=flat-square)](#testler)
+[![Tests](https://img.shields.io/badge/backend%20tests-378%20passing-22A559?style=flat-square)](#testler)
+[![Web tests](https://img.shields.io/badge/web%20tests-47%20passing-22A559?style=flat-square)](#testler)
 [![PWA](https://img.shields.io/badge/PWA-mobil%20öncelikli-8B5CF6?style=flat-square)](#web-istemcisi)
 [![CI](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml/badge.svg)](https://github.com/gvnuysal/gvn.gvnai.lifequest/actions/workflows/ci.yml)
 
@@ -35,10 +35,12 @@ LifeQuest; zamanına, bütçene, ilgi alanlarına ve ne kadar keşif istediğine
 | 🔒 **Önce mahremiyet** | Konum takibi yok, fotoğraf doğrulaması yok. Tek tıkla tüm veriler silinir (KVKK/GDPR). |
 | 🛡️ **Güvenli katalog** | 142 editoryal template, her ilgi alanında en az 4 görev; her biri güvenlik kontrol listesinden CI'da geçer. Gece açık hava görevi yok; efor sınırına saygı. |
 | 🃏 **Hızlı ısınma** | Onboarding'deki "Sana göre mi?" kartları ilk günden isabetli öneri sağlar. |
-| 📬 **Suçlamayan haftalık özet** | Bildirim yalnızca seçersen; varsayılan, uygulama içi haftalık özet. |
+| 📬 **Suçlamayan hatırlatmalar** | Varsayılan, uygulama içi haftalık özet. Günlük push hatırlatmasını yalnızca sen açarsın, saatini sen seçersin; o gün görev tamamladıysan gelmez. |
+| 🌦️ **Gerçek dünya bağlamı** | Şehrinde yağmur, fırtına ya da aşırı sıcak varsa açık hava görevleri o an önerilmez. Ekibin girdiği mekân ve etkinlikler görevin yanında görünür; bu hafta etkinliği olan görev öne çıkar. |
+| 🤝 **Quest Party** | Görevini bir bağlantıyla paylaş, en fazla 4 kişi katılsın. Partide kalan herkes tamamlayınca ekstra "birlikte" XP'si. Arkadaş listesi yok, yalnızca görünen ad. |
 | 💾 **Sonra yaparım + takvim** | Beğendiğin öneriyi kaybetme; kabul ettiğini planla ve `.ics` ile kendi takvimine ekle. Çok sevdiğin deneyim, bir süre sonra yeniden önerilir. |
 | 💡 **Topluluk fikirleri** | Kendi deneyim fikrini öner; ekip inceler, güvenliyse kataloğa girer. Kimliğin deneyimle paylaşılmaz. |
-| 🧪 **A/B deneyleri** | Öneri ağırlıkları önce kullanıcıların bir kısmında denenir, north-star ve güven aralığıyla karşılaştırılır. |
+| 🧪 **A/B deneyleri** | Öneri ağırlıkları önce kullanıcıların bir kısmında denenir, north-star ve güven aralığıyla karşılaştırılır. Simülasyonun önerdiği üç deney hazır şablon; "ilgimi çekmedi" oranı koruma metriği. |
 | 📦 **Verilerin senin** | "Verilerimi indir" ile tüm verin JSON olarak iner (KVKK/GDPR veri taşınabilirliği). |
 | 🧑‍💼 **Denetlenebilir yönetim** | Kullanıcı askıya alma/silme, katalog inceleme kuyruğu ve canlı öneri ağırlıkları; her işlem gerekçesiyle denetim kaydında. |
 
@@ -296,11 +298,11 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 
 | Paket | Kapsam |
 |---|---|
-| `LifeQuest.Domain.Tests` (89) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi, görev günü sınırı, ilgi kapsama kuralı |
-| `LifeQuest.Application.Tests` (53) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması, log maskeleme (şifre/token yok, e-posta kısmi) |
+| `LifeQuest.Domain.Tests` (119) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi, görev günü sınırı, ilgi kapsama kuralı, hazır deneyler, günlük hatırlatma zamanlaması, push aboneliği, hava değerlendirmesi ve motorun hava/etkinlik etkisi, şehir eşleştirme, Quest Party kuralları ve bonus |
+| `LifeQuest.Application.Tests` (54) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması, log maskeleme (şifre/token yok, e-posta kısmi), deney koruma metriği |
 | `LifeQuest.Catalog.Tests` (147) | 142 seed template'in her biri, katalog dengesi ve ilgi kapsaması: her ilgide ≥ 4 görev, ≥ 1 kısa görev (CI kapısı) |
-| `LifeQuest.Api.IntegrationTests` (38) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit) |
-| `LifeQuest.Web` (42, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi, çalışma anı API adresi, İngilizce rotalar ve eski Türkçe adres yönlendirmeleri |
+| `LifeQuest.Api.IntegrationTests` (58) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit); refresh çerezi (HttpOnly/Secure/SameSite, çıkışta silme); hazır deneyler ve açılışta otomatik başlatma; push aboneliği, günlük hatırlatma ve haftalık özet push'u; hava bağlamı ve mekân/etkinlik yönetimi; Quest Party (davet, katılma, bonus, bırakan üye, dolu parti) |
+| `LifeQuest.Web` (47, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi, çalışma anı API adresi, İngilizce rotalar ve eski Türkçe adres yönlendirmeleri, çerezli oturum ve eski token göçü, davet sonrası güvenli yönlendirme |
 
 ---
 
@@ -311,9 +313,9 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Forms. UI kütüphanesi yok; tasarım sistemi CSS değişkenleriyle kurulu. 6 kategori rengi ve açık/koyu tema var. İkonlar kütüphanesiz SVG.
 
 - **Oturum:** access token yalnızca bellekte tutulur. Refresh token `HttpOnly; Secure; SameSite=Strict` çerezdedir (yol `/api/v1/auth`), JavaScript okuyamaz ve yanıt gövdesinde dönmez. Açılışta oturum çerezle sessizce geri yüklenir; 401 alındığında tek seferlik yenileme yapılır. Eski sürümün `localStorage`'da bıraktığı token ilk açılışta çereze taşınıp silinir.
-- **PWA:** service worker yalnızca uygulama kabuğunu önbelleğe alır. API yanıtları mahremiyet nedeniyle önbelleğe alınmaz.
+- **PWA:** service worker yalnızca uygulama kabuğunu önbelleğe alır. API yanıtları mahremiyet nedeniyle önbelleğe alınmaz. Web Push bildirimlerini de service worker gösterir; tıklanınca ilgili sayfa açılır.
 - **Erişilebilirlik:** 44 px dokunma hedefleri, görünür odak, AA kontrast, `prefers-reduced-motion` desteği.
-- **Yönetim paneli (`/admin`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
+- **Yönetim paneli (`/admin`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Mekânlar · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
 
 ---
 
@@ -323,7 +325,7 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 
 | Uç | Açıklama |
 |---|---|
-| `POST /api/v1/auth/register` · `login` · `refresh` · `logout` | Kısa ömürlü JWT, rotasyonlu refresh token |
+| `POST /api/v1/auth/register` · `login` · `refresh` · `logout` | Kısa ömürlü JWT; rotasyonlu refresh token yalnızca HttpOnly çerezde (`/api/v1/auth` yolu) |
 | `GET /api/v1/catalog/interests` | İlgi alanı kataloğu |
 | `GET /api/v1/profile` · `PUT …/onboarding` · `PATCH …/preferences` · `PUT …/interests` | Profil ve tercihler |
 | `DELETE /api/v1/profile` | Hesabı ve tüm verileri kalıcı silme (şifre onaylı) |
@@ -347,6 +349,10 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 | `GET /api/v1/profile/export` | Tüm verileri JSON olarak indir (saatte 3) |
 | `GET/POST /api/v1/admin/experiments` · `GET …/{id}` · `POST …/{id}/start\|stop\|adopt\|discard` | A/B deneyleri: Kontrol/Deneme karşılaştırması, kazananı üretime alma |
 | `GET /api/v1/admin/ideas` · `POST …/{id}/reject` · `POST /admin/templates?sourceIdeaId=` | Fikir kuyruğu, reddetme notu, fikirden template |
+| `GET /api/v1/admin/experiments/presets` | Simülasyonun önerdiği hazır deneyler (oluşturulduysa deney bağlantısıyla) |
+| `GET /api/v1/push` · `PUT/DELETE …/subscription` · `POST …/test` | Web Push: VAPID anahtarı, cihaz aboneliği, deneme bildirimi. Hatırlatma saati `PATCH /profile/preferences` → `dailyReminderHour` (7–22) |
+| `GET/POST /api/v1/admin/places` · `PUT/DELETE …/{id}` | Şehir bazında mekân ve etkinlikler, görevlere bağlı |
+| `POST /api/v1/quests/{id}/party` · `GET /api/v1/parties/{kod}` · `POST …/join` · `DELETE …/members/me` | Quest Party: davet oluştur, önizle, katıl, ayrıl |
 
 Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğrulama · 401 · 404 · 409 çakışma/geçersiz geçiş · 429.
 
@@ -364,6 +370,10 @@ Hatalar `{ code, message, type }` listesi olarak döner. HTTP kodları: 400 doğ
 | `Quests:*`, `Recommendation:*` | Günlük öneri sayısı, aktif görev sınırı, skor ağırlıkları, keşif oranları, tekrar penceresi |
 | `Narration:TimeoutMilliseconds` | Anlatım zaman aşımı (varsayılan 2000) |
 | `Admin:BootstrapEmails` | Açılışta admin rolü verilecek hesaplar (geliştirmede `admin@lifequest.local`) |
+| `Auth:RefreshCookie:*` | Refresh çerezi (`lq_refresh`, yol `/api/v1/auth`); `Secure` yalnızca HTTPS'siz yerel geliştirmede kapatılır |
+| `Push:VapidPublicKey`, `Push:VapidPrivateKey`, `Push:Subject` | Web Push (VAPID) anahtarları; boşsa push kapalıdır. Test ortamında ilk deploy'da üretilir. Private key gizlidir. |
+| `Weather:Enabled`, `Weather:CountryCode` | Open-Meteo hava durumu (anahtarsız); aynı adlı şehirlerde tercih edilen ülke (varsayılan `TR`) |
+| `Experiments:AutoStartPreset` | Açılışta bir kez başlatılacak hazır deney (ör. `loved-repeat-0.8`) |
 
 Migration eklemek için:
 
@@ -384,12 +394,15 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 - [x] Gvn.GvnFramework 1.1.0-preview'a geçiş: doğrulama, domain event ve log maskeleme geçici çözümleri kaldırıldı · Hangfire kalıcı PostgreSQL deposu
 - [x] Test ortamı ve CI/CD: Docker + Caddy (HTTPS), deploy/rollback script'leri, self-hosted runner ile otomatik deploy · İngilizce URL'ler
 - [x] Katalog derinliği: 142 template, her ilgide ≥ 4 görev ve ≥ 1 kısa görev (north-star +%9, gizli ilgi keşfi %61 → %70)
-- [ ] Katalog: ilgi başına 6 görev · simülasyon önerilerinin A/B testi · ilgi alanı ve Taste Graph düzenleme
+- [x] İlk A/B deneyleri: simülasyon önerileri hazır şablon, koruma metriği, test ortamında "sevdiğini tekrarla 0,8" çalışıyor
+- [ ] Katalog: ilgi başına 6 görev · ilgi alanı ve Taste Graph düzenleme
 - [x] Refresh token'ın HttpOnly + SameSite=Strict çereze taşınması
 - [ ] **Faz 2 · Intelligence:** gerçek LLM adaptörü, gelişmiş Taste Graph, contextual bandit
-- [ ] Push kanalı ve kullanıcı seçimli günlük hatırlatma
-- [ ] **Faz 3 · Real World:** mekân/etkinlik kaynakları, hava durumu bağlamı
-- [ ] **Faz 4 · Social:** Quest Party, ortak görevler, kontrollü paylaşım
+- [x] Web Push kanalı ve kullanıcı seçimli günlük hatırlatma
+- [x] **Faz 3 · Real World:** hava durumu bağlamı (Open-Meteo), yönetici tarafından girilen şehir mekânları ve etkinlikleri
+- [ ] Real World devamı: dış etkinlik kaynakları, OpenStreetMap mekânları
+- [x] **Faz 4 · Social:** davet bağlantısıyla Quest Party ve "birlikte" XP'si
+- [ ] Social devamı: ortak görev önerileri, kontrollü paylaşım
 
 <div align="center">
 <br />
