@@ -402,7 +402,7 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
 
         if (s.Scored.Novelty >= 1.0)
             reasons.Add(new(ReasonCode.NewCategory, new($"{category.Tr} alanında henüz quest tamamlamadığın",
-                $"you haven't completed a {category.En} quest yet")));
+                $"you haven't completed {Text.Article(category.En)} {category.En} quest yet")));
 
         if (interest.ViaInterestId is null && interest.MatchedInterestId is { } matched && interest.Score >= 0.6)
         {
@@ -475,7 +475,7 @@ internal static class ExplanationBuilder
 
         var enClauses = string.Join(" and ", top.Select(r => r.Text.En));
         var en = diversified
-            ? $"Since {enClauses}, here's a {name.En} quest for a change."
+            ? $"Since {enClauses}, here's {Text.Article(name.En)} {name.En} quest for a change."
             : $"Suggested because {enClauses}.";
 
         return new LocalizedText(tr, en);

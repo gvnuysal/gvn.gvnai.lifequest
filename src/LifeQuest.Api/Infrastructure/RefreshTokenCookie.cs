@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using LifeQuest.Application.Identity;
 using Microsoft.Extensions.Options;
 
@@ -46,13 +47,20 @@ public sealed class RefreshTokenCookie(IOptions<RefreshCookieOptions> options)
     };
 }
 
-/// <summary>Giriş/kayıt/yenileme yanıtı: refresh token yalnızca çerezdedir, gövdede yalnızca bitiş zamanı döner.</summary>
+/// <summary>
+/// Giriş/kayıt/yenileme yanıtı. Web'de refresh token yalnızca çerezdedir, gövdede yalnızca bitiş zamanı döner;
+/// <see cref="RefreshToken"/> yalnızca native istemciye yazılır.
+/// </summary>
 public sealed record AuthSessionResponse(
     Guid UserId,
     string AccessToken,
     DateTime AccessTokenExpiresAt,
-    DateTime RefreshTokenExpiresAt)
+    DateTime RefreshTokenExpiresAt,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? RefreshToken = null)
 {
     public static AuthSessionResponse From(AuthTokensDto tokens)
         => new(tokens.UserId, tokens.AccessToken, tokens.AccessTokenExpiresAt, tokens.RefreshTokenExpiresAt);
+
+    public static AuthSessionResponse ForNativeClient(AuthTokensDto tokens)
+        => From(tokens) with { RefreshToken = tokens.RefreshToken };
 }

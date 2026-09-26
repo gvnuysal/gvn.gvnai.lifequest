@@ -42,6 +42,7 @@ LifeQuest; zamanına, bütçene, ilgi alanlarına ve ne kadar keşif istediğine
 | 💡 **Topluluk fikirleri** | Kendi deneyim fikrini öner; ekip inceler, güvenliyse kataloğa girer. Kimliğin deneyimle paylaşılmaz. |
 | 🧪 **A/B deneyleri** | Öneri ağırlıkları önce kullanıcıların bir kısmında denenir, north-star ve güven aralığıyla karşılaştırılır. Simülasyonun önerdiği üç deney hazır şablon; "ilgimi çekmedi" oranı koruma metriği. |
 | 📦 **Verilerin senin** | "Verilerimi indir" ile tüm verin JSON olarak iner (KVKK/GDPR veri taşınabilirliği). |
+| 📱 **iOS ve Android** | .NET MAUI ile native mobil uygulama: tüm kullanıcı ekranları, cihazda zamanlanan günlük hatırlatma, parti davet bağlantısı. |
 | 🌍 **Türkçe ve İngilizce** | Arayüz, yönetim paneli, API mesajları, 142 görev ve 37 ilgi alanı iki dilde. Dil tarayıcıdan gelir, profilden değişir; push ve haftalık özet de senin dilinde. |
 | 🧑‍💼 **Denetlenebilir yönetim** | Kullanıcı askıya alma/silme, katalog inceleme kuyruğu ve canlı öneri ağırlıkları; her işlem gerekçesiyle denetim kaydında. |
 
@@ -180,16 +181,21 @@ src/
 ├── LifeQuest.Application     CQRS use case'leri, öneri orkestrasyonu, DTO'lar
 ├── LifeQuest.Infrastructure  EF Core + PostgreSQL, repository'ler, seed, job'lar, modüller
 ├── LifeQuest.Api             Controller'lar, kimlik, rate limit, log maskeleme
-└── LifeQuest.Web             Angular PWA istemcisi
+├── LifeQuest.Web             Angular PWA istemcisi
+├── LifeQuest.Mobile.Core     Mobil çekirdek: API istemcisi, native oturum, sözlük, ViewModel'ler (UI'sız)
+└── LifeQuest.Mobile          .NET MAUI uygulaması (iOS + Android)
 tests/
 ├── LifeQuest.Domain.Tests            Öneri motoru, ekonomi ve aggregate testleri
 ├── LifeQuest.Application.Tests       Narration guard/fallback, metrikler, haftalık özet
 ├── LifeQuest.Catalog.Tests           Editoryal güvenlik kuralları (CI kapısı)
+├── LifeQuest.Mobile.Tests            Mobil çekirdek: oturum, biçimlendirme, sözlük, ViewModel'ler
 └── LifeQuest.Api.IntegrationTests    Testcontainers PostgreSQL ile uçtan uca testler
 tools/
-└── LifeQuest.Simulation              Offline öneri simülasyonu ve rapor üretimi
+├── LifeQuest.Simulation              Offline öneri simülasyonu ve rapor üretimi
+└── mobile/                           Web sözlüğünden ve ikon setinden mobil kaynak üretimi
 docs/
 ├── analiz-degerlendirmesi.md         Ürün analizi değerlendirmesi ve framework bulguları
+├── mobile.md                         Mobil uygulama: kurulum, çalıştırma, oturum, üretilen kaynaklar
 └── simulasyon-raporu.md              Persona simülasyonu, ablasyon ve öneriler
 packages/gvnframework/                Gvn.GvnFramework NuGet paketleri (yerel kaynak, bkz. nuget.config)
 scripts/update-framework-packages.sh  Framework paketlerini günceller
@@ -302,7 +308,8 @@ npm --prefix src/LifeQuest.Web test -- --watch=false
 | `LifeQuest.Domain.Tests` (127) | Öneri motoru (analizdeki "kahve" senaryosu, efor ve gece açık hava filtreleri, güdümlü ve Sakin keşif dahil), XP/seviye ekonomisi, quest durum makinesi, başarımlar, katalog kuralları, haftalık özet metni, hesap askısı, template editoryal kaynağı, ağırlık sınırları, sevdiğini tekrarla, planlama, deney durum makinesi ve deterministik atama, fikir incelemesi, görev günü sınırı, ilgi kapsama kuralı, hazır deneyler, günlük hatırlatma zamanlaması, push aboneliği, hava değerlendirmesi ve motorun hava/etkinlik etkisi, şehir eşleştirme, Quest Party kuralları ve bonus, dil seçimi (`Text.Of`, `Language.Use`), İngilizce gerekçe cümleleri ve haftalık özet |
 | `LifeQuest.Application.Tests` (54) | Narration guard (masum kelimelerde yanlış pozitif yok), zaman aşımı/fallback, PII'siz prompt, north-star hesabı, özet idempotency'si, admin komut doğrulamaları, iCalendar üretimi, deney istatistiği (Welch güven aralığı), içerik taraması, log maskeleme (şifre/token yok, e-posta kısmi), deney koruma metriği |
 | `LifeQuest.Catalog.Tests` (150) | 142 seed template'in her biri, katalog dengesi ve ilgi kapsaması: her ilgide ≥ 4 görev, ≥ 1 kısa görev (CI kapısı); her template ve ilgi alanının İngilizcesi dolu ve kurallardan geçiyor |
-| `LifeQuest.Api.IntegrationTests` (64) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit); refresh çerezi (HttpOnly/Secure/SameSite, çıkışta silme); hazır deneyler ve açılışta otomatik başlatma; push aboneliği, günlük hatırlatma ve haftalık özet push'u; hava bağlamı ve mekân/etkinlik yönetimi; Quest Party (davet, katılma, bonus, bırakan üye, dolu parti); yerelleştirme (`Accept-Language` ile hata/doğrulama mesajları, İngilizce görev ve gerekçeler, hesap dili, İngilizce push, yerelleştirme öncesi kopyaların doldurulması), iki dilli şablon düzenleme |
+| `LifeQuest.Api.IntegrationTests` (68) | Gerçek PostgreSQL (Testcontainers): günlük öneri idempotency'si, eşzamanlı tamamlamada çift XP olmaması, yatay erişim, token rotasyonu ve çalınma tespiti, hesap silme, başlangıç kartları, haftalık özet; yönetim: askının anında etkisi, rol değişiminde TOKEN_STALE + refresh, admin kuralları, maskelenmiş denetim, inceleme kuyruğu, cache invalidation, seed'in admin düzenlemesini ezmemesi, sürüm çakışması, ağırlık sınırları; sonra yaparım → başlat → planla → .ics, A/B deneyi uçtan uca (atama, sonuç, kazananı uygulama), fikir tarama/limit/inceleme, veri dışa aktarma (sızıntı yok, rate limit); refresh çerezi (HttpOnly/Secure/SameSite, çıkışta silme); hazır deneyler ve açılışta otomatik başlatma; push aboneliği, günlük hatırlatma ve haftalık özet push'u; hava bağlamı ve mekân/etkinlik yönetimi; Quest Party (davet, katılma, bonus, bırakan üye, dolu parti); yerelleştirme (`Accept-Language` ile hata/doğrulama mesajları, İngilizce görev ve gerekçeler, hesap dili, İngilizce push, yerelleştirme öncesi kopyaların doldurulması), iki dilli şablon düzenleme; native istemci oturumu (token gövdede, çerez yok) ve mobil çekirdeğin gerçek API'ye karşı sözleşme testi |
+| `LifeQuest.Mobile.Tests` (43) | Mobil çekirdek: tek uçuşlu token yenileme, 401/TOKEN_STALE/ACCOUNT_SUSPENDED akışı, hata ayrıştırma, TR/EN biçimlendirme, üretilen sözlüğün eksiksizliği, onboarding/Bugün/görev/kutlama ViewModel'leri, yerel hatırlatma zamanlaması, derin bağlantı |
 | `LifeQuest.Web` (53, vitest) | Token yenileme interceptor'ı (tek uçuşlu refresh, askı ve eski rol akışı), hata ayrıştırma, formatlayıcılar, JWT rol okuma, dosya adı ayrıştırma, template kodu önerisi, çalışma anı API adresi, İngilizce rotalar ve eski Türkçe adres yönlendirmeleri, çerezli oturum ve eski token göçü, davet sonrası güvenli yönlendirme, dil tespiti, `Accept-Language` interceptor'ı, iki dilli formatlayıcılar |
 
 ---
@@ -318,6 +325,21 @@ Angular 21 ile yazıldı: standalone bileşenler, signals, zoneless, Reactive Fo
 - **Dil (TR/EN):** harici kütüphane yok. `core/i18n/sections/*` içinde her bölümün Türkçesi ve İngilizcesi yan yana durur; İngilizce sözlük Türkçenin tipini karşılamak zorundadır, eksik anahtar derleme hatasıdır. Parametreli metinler fonksiyondur (`t().party.members(n, max)`). Dil bir signal'dır: ilk ziyarette `navigator.language`'dan seçilir, `localStorage` ve hesapta saklanır, giriş ekranından ve profilden değişir. Değişince sayfa yenilenmeden her şey yeni dilde görünür. Her API isteğine `Accept-Language` eklenir; rota başlıkları sözlük anahtarıdır.
 - **Erişilebilirlik:** 44 px dokunma hedefleri, görünür odak, AA kontrast, `prefers-reduced-motion` desteği.
 - **Yönetim paneli (`/admin`, yalnızca admin):** Metrikler · Kullanıcılar · Katalog · Fikirler · Deneyler · Mekânlar · Öneri ayarları · Denetim kaydı. Askıya alma ve rol değişikliği açık oturumlarda da anında geçerli olur: sunucu her istekte hesabın güncel durumuna bakar (60 sn cache, işlemde temizlenir); eski rolü taşıyan token `401 TOKEN_STALE` alır ve istemci sessizce yeniler.
+
+---
+
+<a id="mobil"></a>
+
+## 📲 Mobil uygulama
+
+.NET MAUI (native XAML + MVVM) ile iOS ve Android. Web'deki tüm kullanıcı ekranları; yönetim paneli web'de kalır.
+
+- **Çekirdek:** `LifeQuest.Mobile.Core` UI'sız; API istemcisi, native oturum, TR/EN sözlük ve ViewModel'ler Linux CI'da test edilir.
+- **Oturum:** `X-LifeQuest-Client: native` başlığıyla refresh token gövdede döner ve cihazın güvenli deposunda (Keychain/Keystore) saklanır.
+- **Metin ve ikonlar:** web'den üretilir (`tools/mobile/gen-strings.mjs`, `gen-icons.mjs`); CI güncel olduklarını kontrol eder.
+- **Hatırlatma:** cihazda zamanlanır, o gün görev tamamlandıysa gelmez. Derin bağlantı: `lifequest://party/{kod}`.
+
+Kurulum, çalıştırma ve ayrıntılar: [docs/mobile.md](docs/mobile.md).
 
 ---
 
@@ -408,6 +430,8 @@ dotnet ef migrations add <Ad> -p src/LifeQuest.Infrastructure -s src/LifeQuest.I
 - [x] **Faz 4 · Social:** davet bağlantısıyla Quest Party ve "birlikte" XP'si
 - [ ] Social devamı: ortak görev önerileri, kontrollü paylaşım
 - [x] Türkçe + İngilizce: arayüz, yönetim paneli, API mesajları, katalog, push ve haftalık özet
+- [x] Mobil uygulama (.NET MAUI, iOS + Android): tüm kullanıcı ekranları, yerel hatırlatma, parti derin bağlantısı
+- [ ] Mobil devamı: uzak push (FCM/APNs), Universal/App Links, mağaza yayını
 
 <div align="center">
 <br />

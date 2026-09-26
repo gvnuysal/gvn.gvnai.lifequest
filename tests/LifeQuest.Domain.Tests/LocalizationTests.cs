@@ -14,6 +14,13 @@ public sealed class LocalizationTests
     [InlineData(null, "tr")]
     public void Languages_normalize_to_tr_or_en(string? input, string expected) => Assert.Equal(expected, Language.Normalize(input));
 
+    [Theory]
+    [InlineData("Exploration", "an")]
+    [InlineData("Art", "an")]
+    [InlineData("Culture", "a")]
+    [InlineData("Movement", "a")]
+    public void English_sentences_use_the_right_article(string word, string article) => Assert.Equal(article, Text.Article(word));
+
     [Fact]
     public void Text_and_errors_follow_the_current_language_and_scopes_restore_it()
     {

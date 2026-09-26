@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:LoadingPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+               xmlns:v="clr-namespace:LifeQuest.Mobile.Views"
+               xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+               x:Class="LifeQuest.Mobile.Views.QuestPage"
+               x:DataType="vm:QuestViewModel"
+               x:Name="Root">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20,12,20,120" Spacing="16">
+                <Button Text="{c:Tr Common.Back}" Style="{StaticResource Ghost}" HorizontalOptions="Start" Command="{Binding BackCommand}" Padding="0,8" />
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding HasQuest, Converter={StaticResource Not}}" />
+                <c:EmptyState IsVisible="{Binding NotFound}" Icon="compass" Title="{c:Tr Quest.NotFound}" Message="{c:Tr Quest.NotFoundHint}"
+                              ActionText="{c:Tr Quest.BackToToday}" ActionCommand="{Binding GoTodayCommand}" />
+
+                <VerticalStackLayout Spacing="16" IsVisible="{Binding HasQuest}">
+                    <!-- Başlık -->
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <c:CategoryIcon Icon="{Binding Icon}" ColorKey="{Binding ColorKey}" Diameter="56" />
+                        <FlexLayout Grid.Column="1" Wrap="Wrap" AlignItems="Center">
+                            <Border Style="{StaticResource Pill}" Margin="0,0,6,6"
+                                    BackgroundColor="{Binding ColorKey, Converter={StaticResource ThemeColor}, ConverterParameter=Cat*}">
+                                <Label Text="{Binding CategoryLabel}" FontFamily="NunitoBold" FontSize="13" TextColor="White" />
+                            </Border>
+                            <Border Style="{StaticResource Pill}" Margin="0,0,6,6" IsVisible="{Binding HasSecondary}">
+                                <Label Text="{Binding SecondaryLabel}" FontFamily="NunitoBold" FontSize="13"
+                                       TextColor="{Binding SecondaryColorKey, Converter={StaticResource ThemeColor}, ConverterParameter=Cat*Ink}" />
+                            </Border>
+                            <Border Style="{StaticResource Pill}" Margin="0,0,6,6" IsVisible="{Binding IsExploration}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimarySoftLight}, Dark={StaticResource PrimarySoftDark}}">
+                                <HorizontalStackLayout Spacing="4">
+                                    <c:IconView Name="sparkles" Size="12" Stroke="2.6" Color="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                                    <Label Text="{c:Tr Quest.Exploration}" FontFamily="NunitoBold" FontSize="13"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </FlexLayout>
+                    </Grid>
+                    <Label Text="{Binding Title}" Style="{StaticResource H1}" />
+                    <Label Text="{Binding Description}" FontSize="17" LineHeight="1.3" />
+
+                    <!-- Bilgiler -->
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Facts}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:QuestFact">
+                                <VerticalStackLayout Spacing="2" Margin="0,0,20,12" MinimumWidthRequest="130">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <c:IconView Name="{Binding Icon}" Size="15" />
+                                        <Label Text="{Binding Label}" Style="{StaticResource Small}" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Value}" FontFamily="NunitoBold" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+
+                    <!-- Ödül -->
+                    <Border Style="{StaticResource Card}" BackgroundColor="{AppThemeBinding Light={StaticResource XpSoftLight}, Dark={StaticResource XpSoftDark}}">
+                        <VerticalStackLayout Spacing="6">
+                            <HorizontalStackLayout Spacing="6">
+                                <c:IconView Name="zap" Size="22" Stroke="2.4" Color="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                                <Label Text="{Binding LifeXp}" FontFamily="NunitoBlack" FontSize="24"
+                                       TextColor="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                                <Label Text="Life XP" FontFamily="NunitoBold" VerticalOptions="End" Margin="0,0,0,3"
+                                       TextColor="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}" />
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Spacing="14">
+                                <Label Text="{Binding PrimaryXp}" Style="{StaticResource Muted}" FontFamily="NunitoBold" />
+                                <Label Text="{Binding SecondaryXp}" Style="{StaticResource Muted}" FontFamily="NunitoBold" IsVisible="{Binding HasSecondaryXp}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Neden bunu önerdik? -->
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleWhyCommand}" />
+                                </Grid.GestureRecognizers>
+                                <c:IconView Name="sparkles" Size="18" />
+                                <Label Grid.Column="1" Text="{c:Tr Quest.Why}" Style="{StaticResource Strong}" />
+                                <c:IconView Grid.Column="2" Name="chevron-right" Size="18" x:Name="WhyChevron" />
+                            </Grid>
+                            <Label Text="{Binding Explanation}" Style="{StaticResource Muted}" FontSize="15" />
+                            <VerticalStackLayout Spacing="8" IsVisible="{Binding WhyOpen}">
+                                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding ScoreBars}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ScoreBar">
+                                            <Grid ColumnDefinitions="130,*,44" ColumnSpacing="8">
+                                                <Label Text="{Binding Label}" Style="{StaticResource Small}" VerticalOptions="Center" />
+                                                <c:BarView Grid.Column="1" Value="{Binding Ratio}" HeightRequest="8" VerticalOptions="Center"
+                                                           Color="{Binding Penalty, Converter={StaticResource PenaltyColor}}" />
+                                                <Label Grid.Column="2" Text="{Binding Value}" FontFamily="NunitoBold" FontSize="13" HorizontalTextAlignment="End" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                                <Label Text="{c:Tr Quest.ScoreFoot}" Style="{StaticResource Small}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Birlikte yap (parti) -->
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding ShowParty}">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="8">
+                                <c:IconView Name="users" Size="18" />
+                                <Label Text="{c:Tr Party.Together}" Style="{StaticResource Strong}" />
+                            </HorizontalStackLayout>
+                            <Label Text="{c:Tr Party.Completed}" Style="{StaticResource Muted}" IsVisible="{Binding PartyCompleted}" />
+                            <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding PartyMembers}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PartyMemberItem">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="{Binding Name}" FontFamily="NunitoBold" />
+                                            <Label Grid.Column="1" Text="{Binding State}" Style="{StaticResource Muted}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="8" IsVisible="{Binding PartyJoinable}">
+                                <Label Text="{Binding PartyHint}" Style="{StaticResource Small}" />
+                                <Border Style="{StaticResource Soft}">
+                                    <Label Text="{Binding InviteLink}" FontSize="13" LineBreakMode="MiddleTruncation" />
+                                </Border>
+                                <Button Text="{c:Tr Party.Share}" Style="{StaticResource SmallButton}" HorizontalOptions="Start" Command="{Binding ShareInviteCommand}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="8" IsVisible="{Binding CanCreateParty}">
+                                <Label Text="{c:Tr Party.InviteHint}" Style="{StaticResource Muted}" />
+                                <Button Text="{c:Tr Party.CreateLink}" Style="{StaticResource Secondary}" HorizontalOptions="Start" Command="{Binding CreatePartyCommand}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Şehrinde -->
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasPlaces}">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="8">
+                                <c:IconView Name="map-pin" Size="18" />
+                                <Label Text="{c:Tr Quest.Nearby}" Style="{StaticResource Strong}" />
+                            </HorizontalStackLayout>
+                            <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Places}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Null}">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Name}" FontFamily="NunitoBold" />
+                                            <HorizontalStackLayout Spacing="4" IsVisible="{Binding HasWhen}">
+                                                <c:IconView Name="calendar" Size="14" />
+                                                <Label Text="{Binding When}" Style="{StaticResource Muted}" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Address}" Style="{StaticResource Small}" IsVisible="{Binding HasAddress}" />
+                                            <Label Text="{Binding Note}" Style="{StaticResource Muted}" IsVisible="{Binding HasNote}" />
+                                            <Label Text="{c:Tr Quest.Details}" Style="{StaticResource Link}" IsVisible="{Binding HasUrl}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding OpenPlaceCommand, Source={RelativeSource AncestorType={x:Type vm:QuestViewModel}}}"
+                                                                          CommandParameter="{Binding .}" />
+                                                </Label.GestureRecognizers>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Durum -->
+                    <Border Style="{StaticResource Soft}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                <c:IconView Name="{Binding StatusIcon}" Size="18" />
+                                <Label Grid.Column="1" Text="{Binding StatusText}" FontSize="15" />
+                            </Grid>
+                            <Label Text="{Binding RatingText}" FontFamily="NunitoBold" IsVisible="{Binding HasRating}" />
+                            <VerticalStackLayout Spacing="8" IsVisible="{Binding CanRateLater}">
+                                <Label Text="{c:Tr Quest.HowWasIt}" FontFamily="NunitoBold" />
+                                <c:RatingView Value="{Binding Rating}" />
+                                <Button Text="{c:Tr Quest.SaveRating}" Style="{StaticResource SoftButton}" HorizontalOptions="Start" Command="{Binding RateLaterCommand}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- İkincil eylemler -->
+                    <FlexLayout Wrap="Wrap" IsVisible="{Binding IsOpen}">
+                        <Button Text="{c:Tr Quest.Later}" Style="{StaticResource Ghost}" Command="{Binding SaveForLaterCommand}" IsVisible="{Binding IsOffered}" />
+                        <Button Text="{Binding PlanLabel}" Style="{StaticResource Ghost}" Command="{Binding OpenPlanCommand}" IsVisible="{Binding IsAccepted}" />
+                        <Button Text="{c:Tr Quest.AddToCalendar}" Style="{StaticResource Ghost}" Command="{Binding AddToCalendarCommand}" IsVisible="{Binding IsPlanned}" />
+                    </FlexLayout>
+                    <HorizontalStackLayout Spacing="6" IsVisible="{Binding IsPlanned}">
+                        <c:IconView Name="clock" Size="16" />
+                        <Label Text="{Binding PlannedText}" Style="{StaticResource Muted}" />
+                    </HorizontalStackLayout>
+
+                    <!-- Ana eylemler -->
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" IsVisible="{Binding IsOpen}">
+                        <Button Text="{Binding SkipLabel}" Style="{StaticResource Secondary}" Command="{Binding OpenSkipCommand}" />
+                        <Button Grid.Column="1" Text="{c:Tr Quest.Accept}" Command="{Binding AcceptCommand}" IsVisible="{Binding IsOffered}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" AutomationId="QuestAccept" />
+                        <Button Grid.Column="1" Text="{c:Tr Quest.Done}" Command="{Binding CompleteCommand}" IsVisible="{Binding IsAccepted}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" AutomationId="QuestComplete" />
+                    </Grid>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Planla -->
+        <c:Sheet Title="{c:Tr Quest.PlanTitle}" IsOpen="{Binding PlanOpen}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{c:Tr Quest.PlanHint}" Style="{StaticResource Muted}" />
+                <Label Text="{c:Tr Quest.DateTime}" Style="{StaticResource FieldLabel}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Border Style="{StaticResource Input}">
+                        <DatePicker Date="{Binding PlanDate}" MinimumDate="{Binding PlanMin}" MaximumDate="{Binding PlanMax}" FontFamily="NunitoRegular" />
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Input}">
+                        <TimePicker Time="{Binding PlanTime}" Format="HH:mm" FontFamily="NunitoRegular" />
+                    </Border>
+                </Grid>
+                <Button Text="{c:Tr Quest.SavePlan}" Command="{Binding SavePlanCommand}" />
+                <Button Text="{c:Tr Quest.RemovePlan}" Style="{StaticResource Ghost}" Command="{Binding ClearPlanCommand}" IsVisible="{Binding IsPlanned}" />
+            </VerticalStackLayout>
+        </c:Sheet>
+
+        <!-- Geç / bırak -->
+        <c:Sheet Title="{c:Tr Quest.SkipTitle}" IsOpen="{Binding SkipOpen}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="{c:Tr Quest.SkipHint}" Style="{StaticResource Muted}" />
+                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SkipReasons}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Null}">
+                            <c:ChoiceView Kind="Option" Text="{Binding Label}" Hint="{Binding Hint}" IsSelected="{Binding IsSelected}"
+                                          Command="{Binding PickSkipReasonCommand, Source={RelativeSource AncestorType={x:Type vm:QuestViewModel}}}" CommandParameter="{Binding .}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Button Text="{c:Tr Quest.Confirm}" Command="{Binding ConfirmSkipCommand}" IsEnabled="{Binding CanConfirmSkip}" />
+            </VerticalStackLayout>
+        </c:Sheet>
+
+        <!-- Kutlama -->
+        <Grid IsVisible="{Binding IsCelebrating}" x:Name="CelebrationLayer"
+              BackgroundColor="{AppThemeBinding Light={StaticResource BgLight}, Dark={StaticResource BgDark}}">
+            <ScrollView>
+                <VerticalStackLayout Padding="24,48,24,32" Spacing="16" BindingContext="{Binding Celebration}" x:DataType="vm:CelebrationViewModel">
+                    <c:IconView Name="trophy" Size="64" Stroke="2.2" HorizontalOptions="Center"
+                                Color="{AppThemeBinding Light={StaticResource XpLight}, Dark={StaticResource XpDark}}" />
+                    <Label Text="{Binding Heading}" Style="{StaticResource H1}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding QuestTitle}" Style="{StaticResource Muted}" FontSize="16" HorizontalTextAlignment="Center" />
+                    <Label HorizontalTextAlignment="Center" FontFamily="NunitoBlack" FontSize="44"
+                           TextColor="{AppThemeBinding Light={StaticResource XpInkLight}, Dark={StaticResource XpInkDark}}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="+" />
+                                <Span Text="{Binding ShownXp}" />
+                                <Span Text=" XP" FontSize="22" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Border Style="{StaticResource Soft}" IsVisible="{Binding HasPartyBonus}">
+                        <Label Text="{Binding PartyBonus}" FontFamily="NunitoBold" HorizontalTextAlignment="Center" />
+                    </Border>
+                    <Border Style="{StaticResource Soft}" IsVisible="{Binding LeveledUp}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource XpSoftLight}, Dark={StaticResource XpSoftDark}}">
+                        <Label Text="{Binding LevelUp}" FontFamily="NunitoExtraBold" HorizontalTextAlignment="Center" />
+                    </Border>
+                    <VerticalStackLayout Spacing="6" IsVisible="{Binding HasAchievements}" BindableLayout.ItemsSource="{Binding Achievements}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <Border Style="{StaticResource Card}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <c:IconView Name="trophy" Size="22" Color="{AppThemeBinding Light={StaticResource XpLight}, Dark={StaticResource XpDark}}" />
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="{c:Tr Celebration.NewAchievement}" Style="{StaticResource Small}" />
+                                            <Label Text="{Binding Title}" FontFamily="NunitoBold" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Label Text="{c:Tr Celebration.HowWasIt}" Style="{StaticResource H2}" HorizontalTextAlignment="Center" Margin="0,8,0,0" />
+                    <c:RatingView Value="{Binding Rating}" HorizontalOptions="Center" />
+                    <Label Text="{c:Tr Celebration.Similar}" Style="{StaticResource FieldLabel}" HorizontalTextAlignment="Center" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <c:ChoiceView Kind="Segment" Text="{c:Tr Celebration.More}" IsSelected="{Binding WantsMore}" Command="{Binding ToggleMoreCommand}" />
+                        <c:ChoiceView Grid.Column="1" Kind="Segment" Text="{c:Tr Celebration.Less}" IsSelected="{Binding WantsLess}" Command="{Binding ToggleLessCommand}" />
+                    </Grid>
+                    <Button Text="{Binding SubmitLabel}" Command="{Binding SubmitCommand}" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <c:ConfettiView x:Name="Confetti" />
+        </Grid>
+    </Grid>
+</v:LoadingPage>

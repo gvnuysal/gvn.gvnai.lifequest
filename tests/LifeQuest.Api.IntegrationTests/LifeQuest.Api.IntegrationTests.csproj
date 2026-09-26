@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LifeQuest.Api\LifeQuest.Api.csproj" />
+    <ProjectReference Include="..\..\src\LifeQuest.Mobile.Core\LifeQuest.Mobile.Core.csproj" />
   </ItemGroup>
 
 </Project>

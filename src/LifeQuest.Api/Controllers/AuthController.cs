@@ -25,19 +25,21 @@ public sealed class AuthController(ISender sender, RefreshTokenCookie cookie) : 
         => Session(await sender.Send(command, cancellationToken));
 
     /// <summary>
-    /// Refresh token çerezden okunur. Gövdedeki token yalnızca geçiş içindir: eski sürüm istemcinin localStorage'daki
-    /// token'ı bir kez gönderip çereze taşınmasını sağlar.
+    /// Web: refresh token çerezden okunur; gövdedeki token yalnızca eski sürümün localStorage'daki token'ını bir kez
+    /// çereze taşımak içindir. Native istemci (<see cref="NativeClientHeader"/>): token yalnızca gövdeden okunur ve yenisi
+    /// gövdede döner; çerez ne okunur ne yazılır. Böylece web'deki bir betik başlığı ekleyerek çerezdeki token'ı
+    /// gövdeye çıkaramaz.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest? request, CancellationToken cancellationToken)
     {
-        var token = cookie.Read(Request) ?? request?.RefreshToken;
+        var token = IsNativeClient ? request?.RefreshToken : cookie.Read(Request) ?? request?.RefreshToken;
         if (string.IsNullOrWhiteSpace(token))
             return HandleResult(Result<AuthTokensDto>.Fail(IdentityErrors.InvalidRefreshToken));
 
         var result = await sender.Send(new RefreshTokenCommand(token), cancellationToken);
-        if (!result.Succeeded)
+        if (!result.Succeeded && !IsNativeClient)
             cookie.Clear(Response);
         return Session(result);
     }
@@ -56,9 +58,18 @@ public sealed class AuthController(ISender sender, RefreshTokenCookie cookie) : 
         if (!result.Succeeded)
             return HandleResult(result);
 
+        if (IsNativeClient)
+            return Ok(AuthSessionResponse.ForNativeClient(result.Data!));
+
         cookie.Write(Response, result.Data!);
         return Ok(AuthSessionResponse.From(result.Data!));
     }
+
+    /// <summary>Mobil uygulama bu başlıkla refresh token'ı gövdede alır ve cihazın güvenli deposunda saklar.</summary>
+    public const string NativeClientHeader = "X-LifeQuest-Client";
+
+    private bool IsNativeClient
+        => string.Equals(Request.Headers[NativeClientHeader], "native", StringComparison.OrdinalIgnoreCase);
 
     public sealed record RefreshRequest(string? RefreshToken);
 }

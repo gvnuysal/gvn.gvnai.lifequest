@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:LifeQuest.Mobile.Controls"
+             xmlns:vm="clr-namespace:LifeQuest.Mobile.Core.ViewModels;assembly=LifeQuest.Mobile.Core"
+             x:Class="LifeQuest.Mobile.Views.LoginPage"
+             x:DataType="vm:LoginViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,16,24,32" Spacing="18" MaximumWidthRequest="560">
+            <c:LanguageSwitch HorizontalOptions="End" />
+            <Border WidthRequest="72" HeightRequest="72" StrokeThickness="0" StrokeShape="RoundRectangle 20" HorizontalOptions="Center"
+                    BackgroundColor="{StaticResource BrandLight}">
+                <c:IconView Name="sparkles" Size="40" Color="#FFF8F1" Stroke="2.4" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+            <VerticalStackLayout Spacing="6">
+                <Label Text="{c:Tr Auth.LoginHeading}" Style="{StaticResource H1}" HorizontalTextAlignment="Center" />
+                <Label Text="{c:Tr Auth.LoginLead}" Style="{StaticResource Muted}" FontSize="16" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource Card}" Padding="20">
+                <VerticalStackLayout Spacing="14">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{c:Tr Auth.Email}" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource Input}">
+                            <Entry Text="{Binding Email}" Keyboard="Email" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
+                                   AutomationId="LoginEmail" ReturnType="Next" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{c:Tr Auth.Password}" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource Input}">
+                            <Entry Text="{Binding Password}" IsPassword="True" AutomationId="LoginPassword"
+                                   ReturnType="Go" ReturnCommand="{Binding LoginCommand}" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <Label Text="{Binding Error}" Style="{StaticResource FieldError}" IsVisible="{Binding Error, Converter={StaticResource HasValue}}" />
+                    <Grid>
+                        <Button Text="{c:Tr Auth.Login}" Command="{Binding LoginCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                                AutomationId="LoginSubmit" />
+                        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="End" Margin="0,0,16,0" Color="White" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="6">
+                <Label Text="{c:Tr Auth.NoAccount}" Style="{StaticResource Muted}" VerticalOptions="Center" />
+                <Label Text="{c:Tr Auth.SignUp}" Style="{StaticResource Link}" VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoRegisterCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
