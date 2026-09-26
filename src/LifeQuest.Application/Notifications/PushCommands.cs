@@ -4,6 +4,7 @@ using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Notifications;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Notifications;
 
@@ -11,11 +12,11 @@ public sealed record PushSettingsDto(bool Enabled, string? PublicKey, int Device
 
 public static class PushErrors
 {
-    public static readonly Error NotConfigured =
-        Error.Conflict("PUSH_NOT_CONFIGURED", "Anlık bildirimler bu sunucuda etkin değil.");
+    public static Error NotConfigured =>
+        Error.Conflict("PUSH_NOT_CONFIGURED", Text.Of("Anlık bildirimler bu sunucuda etkin değil.", "Push notifications aren't enabled on this server."));
 
-    public static readonly Error NoDevices =
-        Error.Conflict("PUSH_NO_DEVICES", "Bildirim alacak bir cihaz yok. Önce bu tarayıcıda bildirimlere izin ver.");
+    public static Error NoDevices =>
+        Error.Conflict("PUSH_NO_DEVICES", Text.Of("Bildirim alacak bir cihaz yok. Önce bu tarayıcıda bildirimlere izin ver.", "No device to notify. Allow notifications in this browser first."));
 }
 
 // ── Ayarlar ───────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ public sealed class SubscribePushCommandValidator : AbstractValidator<SubscribeP
         // Push servisleri HTTPS adres verir; başka bir şema sunucuyu keyfi adrese istek atmaya zorlayabilirdi (SSRF).
         RuleFor(x => x.Endpoint).NotEmpty().MaximumLength(2048)
             .Must(e => Uri.TryCreate(e, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps && !uri.IsLoopback)
-            .WithMessage("Geçersiz push adresi.");
+            .WithMessage(_ => Text.Of("Geçersiz push adresi.", "Invalid push endpoint."));
         RuleFor(x => x.P256dh).NotEmpty().MaximumLength(200).Matches("^[A-Za-z0-9_\\-=]+$");
         RuleFor(x => x.Auth).NotEmpty().MaximumLength(100).Matches("^[A-Za-z0-9_\\-=]+$");
     }
@@ -118,7 +119,7 @@ internal sealed class SendTestPushCommandHandler(PushNotifier notifier, IUserCon
             return Result<int>.Fail(PushErrors.NotConfigured);
 
         var delivered = await notifier.SendToUserAsync(user.UserId,
-            new PushNotification("LifeQuest", "Bildirimler çalışıyor. Hatırlatmanı seçtiğin saatte göndereceğiz.", "/today", "test"),
+            new PushNotification("LifeQuest", Text.Of("Bildirimler çalışıyor. Hatırlatmanı seçtiğin saatte göndereceğiz.", "Notifications are working. We'll send your reminder at the time you chose."), "/today", "test"),
             cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

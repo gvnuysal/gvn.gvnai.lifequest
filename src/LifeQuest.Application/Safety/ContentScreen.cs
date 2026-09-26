@@ -22,17 +22,27 @@ public static partial class ContentScreen
         {
             "alkol", "içki", "bira(?!z|der)", "şarap", "rakı(?!m)", "sarhoş", "kumar", "bahis",
             "ıssız", "gece yarısı", "tek başına gece", "karanlıkta", "yüksekten", "uçurum", "çatıya", "çatıda",
-            "tren yolu", "raylar", "otostop", "izinsiz", "gizlice", "yasak bölge", "hız yap", "hız yarış", "tehlikeli"
+            "tren yolu", "raylar", "otostop", "izinsiz", "gizlice", "yasak bölge", "hız yap", "hız yarış", "tehlikeli",
+            // İngilizce içerik (fikirler ve şablonlar iki dilde yazılabilir)
+            "alcohol", "beer", "wine", "liquor", "vodka", "whisk", "drunk", "gambl", "betting", "casino",
+            "deserted", "midnight", "alone at night", "in the dark", "cliff", "rooftop", "on the roof",
+            "railway", "train track", "hitchhik", "trespass", "secretly", "restricted area", "forbidden area",
+            "speeding", "street rac", "dangerous"
         }.Select(p => new Regex(@"(?<!\p{L})" + p, RegexOptions.Compiled | RegexOptions.CultureInvariant))
     ];
 
     private static readonly string[] PersonalDataRequests =
     [
         "konumunu paylaş", "konum paylaş", "konumunu gönder", "canlı konum", "fotoğrafını paylaş",
-        "fotoğraf paylaş", "fotoğrafını gönder", "adresini", "telefon numaran", "kimlik", "şifre"
+        "fotoğraf paylaş", "fotoğrafını gönder", "adresini", "telefon numaran", "kimlik", "şifre",
+        "share your location", "live location", "send your location", "share your photo", "send your photo",
+        "send a photo", "your address", "phone number", "id card", "password"
     ];
 
     public static string Normalize(string text) => " " + text.ToLower(Turkish) + " ";
+
+    /// <summary>İngilizce metin için: Türkçe küçültme "I"yı "ı" yapar; iki biçim de denenir.</summary>
+    private static IEnumerable<string> Forms(string text) => [Normalize(text), " " + text.ToLowerInvariant() + " "];
 
     public static bool ContainsUrl(string text) => UrlPattern().IsMatch(text);
 
@@ -43,14 +53,12 @@ public static partial class ContentScreen
 
     public static bool ContainsRiskyContent(string text)
     {
-        var lower = Normalize(text);
-        return RiskyPatterns.Any(p => p.IsMatch(lower));
+        return Forms(text).Any(lower => RiskyPatterns.Any(p => p.IsMatch(lower)));
     }
 
     public static bool RequestsPersonalData(string text)
     {
-        var lower = Normalize(text);
-        return PersonalDataRequests.Any(lower.Contains);
+        return Forms(text).Any(lower => PersonalDataRequests.Any(lower.Contains));
     }
 
     [GeneratedRegex(@"(https?://|www\.|\b[a-z0-9-]+\.(com|net|org|io|app|com\.tr|tr)\b)", RegexOptions.IgnoreCase)]

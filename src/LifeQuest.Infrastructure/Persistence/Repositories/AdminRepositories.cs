@@ -44,7 +44,8 @@ internal sealed class QuestTemplateRepository(LifeQuestDbContext context)
         if (search.Text is { } text)
         {
             var pattern = $"%{EscapeLike(text)}%";
-            query = query.Where(t => EF.Functions.ILike(t.Title, pattern, "\\") || EF.Functions.ILike(t.Code, pattern, "\\"));
+            query = query.Where(t => EF.Functions.ILike(t.Title, pattern, "\\") || EF.Functions.ILike(t.Code, pattern, "\\")
+                                     || (t.TitleEn != null && EF.Functions.ILike(t.TitleEn, pattern, "\\")));
         }
         if (search.Category is { } category)
             query = query.Where(t => t.Category == category);

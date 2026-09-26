@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -23,28 +24,28 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
     <section class="section">
       <header class="head">
         <div class="stack">
-          <h1>Katalog</h1>
-          <p class="muted">Kurallara uymayan template kaydedilir ama incelemeden geçene kadar önerilmez.</p>
+          <h1>{{ t().adminCatalog.title }}</h1>
+          <p class="muted">{{ t().adminCatalog.lead }}</p>
         </div>
-        <a lq-button size="sm" [routerLink]="paths.admin.newTemplate">Yeni template</a>
+        <a lq-button size="sm" [routerLink]="paths.admin.newTemplate">{{ t().adminCatalog.newTemplate }}</a>
       </header>
 
       @if (health(); as h) {
-        <section class="surface health" aria-label="Katalog sağlığı">
+        <section class="surface health" [attr.aria-label]="t().adminCatalog.healthAria">
           <div class="health__stats">
-            <div><span class="value">{{ h.offerable }}</span><span class="label">Yayında</span></div>
+            <div><span class="value">{{ h.offerable }}</span><span class="label">{{ t().adminCatalog.live }}</span></div>
             <button type="button" class="stat-link" (click)="setStatus('NeedsReview')">
-              <span class="value" [class.warn]="h.needsReview > 0">{{ h.needsReview }}</span><span class="label">İnceleme bekliyor</span>
+              <span class="value" [class.warn]="h.needsReview > 0">{{ h.needsReview }}</span><span class="label">{{ t().adminCatalog.needsReview }}</span>
             </button>
             <a class="stat-link" [routerLink]="paths.admin.ideas">
-              <span class="value" [class.warn]="h.pendingIdeas > 0">{{ h.pendingIdeas }}</span><span class="label">Bekleyen fikir</span>
+              <span class="value" [class.warn]="h.pendingIdeas > 0">{{ h.pendingIdeas }}</span><span class="label">{{ t().adminCatalog.pendingIdeas }}</span>
             </a>
-            <div><span class="value">{{ percent(h.freeShare) }}</span><span class="label">Ücretsiz</span></div>
-            <div><span class="value">{{ percent(h.cityIndependentShare) }}</span><span class="label">Şehirden bağımsız</span></div>
+            <div><span class="value">{{ percent(h.freeShare) }}</span><span class="label">{{ t().adminCatalog.free }}</span></div>
+            <div><span class="value">{{ percent(h.cityIndependentShare) }}</span><span class="label">{{ t().adminCatalog.cityIndependent }}</span></div>
           </div>
           <ul class="health__cats">
             @for (c of h.categories; track c.category) {
-              <li [title]="catLabel(c.category) + ': ' + c.templates + ' template, ' + c.daily + ' günlük'">
+              <li [title]="t().adminCatalog.categoryTip(catLabel(c.category), c.templates, c.daily)">
                 <lq-category-icon [category]="c.category" [size]="16" />
                 <span>{{ catLabel(c.category) }}</span>
                 <strong>{{ c.templates }}</strong>
@@ -56,21 +57,21 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
               @for (w of h.warnings; track w) { <li>{{ w }}</li> }
             </ul>
           } @else {
-            <p class="ok small">Katalog dengesi editoryal kurallara uygun.</p>
+            <p class="ok small">{{ t().adminCatalog.balanced }}</p>
           }
         </section>
       }
 
       <div class="stack">
-        <input class="input" type="search" placeholder="Başlık veya kod ara" aria-label="Template ara"
+        <input class="input" type="search" [placeholder]="t().adminCatalog.search" [attr.aria-label]="t().adminCatalog.searchAria"
                [ngModel]="query()" (ngModelChange)="onSearch($event)" />
-        <div class="chips" role="group" aria-label="Durum">
+        <div class="chips" role="group" [attr.aria-label]="t().adminCatalog.statusAria">
           @for (s of statuses; track s.value) {
             <button lq-chip [selected]="status() === s.value" (click)="setStatus(s.value)">{{ s.label }}</button>
           }
         </div>
-        <div class="chips" role="group" aria-label="Kategori">
-          <button lq-chip [selected]="category() === null" (click)="setCategory(null)">Tüm kategoriler</button>
+        <div class="chips" role="group" [attr.aria-label]="t().adminCatalog.categoryAria">
+          <button lq-chip [selected]="category() === null" (click)="setCategory(null)">{{ t().adminCatalog.allCategories }}</button>
           @for (c of categoryOrder; track c) {
             <button lq-chip [selected]="category() === c" (click)="setCategory(c)">{{ catLabel(c) }}</button>
           }
@@ -78,34 +79,34 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
       </div>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Katalog yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminCatalog.loadFailed" [message]="error()" />
       } @else if (page(); as p) {
-        <p class="muted small">{{ p.totalCount }} template</p>
+        <p class="muted small">{{ t().adminCatalog.count(p.totalCount) }}</p>
         <ul class="list">
-          @for (t of p.items; track t.id) {
+          @for (tpl of p.items; track tpl.id) {
             <li>
-              <a class="surface item" [routerLink]="templatePath(t.id)">
-                <lq-category-icon [category]="t.category" [size]="20" />
+              <a class="surface item" [routerLink]="templatePath(tpl.id)">
+                <lq-category-icon [category]="tpl.category" [size]="20" />
                 <div class="item__body">
-                  <strong>{{ t.title }}</strong>
-                  <span class="muted small">{{ t.code }} · {{ typeLabel(t) }} · v{{ t.version }}{{ t.source === 'Admin' ? ' · admin' : '' }}</span>
+                  <strong>{{ tpl.title }}</strong>
+                  <span class="muted small">{{ tpl.code }} · {{ typeLabel(tpl) }} · v{{ tpl.version }}{{ tpl.source === 'Admin' ? ' · admin' : '' }}</span>
                 </div>
                 <div class="item__status">
-                  <span class="pill" [class]="'pill pill--' + safety(t).tone">{{ safety(t).label }}</span>
-                  @if (!t.isActive) { <span class="pill">Pasif</span> }
-                  @if (t.violationCount) { <span class="muted small">{{ t.violationCount }} kural</span> }
+                  <span class="pill" [class]="'pill pill--' + safety(tpl).tone">{{ safety(tpl).label }}</span>
+                  @if (!tpl.isActive) { <span class="pill">{{ t().adminCatalog.inactive }}</span> }
+                  @if (tpl.violationCount) { <span class="muted small">{{ t().adminCatalog.rules(tpl.violationCount) }}</span> }
                 </div>
               </a>
             </li>
           } @empty {
-            <lq-empty-state icon="list" title="Template bulunamadı" message="Aramanı veya filtreleri değiştirmeyi dene." />
+            <lq-empty-state icon="list" [title]="t().adminCatalog.noneTitle" [message]="t().adminCatalog.noneHint" />
           }
         </ul>
         @if (p.totalPages > 1) {
-          <nav class="pager" aria-label="Sayfalar">
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">Önceki</button>
+          <nav class="pager" [attr.aria-label]="t().adminUsers.pages">
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">{{ t().adminUsers.previous }}</button>
             <span class="muted small">{{ p.pageNumber }} / {{ p.totalPages }}</span>
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">Sonraki</button>
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">{{ t().adminUsers.next }}</button>
           </nav>
         }
       } @else {
@@ -145,18 +146,15 @@ type StatusFilter = 'all' | SafetyLevel | 'inactive';
   `,
 })
 export class AdminCatalogPage {
+  protected readonly t = t;
   protected readonly paths = APP_PATHS;
   protected readonly templatePath = templatePath;
   private readonly api = inject(AdminApi);
 
   protected readonly categoryOrder = CATEGORY_ORDER;
-  protected readonly statuses: { value: StatusFilter; label: string }[] = [
-    { value: 'all', label: 'Tümü' },
-    { value: 'NeedsReview', label: 'İnceleme bekliyor' },
-    { value: 'Safe', label: 'Yayında' },
-    { value: 'Blocked', label: 'Engelli' },
-    { value: 'inactive', label: 'Pasif' },
-  ];
+  protected readonly statuses: { value: StatusFilter; readonly label: string }[] = (
+    ['all', 'NeedsReview', 'Safe', 'Blocked', 'inactive'] as const
+  ).map((s) => option<StatusFilter>(s, (d) => d.adminCatalog.statuses[s]));
 
   protected readonly query = signal('');
   private readonly text = signal('');
@@ -223,6 +221,6 @@ export class AdminCatalogPage {
   }
 
   protected percent(value: number): string {
-    return `%${Math.round(value * 100)}`;
+    return t().format.percent(Math.round(value * 100));
   }
 }

@@ -46,7 +46,8 @@ public static class ExperimentAutoStart
             return;
         }
 
-        var created = Experiment.Create(preset.Name, preset.Hypothesis, preset.Overrides, preset.TreatmentShare, SystemActor);
+        // Sistem işi: kullanıcı dili yok, varsayılan dilde (Türkçe) saklanır.
+        var created = Experiment.Create(preset.NameText.Tr, preset.HypothesisText.Tr, preset.Overrides, preset.TreatmentShare, SystemActor);
         if (!created.Succeeded)
         {
             logger.LogWarning("Preset {Preset} is invalid: {Errors}", preset.Key, string.Join(", ", created.Errors.Select(e => e.Code)));

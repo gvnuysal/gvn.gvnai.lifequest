@@ -4,6 +4,7 @@ using Gvn.GvnFramework.Domain.Repositories;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Notifications;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Notifications;
 
@@ -20,8 +21,13 @@ internal sealed class GetLatestSummaryQueryHandler(IWeeklySummaryRepository summ
     public async Task<Result<WeeklySummaryDto?>> Handle(GetLatestSummaryQuery query, CancellationToken cancellationToken)
     {
         var summary = await summaries.GetLatestUnreadAsync(user.UserId, cancellationToken);
-        return Result<WeeklySummaryDto?>.Ok(summary is null ? null : new WeeklySummaryDto(
-            summary.Id, summary.WeekStart, summary.Title, summary.Message, summary.CompletedCount, summary.XpEarned,
+        if (summary is null)
+            return Result<WeeklySummaryDto?>.Ok(null);
+
+        // Metin saklanan istatistiklerden isteğin dilinde kurulur.
+        var (title, message) = summary.Text;
+        return Result<WeeklySummaryDto?>.Ok(new WeeklySummaryDto(
+            summary.Id, summary.WeekStart, title.Current, message.Current, summary.CompletedCount, summary.XpEarned,
             summary.NewCategories, summary.TopCategory, summary.CreatedAt));
     }
 }
@@ -38,7 +44,7 @@ internal sealed class MarkSummaryReadCommandHandler(
     {
         var summary = await summaries.GetForUserAsync(command.SummaryId, user.UserId, cancellationToken);
         if (summary is null)
-            return Result.Fail(Gvn.GvnFramework.Core.Results.Error.NotFound("SUMMARY_NOT_FOUND", "Özet bulunamadı."));
+            return Result.Fail(Gvn.GvnFramework.Core.Results.Error.NotFound("SUMMARY_NOT_FOUND", Text.Of("Özet bulunamadı.", "Summary not found.")));
 
         summary.MarkRead(clock.GetUtcNow().UtcDateTime);
         await unitOfWork.SaveChangesAsync(cancellationToken);

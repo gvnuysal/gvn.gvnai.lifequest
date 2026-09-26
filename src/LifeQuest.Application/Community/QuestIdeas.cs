@@ -87,10 +87,11 @@ internal sealed class SubmitIdeaCommandHandler(
         if (await ideas.CountSubmittedSinceAsync(user.UserId, now.AddDays(-1), cancellationToken) >= QuestIdea.MaxPerDay)
             return Result<MyIdeaDto>.Fail(IdeaErrors.DailyLimit);
 
+        // Bayraklar kod olarak saklanır; yönetim paneli kendi dilinde etiketler.
         var flags = new List<string>();
-        if (ContentScreen.ContainsRiskyContent(text)) flags.Add("Riskli ifade içeriyor");
-        if (ContentScreen.RequestsPersonalData(text)) flags.Add("Kişisel veri paylaşımı istiyor");
-        if (command.IsOutdoor && command.Minutes > 240) flags.Add("Uzun açık hava etkinliği");
+        if (ContentScreen.ContainsRiskyContent(text)) flags.Add(IdeaFlags.RiskyContent);
+        if (ContentScreen.RequestsPersonalData(text)) flags.Add(IdeaFlags.PersonalData);
+        if (command.IsOutdoor && command.Minutes > 240) flags.Add(IdeaFlags.LongOutdoor);
 
         var idea = QuestIdea.Submit(user.UserId, command.Title, command.Description, command.Category, command.Minutes,
             command.Cost, command.IsOutdoor, flags, now);
@@ -183,4 +184,11 @@ internal sealed class RejectIdeaCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result<AdminIdeaDto>.Ok(idea.ToAdmin());
     }
+}
+
+public static class IdeaFlags
+{
+    public const string RiskyContent = "risky_content";
+    public const string PersonalData = "personal_data";
+    public const string LongOutdoor = "long_outdoor";
 }

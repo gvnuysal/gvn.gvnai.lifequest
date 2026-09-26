@@ -27,8 +27,8 @@ import { OptionCard } from '../../ui/option-card';
 import { Skeleton } from '../../ui/states';
 import { HOME_PATH } from '../../core/routing/app-paths';
 import { consumeDestination } from '../../core/routing/pending-destination';
+import { t } from '../../core/i18n/i18n';
 
-const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütçe', 'Keşif modu'] as const;
 
 @Component({
   selector: 'lq-onboarding-page',
@@ -37,19 +37,19 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
   template: `
     <div class="page page--bare">
       <header class="head">
-        <div class="dots" role="progressbar" [attr.aria-valuenow]="step() + 1" aria-valuemin="1" [attr.aria-valuemax]="steps.length" [attr.aria-label]="'Adım ' + (step() + 1) + ' / ' + steps.length">
-          @for (s of steps; track s; let i = $index) {
+        <div class="dots" role="progressbar" [attr.aria-valuenow]="step() + 1" aria-valuemin="1" [attr.aria-valuemax]="steps().length" [attr.aria-label]="t().onboarding.stepOf(step() + 1, steps().length)">
+          @for (s of steps(); track $index; let i = $index) {
             <span [class.on]="i <= step()"></span>
           }
         </div>
-        <p class="eyebrow">Adım {{ step() + 1 }} / {{ steps.length }} · {{ steps[step()] }}</p>
+        <p class="eyebrow">{{ t().onboarding.stepOf(step() + 1, steps().length) }} · {{ steps()[step()] }}</p>
       </header>
 
       @switch (step()) {
         @case (0) {
           <section class="stack">
-            <h1>Merhaba{{ name() ? ', ' + name() : '' }}! Hangi alanlarda ilerlemek istersin?</h1>
-            <p class="muted">Life Profile'ın bir kişilik testi değil; yalnızca yaşadığın deneyimleri yansıtır. İstediğin kadar seç, sonra değiştirebilirsin.</p>
+            <h1>{{ t().onboarding.goalsTitle(name()) }}</h1>
+            <p class="muted">{{ t().onboarding.goalsLead }}</p>
             <div class="stack">
               @for (category of categories; track category) {
                 <button lq-option
@@ -64,8 +64,8 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
         }
         @case (1) {
           <section class="stack">
-            <h1>Neler ilgini çeker?</h1>
-            <p class="muted">Öneriler buradan başlar ve geri bildirimlerinle zamanla gelişir. En az bir alan seç.</p>
+            <h1>{{ t().onboarding.interestsTitle }}</h1>
+            <p class="muted">{{ t().onboarding.interestsLead }}</p>
             @if (interests(); as list) {
               <lq-interest-picker [interests]="list" [(selection)]="interestSelection" />
             } @else {
@@ -75,8 +75,8 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
         }
         @case (2) {
           <section class="stack">
-            <h1>Bunlardan hangisi sana göre?</h1>
-            <p class="muted">Birkaç örnek quest'e tepki ver; ilk günden daha isabetli öneriler alırsın. İstersen bu adımı atlayabilirsin.</p>
+            <h1>{{ t().onboarding.cardsTitle }}</h1>
+            <p class="muted">{{ t().onboarding.cardsLead }}</p>
             @if (starterCards(); as cards) {
               @if (currentCard(); as card) {
                 <article class="starter" [style.--c]="'var(--cat-' + categoryMeta[card.category].token + ')'">
@@ -89,20 +89,20 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
                   <p class="muted">{{ card.description }}</p>
                   <div class="starter__actions">
                     <button lq-button variant="secondary" (click)="react(card.code, 'Dislike')">
-                      <lq-icon name="thumbs-down" [size]="18" /> Bana göre değil
+                      <lq-icon name="thumbs-down" [size]="18" /> {{ t().onboarding.notForMe }}
                     </button>
                     <button lq-button (click)="react(card.code, 'Like')">
-                      <lq-icon name="thumbs-up" [size]="18" /> Bana göre
+                      <lq-icon name="thumbs-up" [size]="18" /> {{ t().onboarding.forMe }}
                     </button>
                   </div>
-                  <button type="button" class="starter__skip" (click)="react(card.code, null)">Bu kartı geç</button>
+                  <button type="button" class="starter__skip" (click)="react(card.code, null)">{{ t().onboarding.skipCard }}</button>
                 </article>
               } @else {
                 <div class="starter starter--done">
                   <lq-icon name="sparkles" [size]="32" />
-                  <h2>Teşekkürler!</h2>
-                  <p class="muted">{{ likedCount() }} kartı beğendin. İlk önerilerin buna göre şekillenecek.</p>
-                  <button lq-button variant="ghost" size="sm" (click)="restartCards()">Baştan başla</button>
+                  <h2>{{ t().onboarding.thanks }}</h2>
+                  <p class="muted">{{ t().onboarding.likedCards(likedCount()) }}</p>
+                  <button lq-button variant="ghost" size="sm" (click)="restartCards()">{{ t().onboarding.restart }}</button>
                 </div>
               }
             } @else {
@@ -112,22 +112,22 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
         }
         @case (3) {
           <section class="stack">
-            <h1>Haftada ne kadar vaktin var?</h1>
+            <h1>{{ t().onboarding.timeTitle }}</h1>
             <div class="grid">
               @for (option of timeOptions; track option.minutes) {
                 <button lq-option [heading]="option.label" [description]="option.hint"
                   [selected]="weeklyMinutes() === option.minutes" (click)="weeklyMinutes.set(option.minutes)"></button>
               }
             </div>
-            <h2 class="sub">Bütçe yaklaşımın?</h2>
+            <h2 class="sub">{{ t().onboarding.budgetTitle }}</h2>
             <div class="grid">
               @for (cost of costs; track cost) {
                 <button lq-option [heading]="costLabels[cost].label" [description]="costLabels[cost].hint"
                   [selected]="budget() === cost" (click)="budget.set(cost)"></button>
               }
             </div>
-            <h2 class="sub">Hareket tercihin?</h2>
-            <p class="muted small">Bir hareket kısıtın varsa ya da yoğun sporu sevmiyorsan öneriler buna göre filtrelenir.</p>
+            <h2 class="sub">{{ t().onboarding.effortTitle }}</h2>
+            <p class="muted small">{{ t().onboarding.effortLead }}</p>
             <div class="stack">
               @for (option of effortOptions; track option.value) {
                 <button lq-option [heading]="option.label" [description]="option.hint"
@@ -138,16 +138,16 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
         }
         @case (4) {
           <section class="stack">
-            <h1>Ne kadar keşif istersin?</h1>
-            <p class="muted">Yeniliğin dozunu sen belirlersin; istediğin zaman değiştirebilirsin.</p>
+            <h1>{{ t().onboarding.radiusTitle }}</h1>
+            <p class="muted">{{ t().onboarding.radiusLead }}</p>
             @for (radius of radii; track radius) {
               <button lq-option [heading]="radiusLabels[radius].label" [description]="radiusLabels[radius].description"
                 [icon]="radiusLabels[radius].icon" [selected]="discoveryRadius() === radius" (click)="discoveryRadius.set(radius)"></button>
             }
             <div class="field">
-              <label for="city">Şehir <span class="muted">(isteğe bağlı)</span></label>
-              <input id="city" class="input" [ngModel]="city()" (ngModelChange)="city.set($event)" placeholder="Ör. İstanbul" autocomplete="address-level2" maxlength="80" />
-              <span class="field__hint">Yalnızca şehir gerektiren quest'ler için kullanılır. Konumunu asla takip etmeyiz.</span>
+              <label for="city">{{ t().onboarding.city }} <span class="muted">{{ t().onboarding.optional }}</span></label>
+              <input id="city" class="input" [ngModel]="city()" (ngModelChange)="city.set($event)" [placeholder]="t().onboarding.cityPlaceholder" autocomplete="address-level2" maxlength="80" />
+              <span class="field__hint">{{ t().onboarding.cityHint }}</span>
             </div>
           </section>
         }
@@ -155,10 +155,10 @@ const STEPS = ['Hedefler', 'İlgi alanları', 'Sana göre mi?', 'Zaman ve bütç
 
       <footer class="actions">
         @if (step() > 0) {
-          <button lq-button variant="ghost" type="button" (click)="back()">Geri</button>
+          <button lq-button variant="ghost" type="button" (click)="back()">{{ t().common.back }}</button>
         }
         <button lq-button type="button" [block]="true" [disabled]="!canContinue() || busy()" [loading]="busy()" (click)="next()">
-          {{ step() === steps.length - 1 ? 'Maceraya başla' : 'Devam' }}
+          {{ step() === steps().length - 1 ? t().onboarding.start : t().onboarding.next }}
         </button>
       </footer>
     </div>
@@ -199,7 +199,8 @@ export class OnboardingPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  protected readonly steps = STEPS;
+  protected readonly t = t;
+  protected readonly steps = computed(() => t().onboarding.steps);
   protected readonly categories = CATEGORY_ORDER;
   protected readonly categoryMeta = CATEGORIES;
   protected readonly categoryDescriptions = CATEGORY_DESCRIPTIONS;
@@ -271,7 +272,7 @@ export class OnboardingPage {
   }
 
   protected next(): void {
-    if (this.step() < STEPS.length - 1) {
+    if (this.step() < this.steps().length - 1) {
       this.step.update((s) => s + 1);
       window.scrollTo({ top: 0 });
       return;

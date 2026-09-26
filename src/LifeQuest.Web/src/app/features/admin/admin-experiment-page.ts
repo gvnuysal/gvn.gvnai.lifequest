@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminApi } from '../../core/api/api-clients';
@@ -29,83 +30,82 @@ interface MetricRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="section">
-      <a class="back" [routerLink]="paths.admin.experiments"><lq-icon name="arrow-left" [size]="18" /> Deneyler</a>
+      <a class="back" [routerLink]="paths.admin.experiments"><lq-icon name="arrow-left" [size]="18" /> {{ t().adminExperiment.back }}</a>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Deney yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminExperiment.loadFailed" [message]="error()" />
       } @else if (detail(); as d) {
         <header class="stack">
           <h1>{{ d.experiment.name }}</h1>
           <div class="row wrap">
             <span [class]="'pill pill--' + statusMeta().tone">{{ statusMeta().label }}</span>
-            <span class="pill">Deneme payı %{{ share() }}</span>
-            @if (d.experiment.outcome === 'Adopted') { <span class="pill pill--success">Üretime alındı</span> }
-            @if (d.experiment.outcome === 'Discarded') { <span class="pill">Kapatıldı</span> }
+            <span class="pill">{{ t().adminExperiment.share(t().format.percent(share())) }}</span>
+            @if (d.experiment.outcome === 'Adopted') { <span class="pill pill--success">{{ t().adminExperiment.adopted }}</span> }
+            @if (d.experiment.outcome === 'Discarded') { <span class="pill">{{ t().adminExperiment.discarded }}</span> }
           </div>
           <p class="muted">{{ d.experiment.hypothesis }}</p>
         </header>
 
         <section class="surface card">
-          <h2 class="section-title">Değişen ağırlıklar</h2>
+          <h2 class="section-title">{{ t().adminExperiment.changedWeights }}</h2>
           <table>
-            <thead><tr><th>Ağırlık</th><th>Kontrol</th><th>Deneme</th></tr></thead>
+            <thead><tr><th>{{ t().adminExperiment.weight }}</th><th>{{ t().adminExperiment.control }}</th><th>{{ t().adminExperiment.treatment }}</th></tr></thead>
             <tbody>
               @for (o of d.experiment.overrides; track o.key) {
                 <tr><td>{{ o.label }}</td><td>{{ o.controlValue }}</td><td><strong>{{ o.treatmentValue }}</strong></td></tr>
               }
             </tbody>
           </table>
-          <p class="muted small">Kontrol değeri şu anki üretim ağırlığıdır.</p>
+          <p class="muted small">{{ t().adminExperiment.controlHint }}</p>
         </section>
 
         @if (d.results; as r) {
           <section class="surface card verdict" [attr.data-tone]="verdict()!.tone">
-            <span class="eyebrow">Sonuç · {{ r.weeks }} hafta</span>
+            <span class="eyebrow">{{ t().adminExperiment.result(r.weeks) }}</span>
             <p class="verdict__label">{{ verdict()!.label }}</p>
             <p class="small">{{ verdictHint() }}</p>
             @if (r.guardrailBreached) {
               <p class="guardrail small" role="alert">
-                <strong>Koruma metriği aşıldı:</strong> Deneme grubunda "ilgimi çekmedi" oranı
-                {{ pct(r.control.notInterestedRate) }} → {{ pct(r.treatment.notInterestedRate) }}
-                (izin verilen artış en fazla {{ pct(r.guardrailMaxIncrease) }} puan). North-star artsa da üretime almadan önce incele.
+                <strong>{{ t().adminExperiment.guardrailTitle }}</strong>
+                {{ t().adminExperiment.guardrail(pct(r.control.notInterestedRate), pct(r.treatment.notInterestedRate), pct(r.guardrailMaxIncrease)) }}
               </p>
             }
-            <div class="ci" [attr.aria-label]="'North-star farkı ' + r.northStar.difference + ', güven aralığı ' + r.northStar.ciLow + ' ile ' + r.northStar.ciHigh">
+            <div class="ci" [attr.aria-label]="t().adminExperiment.ciAria(r.northStar.difference, r.northStar.ciLow, r.northStar.ciHigh)">
               <span class="ci__zero" [style.left.%]="ciPosition(0)"></span>
               <span class="ci__range" [style.left.%]="ciPosition(r.northStar.ciLow)"
                     [style.width.%]="ciPosition(r.northStar.ciHigh) - ciPosition(r.northStar.ciLow)"></span>
               <span class="ci__point" [style.left.%]="ciPosition(r.northStar.difference)"></span>
             </div>
             <p class="muted small">
-              North-star farkı {{ signed(r.northStar.difference) }} (%95 güven aralığı {{ signed(r.northStar.ciLow) }} … {{ signed(r.northStar.ciHigh) }})
-              @if (r.northStar.relativeLift !== null) { · göreli {{ signed(r.northStar.relativeLift * 100, 1) }}% }
+              {{ t().adminExperiment.ciText(signed(r.northStar.difference), signed(r.northStar.ciLow), signed(r.northStar.ciHigh)) }}
+              @if (r.northStar.relativeLift !== null) { {{ t().adminExperiment.relative(signed(r.northStar.relativeLift * 100, 1)) }} }
             </p>
           </section>
 
           <section class="surface card">
-            <h2 class="section-title">Gruplar</h2>
+            <h2 class="section-title">{{ t().adminExperiment.groups }}</h2>
             <table>
-              <thead><tr><th>Metrik</th><th>Kontrol</th><th>Deneme</th></tr></thead>
+              <thead><tr><th>{{ t().adminExperiment.metric }}</th><th>{{ t().adminExperiment.control }}</th><th>{{ t().adminExperiment.treatment }}</th></tr></thead>
               <tbody>
                 @for (m of metrics(); track m.label) {
                   <tr [title]="m.hint ?? ''"><td>{{ m.label }}</td><td>{{ m.control }}</td><td>{{ m.treatment }}</td></tr>
                 }
               </tbody>
             </table>
-            <p class="muted small">Tamamlamalar, görevin önerildiği gruba sayılır. Koruma metriği: "ilgimi çekmedi" oranı.</p>
+            <p class="muted small">{{ t().adminExperiment.groupsHint }}</p>
           </section>
         } @else {
-          <p class="muted">Deney başlatıldığında sonuçlar burada görünür.</p>
+          <p class="muted">{{ t().adminExperiment.notStarted }}</p>
         }
 
         <div class="actions">
           @switch (d.experiment.status) {
-            @case ('Draft') { <button lq-button (click)="open('start')">Deneyi başlat</button> }
-            @case ('Running') { <button lq-button variant="soft" (click)="open('stop')">Deneyi durdur</button> }
+            @case ('Draft') { <button lq-button (click)="open('start')">{{ t().adminExperiment.actions.start }}</button> }
+            @case ('Running') { <button lq-button variant="soft" (click)="open('stop')">{{ t().adminExperiment.actions.stop }}</button> }
             @case ('Stopped') {
               @if (d.experiment.outcome === 'None') {
-                <button lq-button (click)="open('adopt')">Deneme ayarını üretime al</button>
-                <button lq-button variant="soft" (click)="open('discard')">Kapat (üretimi değiştirme)</button>
+                <button lq-button (click)="open('adopt')">{{ t().adminExperiment.actions.adopt }}</button>
+                <button lq-button variant="soft" (click)="open('discard')">{{ t().adminExperiment.discardButton }}</button>
               }
             }
           }
@@ -121,10 +121,10 @@ interface MetricRow {
         <div class="stack">
           <p class="muted">{{ actionHint() }}</p>
           <div class="field">
-            <label for="exp-reason">Not (denetim kaydına yazılır)</label>
+            <label for="exp-reason">{{ t().adminExperiment.note }}</label>
             <textarea id="exp-reason" class="input" rows="2" maxlength="500" #reason></textarea>
           </div>
-          <button lq-button [block]="true" [loading]="busy()" (click)="run(action, reason.value)">Onayla</button>
+          <button lq-button [block]="true" [loading]="busy()" (click)="run(action, reason.value)">{{ t().adminExperiment.confirm }}</button>
         </div>
       }
     </lq-sheet>
@@ -152,6 +152,7 @@ interface MetricRow {
   `,
 })
 export class AdminExperimentPage {
+  protected readonly t = t;
   protected readonly paths = APP_PATHS;
   readonly id = input.required<string>();
 
@@ -163,7 +164,7 @@ export class AdminExperimentPage {
   protected readonly pending = signal<ExperimentAction | null>(null);
   protected readonly busy = signal(false);
 
-  protected readonly pct = (v: number) => `%${Math.round(v * 100)}`;
+  protected readonly pct = (v: number) => t().format.percent(Math.round(v * 100));
 
   protected readonly statusMeta = computed(() => EXPERIMENT_STATUS_LABELS[this.detail()?.experiment.status ?? 'Draft']);
   protected readonly share = computed(() => Math.round((this.detail()?.experiment.treatmentShare ?? 0) * 100));
@@ -187,28 +188,26 @@ export class AdminExperimentPage {
     const row = (label: string, pick: (v: VariantResult) => string, hint?: string): MetricRow =>
       ({ label, control: pick(r.control), treatment: pick(r.treatment), hint });
     const pct = this.pct;
+    const L = t().adminExperiment.rows;
     return [
-      row('Kullanıcı', (v) => `${v.users}`),
-      row('North-star / hafta', (v) => `${v.northStar.toFixed(2)} ±${v.northStarStandardError.toFixed(2)}`, 'Kullanıcı başına haftalık anlamlı deneyim ± standart hata'),
-      row('Öneri', (v) => `${v.offered}`),
-      row('Kabul oranı', (v) => pct(v.acceptanceRate)),
-      row('Tamamlama oranı', (v) => pct(v.completionRate)),
-      row('Keşif kabulü', (v) => pct(v.explorationAcceptanceRate)),
-      row('"İlgimi çekmedi"', (v) => pct(v.notInterestedRate), 'Koruma metriği: düşük olması iyi'),
-      row('Ortalama puan', (v) => v.averageRating?.toFixed(1) ?? '–'),
+      row(L.users, (v) => `${v.users}`),
+      row(L.northStar, (v) => `${v.northStar.toFixed(2)} ±${v.northStarStandardError.toFixed(2)}`, L.northStarHint),
+      row(L.offered, (v) => `${v.offered}`),
+      row(L.acceptance, (v) => pct(v.acceptanceRate)),
+      row(L.completion, (v) => pct(v.completionRate)),
+      row(L.exploration, (v) => pct(v.explorationAcceptanceRate)),
+      row(L.notInterested, (v) => pct(v.notInterestedRate), L.notInterestedHint),
+      row(L.rating, (v) => v.averageRating?.toFixed(1) ?? '–'),
     ];
   });
 
-  protected readonly actionTitle = computed(() => ({
-    start: 'Deneyi başlat', stop: 'Deneyi durdur', adopt: 'Deneme ayarını üretime al', discard: 'Deneyi kapat',
-  })[this.pending() ?? 'start']);
+  protected readonly actionTitle = computed(() => t().adminExperiment.actions[this.pending() ?? 'start']);
 
-  protected readonly actionHint = computed(() => ({
-    start: `Kullanıcıların %${this.share()} kadarı hemen deneme ağırlıklarıyla öneri almaya başlar. Aynı anda yalnızca bir deney çalışabilir.`,
-    stop: 'Tüm kullanıcılar üretim ağırlıklarına döner. Sonuçlar korunur; sonra kazananı uygulayabilir veya kapatabilirsin.',
-    adopt: 'Deneme ağırlıkları "Öneri ayarları"na yazılır ve herkes için geçerli olur. İşlem denetim kaydına düşer.',
-    discard: 'Üretim ağırlıkları değişmez; deney kapatılır.',
-  })[this.pending() ?? 'start']);
+  protected readonly actionHint = computed(() => {
+    const hints = t().adminExperiment.hints;
+    const action = this.pending() ?? 'start';
+    return action === 'start' ? hints.start(t().format.percent(this.share())) : hints[action];
+  });
 
   constructor() {
     effect(() => this.load(this.id()));
@@ -236,7 +235,7 @@ export class AdminExperimentPage {
       next: () => {
         this.busy.set(false);
         this.pending.set(null);
-        this.toast.success('Kaydedildi.');
+        this.toast.success(t().adminExperiment.saved);
         this.load(this.id());
       },
       error: (err: unknown) => {

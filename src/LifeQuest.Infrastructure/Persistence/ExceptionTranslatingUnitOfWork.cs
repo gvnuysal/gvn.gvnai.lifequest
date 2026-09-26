@@ -3,6 +3,7 @@ using Gvn.GvnFramework.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Infrastructure.Persistence;
 
@@ -23,12 +24,12 @@ internal sealed class ExceptionTranslatingUnitOfWork(IUnitOfWork inner, ILogger<
         catch (DbUpdateConcurrencyException ex)
         {
             logger.LogWarning(ex, "Concurrency conflict while saving changes");
-            throw new ConflictException("Kayıt eşzamanlı olarak değiştirildi. Lütfen isteği tekrar deneyin.");
+            throw new ConflictException(Text.Of("Kayıt eşzamanlı olarak değiştirildi. Lütfen isteği tekrar deneyin.", "The record was changed concurrently. Please try the request again."));
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg)
         {
             logger.LogWarning("Unique constraint violation on {Constraint}", pg.ConstraintName);
-            throw new ConflictException("Bu işlem zaten gerçekleştirilmiş.");
+            throw new ConflictException(Text.Of("Bu işlem zaten gerçekleştirilmiş.", "This action has already been done."));
         }
     }
 }

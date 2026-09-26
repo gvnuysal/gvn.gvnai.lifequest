@@ -44,6 +44,15 @@ public sealed class UserQuest : AggregateRoot
     public List<string> ReasonCodes { get; private set; } = [];
     public string Explanation { get; private set; } = default!;
 
+    // ── İngilizce kopya: teklif anında iki dil birden saklanır; eski kayıtlarda boştur (Türkçeye düşer) ──
+    public string? TitleEn { get; private set; }
+    public string? DescriptionEn { get; private set; }
+    public string? ExplanationEn { get; private set; }
+
+    public Localization.LocalizedText LocalizedTitle => Localization.LocalizedText.WithFallback(Title, TitleEn);
+    public Localization.LocalizedText LocalizedDescription => Localization.LocalizedText.WithFallback(Description, DescriptionEn);
+    public Localization.LocalizedText LocalizedExplanation => Localization.LocalizedText.WithFallback(Explanation, ExplanationEn);
+
     // ── Yaşam döngüsü ────────────────────────────────────────────────────────
     public QuestStatus Status { get; private set; }
     public DateTime OfferedAt { get; private set; }
@@ -107,7 +116,10 @@ public sealed class UserQuest : AggregateRoot
             Score = recommendation.Score,
             IsExploration = recommendation.IsExploration,
             ReasonCodes = recommendation.Reasons.Select(r => r.Code.ToString()).ToList(),
-            Explanation = recommendation.Explanation,
+            Explanation = recommendation.Explanation.Tr,
+            ExplanationEn = recommendation.Explanation.En,
+            TitleEn = candidate.TitleEn,
+            DescriptionEn = candidate.DescriptionEn,
             Status = QuestStatus.Offered,
             OfferedAt = nowUtc,
             ExpiresAt = expiresAtUtc

@@ -40,7 +40,7 @@ public sealed record PartyInviteDto(
 internal static class PartyMapping
 {
     public static PartyDto ToDto(this QuestParty party, Guid viewerId, DateTime nowUtc) => new(
-        party.InviteCode, party.QuestTitle, party.Category, party.Status, party.ExpiresAt, QuestParty.MaxMembers,
+        party.InviteCode, party.LocalizedQuestTitle.Current, party.Category, party.Status, party.ExpiresAt, QuestParty.MaxMembers,
         party.IsJoinable(nowUtc),
         party.Members.OrderBy(m => m.JoinedAt).Select(m => new PartyMemberDto(
             m.DisplayName, m.UserId == party.HostUserId, m.UserId == viewerId,
@@ -107,7 +107,7 @@ internal sealed class GetPartyInviteQueryHandler(IQuestPartyRepository parties, 
                    ?? party.Members.OrderBy(m => m.JoinedAt).First().DisplayName;
         var me = party.Members.FirstOrDefault(m => m.UserId == user.UserId);
         return Result<PartyInviteDto>.Ok(new PartyInviteDto(
-            party.InviteCode, party.QuestTitle, party.Category, host, party.Members.Count, QuestParty.MaxMembers,
+            party.InviteCode, party.LocalizedQuestTitle.Current, party.Category, host, party.Members.Count, QuestParty.MaxMembers,
             party.ExpiresAt, me is not null, party.IsJoinable(now) && me is null, me?.UserQuestId));
     }
 }
@@ -169,7 +169,7 @@ internal sealed class JoinPartyCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         var host = party.Members.First(m => m.UserId == party.HostUserId || m.JoinedAt == party.Members.Min(x => x.JoinedAt)).DisplayName;
         return Result<PartyInviteDto>.Ok(new PartyInviteDto(
-            party.InviteCode, party.QuestTitle, party.Category, host, party.Members.Count, QuestParty.MaxMembers,
+            party.InviteCode, party.LocalizedQuestTitle.Current, party.Category, host, party.Members.Count, QuestParty.MaxMembers,
             party.ExpiresAt, true, false, quest.Id));
     }
 }

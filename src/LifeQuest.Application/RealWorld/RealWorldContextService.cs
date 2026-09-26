@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Localization;
 using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.RealWorld;
@@ -6,7 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace LifeQuest.Application.RealWorld;
 
 /// <param name="Outdoor">"Uygun değil" ise açık hava görevine uyarı verilir.</param>
-public sealed record WeatherDto(string City, int TemperatureC, string Summary, OutdoorWeather Outdoor, string? Advice);
+/// <param name="Code">WMO hava kodu (istemci ikonu buna göre seçer, metne göre değil).</param>
+public sealed record WeatherDto(string City, int TemperatureC, string Summary, OutdoorWeather Outdoor, string? Advice, int Code = 0);
 
 public sealed record RealWorldContext(OutdoorWeather Weather, IReadOnlySet<Guid> EventTemplateIds, WeatherDto? WeatherDto)
 {
@@ -58,13 +60,14 @@ public sealed class RealWorldContextService(
 
         var verdict = WeatherAssessment.Assess(snapshot, fromLocal, toLocal);
         var advice = verdict.Outdoor == OutdoorWeather.Poor
-            ? $"{Capitalize(verdict.Reason!)}; açık hava görevleri şimdilik önerilmiyor."
+            ? Text.Of($"{Capitalize(verdict.Reason!)}; açık hava görevleri şimdilik önerilmiyor.",
+                $"{Capitalize(verdict.Reason!)}, so outdoor quests are paused for now.")
             : null;
 
         return new RealWorldContext(verdict.Outdoor, events, new WeatherDto(
-            snapshot.City, (int)Math.Round(snapshot.TemperatureC), WeatherAssessment.Describe(snapshot.WeatherCode),
-            verdict.Outdoor, advice));
+            profile.City.Trim(), (int)Math.Round(snapshot.TemperatureC), WeatherAssessment.Describe(snapshot.WeatherCode),
+            verdict.Outdoor, advice, snapshot.WeatherCode));
     }
 
-    private static string Capitalize(string text) => char.ToUpper(text[0], System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) + text[1..];
+    private static string Capitalize(string text) => char.ToUpper(text[0], Language.CurrentCulture) + text[1..];
 }

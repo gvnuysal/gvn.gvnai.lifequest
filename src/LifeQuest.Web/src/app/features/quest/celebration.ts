@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, OnInit, input, output, signal } from '@angular/core';
 import { Achievement, FeedbackPreference, QuestCompletion } from '../../core/api/models';
 import { Button } from '../../ui/button';
@@ -25,35 +26,35 @@ export interface FeedbackSubmission {
         }
       </div>
       <div class="medal"><lq-icon name="trophy" [size]="40" /></div>
-      <h2 id="celebration-title">{{ completion().alreadyCompleted ? 'Bu quest zaten tamamlanmış' : 'Harika, tamamladın!' }}</h2>
+      <h2 id="celebration-title">{{ completion().alreadyCompleted ? t().celebration.alreadyDone : t().celebration.great }}</h2>
       @if (!completion().alreadyCompleted) {
         <p class="xp">+{{ shownXp() }} <span>XP</span></p>
         @if (completion().partyBonusXp) {
-          <p class="level-up"><lq-icon name="users" [size]="18" /> Parti tamamlandı: +{{ completion().partyBonusXp }} "birlikte" XP!</p>
+          <p class="level-up"><lq-icon name="users" [size]="18" /> {{ t().celebration.partyBonus(completion().partyBonusXp) }}</p>
         }
         @if (completion().leveledUp) {
-          <p class="level-up"><lq-icon name="star" [size]="18" [strokeWidth]="2.6" /> Seviye {{ completion().lifeLevel }}'e ulaştın!</p>
+          <p class="level-up"><lq-icon name="star" [size]="18" [strokeWidth]="2.6" /> {{ t().celebration.levelUp(completion().lifeLevel) }}</p>
         }
         @for (achievement of achievements(); track achievement.code) {
-          <p class="achievement"><lq-icon name="trophy" [size]="16" /> Yeni başarım: <strong>{{ achievement.title }}</strong></p>
+          <p class="achievement"><lq-icon name="trophy" [size]="16" /> {{ t().celebration.newAchievement }} <strong>{{ achievement.title }}</strong></p>
         }
       }
 
       <div class="feedback">
-        <p class="question">Deneyim nasıldı?</p>
+        <p class="question">{{ t().celebration.howWasIt }}</p>
         <lq-rating [(value)]="rating" />
-        <div class="prefs" role="group" aria-label="Benzer öneriler">
+        <div class="prefs" role="group" [attr.aria-label]="t().celebration.similar">
           <button type="button" [class.on]="preference() === 'MoreLikeThis'" [attr.aria-pressed]="preference() === 'MoreLikeThis'" (click)="toggle('MoreLikeThis')">
-            <lq-icon name="thumbs-up" [size]="18" /> Daha fazla göster
+            <lq-icon name="thumbs-up" [size]="18" /> {{ t().celebration.more }}
           </button>
           <button type="button" [class.on]="preference() === 'LessLikeThis'" [attr.aria-pressed]="preference() === 'LessLikeThis'" (click)="toggle('LessLikeThis')">
-            <lq-icon name="thumbs-down" [size]="18" /> Daha az göster
+            <lq-icon name="thumbs-down" [size]="18" /> {{ t().celebration.less }}
           </button>
         </div>
       </div>
 
       <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="submit()">
-        {{ rating() || preference() ? 'Kaydet ve devam et' : 'Devam et' }}
+        {{ rating() || preference() ? t().celebration.saveContinue : t().celebration.continue }}
       </button>
     </div>
   `,
@@ -99,6 +100,7 @@ export interface FeedbackSubmission {
   `,
 })
 export class Celebration implements OnInit {
+  protected readonly t = t;
   readonly completion = input.required<QuestCompletion>();
   readonly achievements = input<Achievement[]>([]);
   readonly busy = input(false);

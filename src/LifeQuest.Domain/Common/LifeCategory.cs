@@ -17,14 +17,17 @@ public static class LifeCategories
 {
     public static readonly IReadOnlyList<LifeCategory> All = Enum.GetValues<LifeCategory>();
 
-    public static string DisplayName(this LifeCategory category) => category switch
+    /// <summary>O anki dilde ad.</summary>
+    public static string DisplayName(this LifeCategory category) => category.LocalizedName().Current;
+
+    public static Localization.LocalizedText LocalizedName(this LifeCategory category) => category switch
     {
-        LifeCategory.Explorer => "Keşif",
-        LifeCategory.Culture => "Kültür",
-        LifeCategory.Learning => "Öğrenme",
-        LifeCategory.Social => "Sosyal",
-        LifeCategory.Fitness => "Hareket",
-        LifeCategory.Creativity => "Yaratıcılık",
-        _ => category.ToString()
+        LifeCategory.Explorer => new("Keşif", "Exploration"),
+        LifeCategory.Culture => new("Kültür", "Culture"),
+        LifeCategory.Learning => new("Öğrenme", "Learning"),
+        LifeCategory.Social => new("Sosyal", "Social"),
+        LifeCategory.Fitness => new("Hareket", "Movement"),
+        LifeCategory.Creativity => new("Yaratıcılık", "Creativity"),
+        _ => Localization.LocalizedText.Same(category.ToString())
     };
 }

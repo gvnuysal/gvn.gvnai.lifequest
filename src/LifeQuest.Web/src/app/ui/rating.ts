@@ -1,18 +1,19 @@
 import { ChangeDetectionStrategy, Component, model, signal } from '@angular/core';
 import { Icon } from './icon';
+import { t } from '../core/i18n/i18n';
 
 @Component({
   selector: 'lq-rating',
   imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { role: 'radiogroup', 'aria-label': 'Deneyim puanı' },
+  host: { role: 'radiogroup', '[attr.aria-label]': 't().ui.rating' },
   template: `
     @for (star of stars; track star) {
       <button
         type="button"
         role="radio"
         [attr.aria-checked]="value() === star"
-        [attr.aria-label]="star + ' yıldız'"
+        [attr.aria-label]="t().ui.stars(star)"
         [class.on]="star <= (hover() ?? value() ?? 0)"
         (click)="value.set(star)"
         (mouseenter)="hover.set(star)"
@@ -41,6 +42,7 @@ import { Icon } from './icon';
   `,
 })
 export class Rating {
+  protected readonly t = t;
   readonly value = model<number | null>(null);
   protected readonly hover = signal<number | null>(null);
   protected readonly stars = [1, 2, 3, 4, 5];

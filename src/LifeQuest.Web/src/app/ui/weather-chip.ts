@@ -24,8 +24,9 @@ export class WeatherChip {
   readonly weather = input.required<WeatherInfo>();
 
   protected readonly icon = computed(() => {
-    const w = this.weather();
-    if (w.outdoor === 'Poor' && /yağ|sağanak|çisel|fırtına|kar/i.test(w.summary)) return 'cloud-rain';
-    return /açık/i.test(w.summary) ? 'sun' : 'cloud';
+    // WMO kodu: 0 açık · 1-3 bulutlu · 45-48 sis · 51+ yağış/kar/fırtına.
+    const code = this.weather().code;
+    if (code >= 51) return 'cloud-rain';
+    return code === 0 ? 'sun' : 'cloud';
   });
 }

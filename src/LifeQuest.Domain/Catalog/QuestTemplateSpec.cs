@@ -24,4 +24,6 @@ public sealed record QuestTemplateSpec(
     double RiskScore,
     IReadOnlyList<Guid> InterestIds,
     PhysicalEffort Effort,
-    bool IsStarter);
+    bool IsStarter,
+    string? TitleEn = null,
+    string? DescriptionEn = null);

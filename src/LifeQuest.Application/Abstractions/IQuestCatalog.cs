@@ -29,6 +29,12 @@ public sealed record StarterCard(
     CostBand Cost,
     int MinMinutes,
     int MaxMinutes,
-    IReadOnlyList<Guid> InterestIds);
+    IReadOnlyList<Guid> InterestIds,
+    string? TitleEn = null,
+    string? DescriptionEn = null);
 
-public sealed record InterestCatalogItem(Guid Id, string Code, string Name, LifeCategory Category);
+public sealed record InterestCatalogItem(Guid Id, string Code, string Name, LifeCategory Category, string? NameEn = null)
+{
+    /// <summary>O anki dilde ad (İngilizcesi yoksa Türkçe).</summary>
+    public string DisplayName() => Domain.Localization.LocalizedText.WithFallback(Name, NameEn).Current;
+}

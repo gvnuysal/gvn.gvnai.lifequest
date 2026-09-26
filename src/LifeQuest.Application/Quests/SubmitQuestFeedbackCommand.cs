@@ -7,6 +7,7 @@ using LifeQuest.Application.Progression;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Progression;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Quests;
 
@@ -19,7 +20,7 @@ public sealed class SubmitQuestFeedbackCommandValidator : AbstractValidator<Subm
     public SubmitQuestFeedbackCommandValidator()
     {
         RuleFor(x => x).Must(x => x.Rating is not null || x.Preference is not null)
-            .WithMessage("Değerlendirme veya tercih bilgisinden en az biri gönderilmelidir.")
+            .WithMessage(_ => Text.Of("Değerlendirme veya tercih bilgisinden en az biri gönderilmelidir.", "Send a rating, a preference, or both."))
             .OverridePropertyName("Feedback");
         RuleFor(x => x.Rating).InclusiveBetween(1, 5);
         RuleFor(x => x.Preference).IsInEnum();

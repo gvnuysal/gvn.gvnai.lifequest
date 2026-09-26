@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -29,16 +30,16 @@ interface OverrideRow {
     <section class="section">
       <header class="head">
         <div class="stack">
-          <h1>Deneyler</h1>
-          <p class="muted">Ağırlık değişikliğini herkese açmadan önce kullanıcıların bir kısmında dene; north-star ile karşılaştır.</p>
+          <h1>{{ t().adminExperiments.title }}</h1>
+          <p class="muted">{{ t().adminExperiments.lead }}</p>
         </div>
-        <button lq-button size="sm" (click)="openCreate()">Yeni deney</button>
+        <button lq-button size="sm" (click)="openCreate()">{{ t().adminExperiments.newExperiment }}</button>
       </header>
 
       @if (presets().length) {
         <section class="stack presets" aria-labelledby="presets-title">
-          <h2 id="presets-title" class="presets__title">Önerilen deneyler</h2>
-          <p class="muted small">Simülasyon raporunun önerdiği ilk deneyler, öncelik sırasıyla. Birincil metrik north-star, koruma metriği "ilgimi çekmedi" oranı.</p>
+          <h2 id="presets-title" class="presets__title">{{ t().adminExperiments.presets }}</h2>
+          <p class="muted small">{{ t().adminExperiments.presetsHint }}</p>
           @for (p of presets(); track p.key) {
             <article class="surface item">
               <div class="item__head">
@@ -52,9 +53,9 @@ interface OverrideRow {
                 @for (o of p.overrides; track o.key) { <span class="change">{{ o.label }}: {{ o.controlValue }} → <strong>{{ o.treatmentValue }}</strong></span> }
               </p>
               @if (p.existingExperimentId; as existingId) {
-                <a class="link" [routerLink]="experimentPath(existingId)">Deneye git</a>
+                <a class="link" [routerLink]="experimentPath(existingId)">{{ t().adminExperiments.goToExperiment }}</a>
               } @else {
-                <button lq-button size="sm" variant="secondary" (click)="usePreset(p)">Taslağı hazırla</button>
+                <button lq-button size="sm" variant="secondary" (click)="usePreset(p)">{{ t().adminExperiments.prepareDraft }}</button>
               }
             </article>
           }
@@ -62,7 +63,7 @@ interface OverrideRow {
       }
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Deneyler yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminExperiments.loadFailed" [message]="error()" />
       } @else if (experiments(); as list) {
         @for (e of list; track e.id) {
           <a class="surface item" [routerLink]="experimentPath(e.id)">
@@ -75,59 +76,59 @@ interface OverrideRow {
               @for (o of e.overrides; track o.key) { <span class="change">{{ o.label }}: {{ o.controlValue }} → <strong>{{ o.treatmentValue }}</strong></span> }
             </p>
             <p class="muted small">
-              Deneme payı %{{ share(e) }} ·
-              {{ e.startedAt ? date(e.startedAt) + (e.endedAt ? ' – ' + date(e.endedAt) : ' başladı') : 'henüz başlamadı' }}
-              @if (e.outcome === 'Adopted') { · <strong>üretime alındı</strong> }
-              @if (e.outcome === 'Discarded') { · kapatıldı }
+              {{ t().adminExperiments.share(t().format.percent(share(e))) }} ·
+              {{ e.startedAt ? date(e.startedAt) + (e.endedAt ? ' – ' + date(e.endedAt) : ' ' + t().adminExperiments.started) : t().adminExperiments.notStarted }}
+              @if (e.outcome === 'Adopted') { · <strong>{{ t().adminExperiments.adopted }}</strong> }
+              @if (e.outcome === 'Discarded') { · {{ t().adminExperiments.discarded }} }
             </p>
           </a>
         } @empty {
-          <lq-empty-state icon="target" title="Henüz deney yok"
-            message="Yukarıdaki önerilen deneylerden biriyle başlayabilirsin." />
+          <lq-empty-state icon="target" [title]="t().adminExperiments.noneTitle"
+            [message]="t().adminExperiments.noneHint" />
         }
       } @else {
         <lq-skeleton [height]="120" />
       }
     </section>
 
-    <lq-sheet title="Yeni deney" [(open)]="createOpen">
+    <lq-sheet [title]="t().adminExperiments.newExperiment" [(open)]="createOpen">
       <form class="stack" (ngSubmit)="create()">
         <div class="field">
-          <label for="exp-name">Ad</label>
-          <input id="exp-name" class="input" name="name" maxlength="100" [(ngModel)]="name" placeholder="Örn. Sevdiğini tekrarla 0,8" />
+          <label for="exp-name">{{ t().adminExperiments.name }}</label>
+          <input id="exp-name" class="input" name="name" maxlength="100" [(ngModel)]="name" [placeholder]="t().adminExperiments.namePlaceholder" />
         </div>
         <div class="field">
-          <label for="exp-hypothesis">Hipotez</label>
+          <label for="exp-hypothesis">{{ t().adminExperiments.hypothesis }}</label>
           <textarea id="exp-hypothesis" class="input" name="hypothesis" rows="2" maxlength="500" [(ngModel)]="hypothesis"
-                    placeholder="Ne olmasını bekliyorsun ve neden?"></textarea>
+                    [placeholder]="t().adminExperiments.hypothesisPlaceholder"></textarea>
         </div>
         <div class="field">
-          <span class="field__label">Deneme grubunda değişecek ağırlıklar</span>
+          <span class="field__label">{{ t().adminExperiments.changedWeights }}</span>
           @for (row of rows(); track row.field.key) {
             <div class="override">
               <span class="override__label">{{ row.field.label }}</span>
               <span class="muted small">{{ row.field.value }} →</span>
               <input class="input override__value" type="number" [name]="row.field.key" [min]="row.field.min" [max]="row.field.max"
                      [step]="row.field.step" [ngModel]="row.value" (ngModelChange)="setValue(row, $event)" />
-              <button type="button" class="link" (click)="removeRow(row)" aria-label="Kaldır">Kaldır</button>
+              <button type="button" class="link" (click)="removeRow(row)" [attr.aria-label]="t().common.remove">{{ t().common.remove }}</button>
             </div>
           }
-          <select class="input" aria-label="Ağırlık ekle" (change)="addRow($event)">
-            <option value="">+ Ağırlık ekle</option>
-            @for (f of availableFields(); track f.key) { <option [value]="f.key">{{ f.label }} (şu an {{ f.value }})</option> }
+          <select class="input" [attr.aria-label]="t().adminExperiments.addWeightAria" (change)="addRow($event)">
+            <option value="">{{ t().adminExperiments.addWeight }}</option>
+            @for (f of availableFields(); track f.key) { <option [value]="f.key">{{ f.label }} ({{ t().adminExperiments.current(f.value) }})</option> }
           </select>
         </div>
         <div class="field">
-          <label for="exp-share">Deneme grubuna düşen kullanıcı payı</label>
+          <label for="exp-share">{{ t().adminExperiments.shareLabel }}</label>
           <select id="exp-share" class="input" name="share" [(ngModel)]="shareValue">
-            <option [ngValue]="0.2">%20 (temkinli)</option>
-            <option [ngValue]="0.5">%50 (en hızlı sonuç)</option>
+            <option [ngValue]="0.2">{{ t().adminExperiments.cautious }}</option>
+            <option [ngValue]="0.5">{{ t().adminExperiments.fastest }}</option>
           </select>
         </div>
         @if (createError()) { <p class="field__error" role="alert">{{ createError() }}</p> }
         <button lq-button type="submit" [block]="true" [loading]="busy()"
-                [disabled]="!name.trim() || !hypothesis.trim() || !rows().length">Taslak olarak oluştur</button>
-        <p class="muted small">Deney taslak olarak oluşur; detay ekranından başlatırsın.</p>
+                [disabled]="!name.trim() || !hypothesis.trim() || !rows().length">{{ t().adminExperiments.createDraft }}</button>
+        <p class="muted small">{{ t().adminExperiments.draftHint }}</p>
       </form>
     </lq-sheet>
   `,
@@ -150,6 +151,7 @@ interface OverrideRow {
   `,
 })
 export class AdminExperimentsPage {
+  protected readonly t = t;
   protected readonly experimentPath = experimentPath;
   private readonly api = inject(AdminApi);
   private readonly router = inject(Router);
@@ -241,7 +243,7 @@ export class AdminExperimentsPage {
       next: (experiment) => {
         this.busy.set(false);
         this.createOpen.set(false);
-        this.toast.success('Deney taslağı oluşturuldu.');
+        this.toast.success(t().adminExperiments.draftCreated);
         void this.router.navigate(experimentPath(experiment.id));
       },
       error: (err: unknown) => {

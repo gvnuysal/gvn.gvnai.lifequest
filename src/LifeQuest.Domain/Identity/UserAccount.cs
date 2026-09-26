@@ -1,6 +1,7 @@
 using Gvn.GvnFramework.Core.Guarding;
 using Gvn.GvnFramework.Core.Results;
 using Gvn.GvnFramework.Domain.Aggregates;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Domain.Identity;
 
@@ -29,10 +30,13 @@ public sealed class UserAccount : AggregateRoot
     public DateTime? SuspendedUntil { get; private set; }
     public string? SuspensionReason { get; private set; }
 
+    /// <summary>Arayüz, e-posta dışı bildirimler (push) ve haftalık özet dili: "tr" veya "en".</summary>
+    public string Language { get; private set; } = Localization.Language.Default;
+
     private UserAccount() { }
 
     public static Result<UserAccount> Register(
-        string email, string passwordHash, string displayName, int birthYear, DateTime nowUtc)
+        string email, string passwordHash, string displayName, int birthYear, DateTime nowUtc, string? language = null)
     {
         // Yalnızca yıl bilindiği için muhafazakâr hesap: bu yıl doğum günü gelmemiş olabilir.
         if (nowUtc.Year - birthYear - 1 < MinimumAge)
@@ -43,17 +47,26 @@ public sealed class UserAccount : AggregateRoot
             Email = NormalizeEmail(Guard.NotNullOrWhiteSpace(email, nameof(email))),
             PasswordHash = Guard.NotNullOrWhiteSpace(passwordHash, nameof(passwordHash)),
             DisplayName = Guard.NotNullOrWhiteSpace(displayName, nameof(displayName)).Trim(),
-            BirthYear = birthYear
+            BirthYear = birthYear,
+            Language = Localization.Language.Normalize(language)
         };
 
         account.AddDomainEvent(new UserRegisteredEvent(account.Id));
         return Result<UserAccount>.Ok(account);
     }
 
+    public Result SetLanguage(string language)
+    {
+        if (!Localization.Language.IsSupported(language))
+            return Result.Fail(IdentityErrors.UnsupportedLanguage);
+        Language = Localization.Language.Normalize(language);
+        return Result.Ok();
+    }
+
     /// <returns>Rol değiştiyse <c>true</c>.</returns>
     public bool GrantRole(string role)
     {
-        Guard.True(role is UserRoles.User or UserRoles.Admin, "Bilinmeyen rol.");
+        Guard.True(role is UserRoles.User or UserRoles.Admin, Text.Of("Bilinmeyen rol.", "Unknown role."));
         if (Role == role)
             return false;
 
@@ -68,7 +81,7 @@ public sealed class UserAccount : AggregateRoot
 
     public void Suspend(DateTime? untilUtc, string reason, DateTime nowUtc)
     {
-        Guard.True(untilUtc is null || untilUtc > nowUtc, "Askı bitişi gelecekte olmalıdır.");
+        Guard.True(untilUtc is null || untilUtc > nowUtc, Text.Of("Askı bitişi gelecekte olmalıdır.", "The suspension end must be in the future."));
         SuspendedAt = nowUtc;
         SuspendedUntil = untilUtc;
         SuspensionReason = Guard.NotNullOrWhiteSpace(reason, nameof(reason)).Trim();

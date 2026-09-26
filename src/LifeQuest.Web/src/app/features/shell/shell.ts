@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Icon, IconName } from '../../ui/icon';
 import { APP_PATHS } from '../../core/routing/app-paths';
+import { t } from '../../core/i18n/i18n';
 
 interface NavItem {
   path: string;
-  label: string;
+  key: 'today' | 'quests' | 'progress' | 'profile';
   icon: IconName;
 }
 
@@ -18,11 +19,11 @@ interface NavItem {
       <router-outlet />
     </main>
 
-    <nav aria-label="Ana menü">
+    <nav [attr.aria-label]="t().nav.mainMenu">
       @for (item of items; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">
           <span class="pill"><lq-icon [name]="item.icon" [size]="22" /></span>
-          <span class="label">{{ item.label }}</span>
+          <span class="label">{{ t().nav[item.key] }}</span>
         </a>
       }
     </nav>
@@ -65,10 +66,11 @@ interface NavItem {
   `,
 })
 export class Shell {
+  protected readonly t = t;
   protected readonly items: NavItem[] = [
-    { path: APP_PATHS.today, label: 'Bugün', icon: 'sun' },
-    { path: APP_PATHS.quests, label: 'Görevlerim', icon: 'list' },
-    { path: APP_PATHS.progress, label: 'İlerleme', icon: 'trophy' },
-    { path: APP_PATHS.profile, label: 'Profil', icon: 'user' },
+    { path: APP_PATHS.today, key: 'today', icon: 'sun' },
+    { path: APP_PATHS.quests, key: 'quests', icon: 'list' },
+    { path: APP_PATHS.progress, key: 'progress', icon: 'trophy' },
+    { path: APP_PATHS.profile, key: 'profile', icon: 'user' },
   ];
 }

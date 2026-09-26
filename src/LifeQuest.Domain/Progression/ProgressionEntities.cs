@@ -65,6 +65,9 @@ public sealed class XpTransaction : Entity
     public XpSourceType SourceType { get; private set; }
     public Guid SourceId { get; private set; }
     public string Description { get; private set; } = default!;
+
+    /// <summary>İngilizce açıklama; eski kayıtlarda boştur.</summary>
+    public string? DescriptionEn { get; private set; }
     public int LifeXp { get; private set; }
     public LifeCategory PrimaryCategory { get; private set; }
     public int PrimaryCategoryXp { get; private set; }
@@ -72,17 +75,20 @@ public sealed class XpTransaction : Entity
     public int SecondaryCategoryXp { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    public Localization.LocalizedText LocalizedDescription => Localization.LocalizedText.WithFallback(Description, DescriptionEn);
+
     private XpTransaction() { }
 
     internal XpTransaction(
-        Guid userId, XpSourceType sourceType, Guid sourceId, string description,
+        Guid userId, XpSourceType sourceType, Guid sourceId, Localization.LocalizedText description,
         int lifeXp, LifeCategory primaryCategory, int primaryCategoryXp,
         LifeCategory? secondaryCategory, int secondaryCategoryXp, DateTime nowUtc)
     {
         UserId = userId;
         SourceType = sourceType;
         SourceId = sourceId;
-        Description = description;
+        Description = description.Tr;
+        DescriptionEn = description.En;
         LifeXp = lifeXp;
         PrimaryCategory = primaryCategory;
         PrimaryCategoryXp = primaryCategoryXp;

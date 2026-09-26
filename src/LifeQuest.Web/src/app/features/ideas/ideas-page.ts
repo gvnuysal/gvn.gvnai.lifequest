@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdeasApi } from '../../core/api/api-clients';
@@ -10,11 +11,7 @@ import { Button } from '../../ui/button';
 import { Chip } from '../../ui/chip';
 import { EmptyState, Skeleton } from '../../ui/states';
 
-const STATUS: Record<IdeaStatus, { label: string; tone: string }> = {
-  Pending: { label: 'İnceleniyor', tone: 'warning' },
-  Accepted: { label: 'Kataloğa eklendi', tone: 'success' },
-  Rejected: { label: 'Eklenmedi', tone: '' },
-};
+const STATUS_TONE: Record<IdeaStatus, string> = { Pending: 'warning', Accepted: 'success', Rejected: '' };
 
 /**
  * Topluluk fikirleri: kullanıcı yaşamak istediği bir deneyimi önerir, ekip inceler. Bağlantı ve iletişim bilgisi
@@ -27,27 +24,24 @@ const STATUS: Record<IdeaStatus, { label: string; tone: string }> = {
   template: `
     <div class="page">
       <header class="stack">
-        <h1>Bir deneyim öner</h1>
-        <p class="muted">
-          Başkalarının da sevebileceği küçük bir gerçek hayat deneyimi mi var? Paylaş; ekibimiz inceleyip güvenlik
-          kurallarına uygunsa kataloğa ekler. Kimliğin deneyimle birlikte paylaşılmaz.
-        </p>
+        <h1>{{ t().ideas.title }}</h1>
+        <p class="muted">{{ t().ideas.lead }}</p>
       </header>
 
       <form class="surface card stack" [formGroup]="form" (ngSubmit)="submit()">
         <div class="field">
-          <label for="idea-title">Başlık</label>
-          <input id="idea-title" class="input" formControlName="title" maxlength="80" placeholder="Örn. Mahalle kütüphanesi turu" />
+          <label for="idea-title">{{ t().ideas.titleLabel }}</label>
+          <input id="idea-title" class="input" formControlName="title" maxlength="80" [placeholder]="t().ideas.titlePlaceholder" />
           <span class="field__hint">{{ form.controls.title.value.length }} / 80</span>
         </div>
         <div class="field">
-          <label for="idea-description">Ne yapılıyor?</label>
+          <label for="idea-description">{{ t().ideas.description }}</label>
           <textarea id="idea-description" class="input" rows="3" formControlName="description" maxlength="300"
-                    placeholder="Deneyimi kendi cümlelerinle anlat. Bağlantı, e-posta veya telefon ekleme."></textarea>
-          <span class="field__hint">{{ form.controls.description.value.length }} / 300 · en az 30 karakter</span>
+                    [placeholder]="t().ideas.descriptionPlaceholder"></textarea>
+          <span class="field__hint">{{ form.controls.description.value.length }} / 300 · {{ t().ideas.minChars }}</span>
         </div>
         <div class="field">
-          <span class="field__label">Alan</span>
+          <span class="field__label">{{ t().ideas.area }}</span>
           <div class="chips">
             @for (c of categories; track c) {
               <button lq-chip [selected]="form.controls.category.value === c" (click)="form.controls.category.setValue(c)">{{ catLabel(c) }}</button>
@@ -56,23 +50,23 @@ const STATUS: Record<IdeaStatus, { label: string; tone: string }> = {
         </div>
         <div class="grid">
           <div class="field">
-            <label for="idea-minutes">Yaklaşık süre (dk)</label>
+            <label for="idea-minutes">{{ t().ideas.minutes }}</label>
             <input id="idea-minutes" class="input" type="number" min="5" max="600" formControlName="minutes" />
           </div>
           <div class="field">
-            <label for="idea-cost">Maliyet</label>
+            <label for="idea-cost">{{ t().ideas.cost }}</label>
             <select id="idea-cost" class="input" formControlName="cost">
               @for (c of costs; track c) { <option [value]="c">{{ costLabel(c) }}</option> }
             </select>
           </div>
         </div>
-        <label class="toggle"><input type="checkbox" formControlName="isOutdoor" /> Açık havada yapılır</label>
+        <label class="toggle"><input type="checkbox" formControlName="isOutdoor" /> {{ t().ideas.outdoor }}</label>
         @if (error()) { <p class="field__error" role="alert">{{ error() }}</p> }
-        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="form.invalid">Fikri gönder</button>
+        <button lq-button type="submit" [block]="true" [loading]="busy()" [disabled]="form.invalid">{{ t().ideas.submit }}</button>
       </form>
 
       <section class="stack">
-        <h2 class="section-title">Fikirlerim</h2>
+        <h2 class="section-title">{{ t().ideas.mine }}</h2>
         @if (ideas(); as list) {
           @for (idea of list; track idea.id) {
             <article class="surface idea">
@@ -83,11 +77,11 @@ const STATUS: Record<IdeaStatus, { label: string; tone: string }> = {
               <p class="muted small">{{ catLabel(idea.category) }} · {{ date(idea.submittedAt) }}</p>
               @if (idea.reviewNote) { <p class="note small">{{ idea.reviewNote }}</p> }
               @if (idea.status === 'Pending') {
-                <button lq-button variant="ghost" size="sm" (click)="withdraw(idea)">Geri çek</button>
+                <button lq-button variant="ghost" size="sm" (click)="withdraw(idea)">{{ t().ideas.withdraw }}</button>
               }
             </article>
           } @empty {
-            <lq-empty-state icon="sparkles" title="Henüz fikir göndermedin" message="İlk fikrin kataloğa eklenen ilk topluluk deneyimi olabilir." />
+            <lq-empty-state icon="sparkles" [title]="t().ideas.emptyTitle" [message]="t().ideas.emptyHint" />
           }
         } @else {
           <lq-skeleton [height]="80" />
@@ -109,6 +103,7 @@ const STATUS: Record<IdeaStatus, { label: string; tone: string }> = {
   `,
 })
 export class IdeasPage {
+  protected readonly t = t;
   private readonly api = inject(IdeasApi);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder).nonNullable;
@@ -141,7 +136,7 @@ export class IdeasPage {
   }
 
   protected status(idea: MyIdea) {
-    return STATUS[idea.status];
+    return { label: t().ideas.status[idea.status], tone: STATUS_TONE[idea.status] };
   }
 
   protected date(value: string): string {
@@ -158,7 +153,7 @@ export class IdeasPage {
         this.busy.set(false);
         this.ideas.update((list) => [idea, ...(list ?? [])]);
         this.form.reset();
-        this.toast.success('Teşekkürler! Fikrin incelemeye alındı.');
+        this.toast.success(t().ideas.sent);
       },
       error: (err: unknown) => {
         this.busy.set(false);

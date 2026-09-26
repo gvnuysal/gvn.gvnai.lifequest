@@ -32,7 +32,7 @@ internal sealed class GetProgressQueryHandler(IPlayerProgressRepository progress
             .ToList();
 
         var xp = recent
-            .Select(t => new XpEntryDto(t.CreatedAt, t.Description, t.LifeXp, t.PrimaryCategory, t.PrimaryCategoryXp))
+            .Select(t => new XpEntryDto(t.CreatedAt, t.LocalizedDescription.Current, t.LifeXp, t.PrimaryCategory, t.PrimaryCategoryXp))
             .ToList();
 
         return Result<ProgressDto>.Ok(new ProgressDto(

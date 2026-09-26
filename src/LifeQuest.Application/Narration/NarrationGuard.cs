@@ -14,7 +14,7 @@ public static partial class NarrationGuard
     public const int MaxDescriptionLength = 300;
     public const int MinDescriptionLength = 20;
 
-    private static readonly string[] MoneyAndRewardTerms = ["₺", " tl", "lira", "$", "€", "xp", "puan kazan"];
+    private static readonly string[] MoneyAndRewardTerms = ["₺", " tl", "lira", "$", "€", "£", "xp", "puan kazan", "earn points", "win points"];
 
     public static IReadOnlyList<string> Validate(QuestNarration output, NarrationRequest request)
     {

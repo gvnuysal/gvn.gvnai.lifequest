@@ -6,6 +6,7 @@ using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Admin;
 using LifeQuest.Domain.Recommendations;
 using Microsoft.Extensions.Options;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Admin.Weights;
 
@@ -63,7 +64,7 @@ public sealed class UpdateRecommendationWeightsCommandValidator : AbstractValida
     public UpdateRecommendationWeightsCommandValidator()
     {
         RuleFor(x => x.Reason).NotEmpty().MaximumLength(500);
-        RuleFor(x => x.Values).NotEmpty().WithMessage("Değiştirilecek en az bir ağırlık gönderilmelidir.");
+        RuleFor(x => x.Values).NotEmpty().WithMessage(_ => Text.Of("Değiştirilecek en az bir ağırlık gönderilmelidir.", "Send at least one weight to change."));
         RuleFor(x => x.Values).Custom((values, context) =>
         {
             if (values is null)
@@ -99,7 +100,7 @@ internal sealed class UpdateRecommendationWeightsCommandHandler(
         if (changes.Count > 0)
         {
             await audit.RecordAsync(AdminAction.WeightsUpdated, AdminTargetType.RecommendationSettings, settings.Id,
-                "Öneri ağırlıkları", command.Reason, changes, cancellationToken);
+                Text.Of("Öneri ağırlıkları", "Recommendation weights"), command.Reason, changes, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await provider.InvalidateAsync(cancellationToken);
         }
@@ -117,7 +118,7 @@ public sealed class ResetRecommendationWeightsCommandValidator : AbstractValidat
     public ResetRecommendationWeightsCommandValidator()
     {
         RuleFor(x => x.Reason).MaximumLength(500);
-        RuleForEach(x => x.Keys).Must(k => RecommendationWeightCatalog.TryGet(k, out _)).WithMessage("Bilinmeyen ağırlık: {PropertyValue}");
+        RuleForEach(x => x.Keys).Must(k => RecommendationWeightCatalog.TryGet(k, out _)).WithMessage(_ => Text.Of("Bilinmeyen ağırlık: {PropertyValue}", "Unknown weight: {PropertyValue}"));
     }
 }
 
@@ -142,7 +143,7 @@ internal sealed class ResetRecommendationWeightsCommandHandler(
         if (changes.Count > 0)
         {
             await audit.RecordAsync(AdminAction.WeightsReset, AdminTargetType.RecommendationSettings, settings.Id,
-                "Öneri ağırlıkları", command.Reason, changes, cancellationToken);
+                Text.Of("Öneri ağırlıkları", "Recommendation weights"), command.Reason, changes, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await provider.InvalidateAsync(cancellationToken);
         }

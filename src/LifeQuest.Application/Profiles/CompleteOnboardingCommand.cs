@@ -6,6 +6,7 @@ using LifeQuest.Application.Abstractions;
 using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Application.Profiles;
 
@@ -46,7 +47,7 @@ public sealed class CompleteOnboardingCommandValidator : AbstractValidator<Compl
         RuleFor(x => x.TimeZoneId).ValidTimeZone();
         RuleFor(x => x.MaxPhysicalEffort).IsInEnum();
         RuleFor(x => x.StarterReactions)
-            .Must(r => r is null || r.Count <= 30).WithMessage("En fazla 30 kart tepkisi gönderilebilir.")
+            .Must(r => r is null || r.Count <= 30).WithMessage(_ => Text.Of("En fazla 30 kart tepkisi gönderilebilir.", "At most 30 card reactions can be sent."))
             .ForEach(item => item.ChildRules(r =>
             {
                 r.RuleFor(x => x.TemplateCode).NotEmpty().MaximumLength(64);

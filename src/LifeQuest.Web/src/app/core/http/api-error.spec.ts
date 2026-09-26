@@ -1,5 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { fieldErrors, firstErrorMessage, hasErrorCode, parseApiErrors } from './api-error';
+import { setLang } from '../i18n/lang';
+
+beforeEach(() => setLang('tr', false));
 
 const response = (status: number, error: unknown) => new HttpErrorResponse({ status, error });
 
@@ -24,6 +27,12 @@ describe('parseApiErrors', () => {
     expect(firstErrorMessage(response(0, null))).toContain('Sunucuya ulaşılamıyor');
     expect(firstErrorMessage(response(429, null))).toContain('Çok fazla istek');
     expect(firstErrorMessage(response(500, { detail: 'stack trace' }))).not.toContain('stack trace');
+  });
+
+  it('falls back to English messages when the interface is in English', () => {
+    setLang('en', false);
+    expect(firstErrorMessage(response(0, null))).toBe("Can't reach the server. Check your connection.");
+    expect(firstErrorMessage(response(429, null))).toContain('Too many requests');
   });
 });
 

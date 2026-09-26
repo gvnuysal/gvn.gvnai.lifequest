@@ -31,10 +31,13 @@ import { Sheet } from '../../ui/sheet';
 import { Skeleton } from '../../ui/states';
 import { APP_PATHS } from '../../core/routing/app-paths';
 import { ReminderCard } from './reminder-card';
+import { option, t } from '../../core/i18n/i18n';
+import { Lang } from '../../core/i18n/lang';
+import { LanguageSwitch } from '../../ui/language-switch';
 
 @Component({
   selector: 'lq-profile-page',
-  imports: [FormsModule, RouterLink, Button, CategoryBadge, Chip, Icon, InterestPicker, ReminderCard, Segmented, Sheet, Skeleton],
+  imports: [FormsModule, RouterLink, Button, CategoryBadge, Chip, Icon, InterestPicker, LanguageSwitch, ReminderCard, Segmented, Sheet, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
@@ -55,23 +58,17 @@ export class ProfilePage {
   protected readonly categories = CATEGORY_ORDER;
   protected readonly categoryMeta = CATEGORIES;
   protected readonly loveWeight = LOVE_WEIGHT;
-  protected readonly radiusOptions: SegmentOption<DiscoveryRadius>[] = (['Chill', 'Explore', 'SurpriseMe'] as const).map((r) => ({
-    value: r,
-    label: RADIUS_LABELS[r].label,
-  }));
-  protected readonly costOptions: SegmentOption<CostBand>[] = COST_ORDER.map((c) => ({ value: c, label: COST_LABELS[c].label }));
-  protected readonly timeOptions: SegmentOption<number>[] = WEEKLY_TIME_OPTIONS.map((o) => ({ value: o.minutes, label: o.short }));
-  protected readonly effortOptions: SegmentOption<PhysicalEffort>[] = EFFORT_LIMIT_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
-  protected readonly notificationOptions: SegmentOption<NotificationPreference>[] = (['WeeklySummary', 'Off'] as const).map((v) => ({
-    value: v,
-    label: NOTIFICATION_LABELS[v],
-  }));
+  protected readonly t = t;
+  protected readonly radiusOptions: SegmentOption<DiscoveryRadius>[] = (['Chill', 'Explore', 'SurpriseMe'] as const).map((r) =>
+    option(r, () => RADIUS_LABELS[r].label));
+  protected readonly costOptions: SegmentOption<CostBand>[] = COST_ORDER.map((c) => option(c, () => COST_LABELS[c].label));
+  protected readonly timeOptions: SegmentOption<number>[] = WEEKLY_TIME_OPTIONS.map((o) => option(o.minutes, () => o.short));
+  protected readonly effortOptions: SegmentOption<PhysicalEffort>[] = EFFORT_LIMIT_OPTIONS.map((o) => option(o.value, () => o.label));
+  protected readonly notificationOptions: SegmentOption<NotificationPreference>[] = (['WeeklySummary', 'Off'] as const).map((v) =>
+    option(v, () => NOTIFICATION_LABELS[v]));
   protected readonly isAdmin = this.auth.isAdmin;
-  protected readonly themeOptions: SegmentOption<ThemePreference>[] = [
-    { value: 'system', label: 'Sistem' },
-    { value: 'light', label: 'Açık' },
-    { value: 'dark', label: 'Koyu' },
-  ];
+  protected readonly themeOptions: SegmentOption<ThemePreference>[] = (['system', 'light', 'dark'] as const).map((v) =>
+    option<ThemePreference>(v, (d) => d.profile.themes[v]));
 
   // Düzenlenebilir tercih kopyası
   protected readonly radius = signal<DiscoveryRadius>('Explore');
@@ -137,7 +134,7 @@ export class ProfilePage {
         notificationPreference: this.notifications(),
       }),
       this.savingPreferences,
-      'Tercihlerin kaydedildi. Yarınki öneriler buna göre şekillenecek.',
+      t().profile.savedPrefs,
     );
   }
 
@@ -153,12 +150,20 @@ export class ProfilePage {
   protected saveInterests(): void {
     const interests = Object.entries(this.interestDraft()).map(([code, weight]) => ({ code, weight }));
     if (interests.length === 0) {
-      this.toast.error('En az bir ilgi alanı seçmelisin.');
+      this.toast.error(t().profile.pickInterest);
       return;
     }
-    this.save(this.profileApi.setInterests(interests), this.savingInterests, 'İlgi alanların güncellendi.', () =>
+    this.save(this.profileApi.setInterests(interests), this.savingInterests, t().profile.interestsSaved, () =>
       this.interestsOpen.set(false),
     );
+  }
+
+  /** Dil hemen değişir; hesaba da yazılır ki push ve haftalık özet aynı dilde gelsin. */
+  protected saveLanguage(language: Lang): void {
+    this.profileApi.updatePreferences({ language }).subscribe({
+      next: (profile) => this.profiles.set(profile),
+      error: (err: unknown) => this.toast.error(firstErrorMessage(err)),
+    });
   }
 
   protected logout(): void {
@@ -171,7 +176,7 @@ export class ProfilePage {
       next: () => {
         this.deleteOpen.set(false);
         this.auth.clear();
-        this.toast.show('Hesabın ve tüm verilerin silindi.');
+        this.toast.show(t().profile.deleted);
         void this.router.navigate([APP_PATHS.register]);
       },
       error: (err: unknown) => {
@@ -213,8 +218,8 @@ export class ProfilePage {
     this.profileApi.exportData().subscribe({
       next: (response) => {
         this.exporting.set(false);
-        saveResponse(response, 'lifequest-verilerim.json');
-        this.toast.success('Verilerin indirildi.');
+        saveResponse(response, t().profile.exportFile);
+        this.toast.success(t().profile.exported);
       },
       error: (err: unknown) => {
         this.exporting.set(false);

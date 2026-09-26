@@ -1,3 +1,4 @@
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
@@ -26,17 +27,17 @@ type UserAction = 'suspend' | 'unsuspend' | 'role' | 'delete';
   template: `
     <section class="section">
       <header class="stack">
-        <h1>Kullanıcılar</h1>
-        <p class="muted">Hesap bilgisi ve toplam sayılar. Görev içerikleri, puanlar ve ilgiler burada görünmez.</p>
-        <input class="input" type="search" placeholder="E-posta veya ad ara" aria-label="Kullanıcı ara"
+        <h1>{{ t().adminUsers.title }}</h1>
+        <p class="muted">{{ t().adminUsers.lead }}</p>
+        <input class="input" type="search" [placeholder]="t().adminUsers.search" [attr.aria-label]="t().adminUsers.searchAria"
                [ngModel]="query()" (ngModelChange)="onSearch($event)" />
-        <lq-segmented ariaLabel="Filtre" [options]="filters" [value]="filter()" (valueChange)="setFilter($event)" />
+        <lq-segmented [ariaLabel]="t().adminUsers.filter" [options]="filters" [value]="filter()" (valueChange)="setFilter($event)" />
       </header>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Kullanıcılar yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminUsers.loadFailed" [message]="error()" />
       } @else if (page(); as p) {
-        <p class="muted small">{{ p.totalCount }} hesap</p>
+        <p class="muted small">{{ t().adminUsers.accounts(p.totalCount) }}</p>
         <ul class="list">
           @for (user of p.items; track user.id) {
             <li class="surface user">
@@ -46,52 +47,52 @@ type UserAction = 'suspend' | 'unsuspend' | 'role' | 'delete';
                   <span class="muted small">{{ user.email }}</span>
                 </div>
                 <div class="row wrap">
-                  @if (user.role === 'admin') { <span class="pill pill--brand">Admin</span> }
-                  @if (user.isSuspended) { <span class="pill pill--danger">Askıda</span> }
-                  @if (user.isSelf) { <span class="pill">Sen</span> }
+                  @if (user.role === 'admin') { <span class="pill pill--brand">{{ t().adminUsers.admin }}</span> }
+                  @if (user.isSuspended) { <span class="pill pill--danger">{{ t().adminUsers.suspended }}</span> }
+                  @if (user.isSelf) { <span class="pill">{{ t().adminUsers.self }}</span> }
                 </div>
               </div>
               <dl class="facts">
-                <div><dt>Kayıt</dt><dd>{{ date(user.createdAt) }}</dd></div>
-                <div><dt>Son giriş</dt><dd>{{ user.lastLoginAt ? date(user.lastLoginAt) : '–' }}</dd></div>
-                <div><dt>Tamamlanan</dt><dd>{{ user.completedQuests }}</dd></div>
+                <div><dt>{{ t().adminUsers.registered }}</dt><dd>{{ date(user.createdAt) }}</dd></div>
+                <div><dt>{{ t().adminUsers.lastLogin }}</dt><dd>{{ user.lastLoginAt ? date(user.lastLoginAt) : '–' }}</dd></div>
+                <div><dt>{{ t().adminUsers.completed }}</dt><dd>{{ user.completedQuests }}</dd></div>
                 <div><dt>Life XP</dt><dd>{{ user.lifeXp }}</dd></div>
               </dl>
               @if (user.isSuspended) {
                 <p class="notice small">
-                  {{ user.suspendedUntil ? date(user.suspendedUntil) + ' tarihine kadar' : 'Süresiz' }} askıda · {{ user.suspensionReason }}
+                  {{ user.suspendedUntil ? t().adminUsers.suspendedUntil(date(user.suspendedUntil)) : t().adminUsers.suspendedForever }} · {{ user.suspensionReason }}
                 </p>
               }
               @if (user.isSelf) {
-                <p class="muted small">Kendi hesabında yönetim işlemi yapamazsın.</p>
+                <p class="muted small">{{ t().adminUsers.noSelfActions }}</p>
               } @else {
                 <div class="actions">
                   @if (user.isSuspended) {
-                    <button lq-button variant="soft" size="sm" (click)="openAction(user, 'unsuspend')">Askıyı kaldır</button>
+                    <button lq-button variant="soft" size="sm" (click)="openAction(user, 'unsuspend')">{{ t().adminUsers.unsuspend }}</button>
                   } @else if (user.role !== 'admin') {
-                    <button lq-button variant="soft" size="sm" (click)="openAction(user, 'suspend')">Askıya al</button>
+                    <button lq-button variant="soft" size="sm" (click)="openAction(user, 'suspend')">{{ t().adminUsers.suspend }}</button>
                   }
                   <button lq-button variant="soft" size="sm" [disabled]="user.isBootstrapAdmin" (click)="openAction(user, 'role')">
-                    {{ user.role === 'admin' ? 'Admin rolünü al' : 'Admin yap' }}
+                    {{ user.role === 'admin' ? t().adminUsers.revokeAdmin : t().adminUsers.makeAdmin }}
                   </button>
                   @if (user.role !== 'admin') {
-                    <button lq-button variant="danger" size="sm" (click)="openAction(user, 'delete')">Sil</button>
+                    <button lq-button variant="danger" size="sm" (click)="openAction(user, 'delete')">{{ t().common.delete }}</button>
                   }
                 </div>
                 @if (user.isBootstrapAdmin) {
-                  <p class="muted small">Bu hesap Admin:BootstrapEmails ayarından admin; rolü panelden alınamaz.</p>
+                  <p class="muted small">{{ t().adminUsers.bootstrapHint }}</p>
                 }
               }
             </li>
           } @empty {
-            <lq-empty-state icon="users" title="Kullanıcı bulunamadı" message="Aramanı veya filtreni değiştirmeyi dene." />
+            <lq-empty-state icon="users" [title]="t().adminUsers.noneTitle" [message]="t().adminUsers.noneHint" />
           }
         </ul>
         @if (p.totalPages > 1) {
-          <nav class="pager" aria-label="Sayfalar">
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="go(p.pageNumber - 1)">Önceki</button>
+          <nav class="pager" [attr.aria-label]="t().adminUsers.pages">
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="go(p.pageNumber - 1)">{{ t().adminUsers.previous }}</button>
             <span class="muted small">{{ p.pageNumber }} / {{ p.totalPages }}</span>
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="go(p.pageNumber + 1)">Sonraki</button>
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="go(p.pageNumber + 1)">{{ t().adminUsers.next }}</button>
           </nav>
         }
       } @else {
@@ -108,30 +109,28 @@ type UserAction = 'suspend' | 'unsuspend' | 'role' | 'delete';
           @switch (action()) {
             @case ('suspend') {
               <div class="field">
-                <span class="field__label">Süre</span>
+                <span class="field__label">{{ t().adminUsers.duration }}</span>
                 <div class="row wrap">
-                  @for (option of suspendOptions; track option.label) {
+                  @for (option of suspendOptions; track option.value) {
                     <button type="button" lq-chip [selected]="days() === option.value" (click)="days.set(option.value)">{{ option.label }}</button>
                   }
                 </div>
               </div>
-              <p class="muted small">Açık oturumlar hemen kapanır. Kullanıcı süre bitene veya askı kaldırılana kadar giriş yapamaz.</p>
+              <p class="muted small">{{ t().adminUsers.suspendHint }}</p>
             }
             @case ('unsuspend') {
-              <p class="muted">Kullanıcı yeniden giriş yapabilecek.</p>
+              <p class="muted">{{ t().adminUsers.unsuspendHint }}</p>
             }
             @case ('role') {
               <p class="muted">
-                {{ user.role === 'admin'
-                  ? 'Kullanıcı yönetim paneline erişimini kaybedecek.'
-                  : 'Kullanıcı kullanıcıları, kataloğu ve öneri ayarlarını yönetebilecek.' }}
-                Değişiklik açık oturumlarda da hemen geçerli olur.
+                {{ user.role === 'admin' ? t().adminUsers.revokeHint : t().adminUsers.grantHint }}
+                {{ t().adminUsers.immediate }}
               </p>
             }
             @case ('delete') {
-              <p class="notice">Hesap ve tüm verisi (profil, görevler, XP, özetler) kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+              <p class="notice">{{ t().adminUsers.deleteWarning }}</p>
               <div class="field">
-                <label for="confirm-email">Onay için e-posta adresini yaz</label>
+                <label for="confirm-email">{{ t().adminUsers.confirmEmail }}</label>
                 <input id="confirm-email" class="input" name="confirmEmail" autocomplete="off" [(ngModel)]="confirmEmail" />
               </div>
             }
@@ -139,9 +138,9 @@ type UserAction = 'suspend' | 'unsuspend' | 'role' | 'delete';
 
           @if (action() === 'suspend' || action() === 'delete') {
             <div class="field">
-              <label for="reason">Gerekçe</label>
+              <label for="reason">{{ t().adminUsers.reason }}</label>
               <textarea id="reason" class="input" name="reason" rows="3" maxlength="500" [(ngModel)]="reason"
-                        placeholder="Denetim kaydına yazılır"></textarea>
+                        [placeholder]="t().adminUsers.reasonPlaceholder"></textarea>
             </div>
           }
 
@@ -174,14 +173,12 @@ type UserAction = 'suspend' | 'unsuspend' | 'role' | 'delete';
   `,
 })
 export class AdminUsersPage {
+  protected readonly t = t;
   private readonly api = inject(AdminApi);
   private readonly toast = inject(ToastService);
 
-  protected readonly filters: SegmentOption<AdminUserFilter>[] = [
-    { value: 'All', label: 'Tümü' },
-    { value: 'Admins', label: 'Admin' },
-    { value: 'Suspended', label: 'Askıda' },
-  ];
+  protected readonly filters: SegmentOption<AdminUserFilter>[] = (['All', 'Admins', 'Suspended'] as const).map((f) =>
+    option<AdminUserFilter>(f, (d) => d.adminUsers.filters[f]));
   protected readonly suspendOptions = SUSPEND_OPTIONS;
 
   protected readonly query = signal('');
@@ -203,15 +200,15 @@ export class AdminUsersPage {
   protected readonly sheetTitle = computed(() => {
     const user = this.selected();
     switch (this.action()) {
-      case 'suspend': return 'Hesabı askıya al';
-      case 'unsuspend': return 'Askıyı kaldır';
-      case 'role': return user?.role === 'admin' ? 'Admin rolünü al' : 'Admin yap';
-      case 'delete': return 'Hesabı kalıcı olarak sil';
+      case 'suspend': return t().adminUsers.titles.suspend;
+      case 'unsuspend': return t().adminUsers.titles.unsuspend;
+      case 'role': return user?.role === 'admin' ? t().adminUsers.revokeAdmin : t().adminUsers.makeAdmin;
+      case 'delete': return t().adminUsers.titles.delete;
       default: return '';
     }
   });
 
-  protected readonly confirmLabel = computed(() => (this.action() === 'delete' ? 'Kalıcı olarak sil' : 'Onayla'));
+  protected readonly confirmLabel = computed(() => (this.action() === 'delete' ? t().adminUsers.deleteForever : t().adminUsers.confirm));
 
   constructor() {
     effect(() => this.load(this.search(), this.filter(), this.pageNumber()));
@@ -278,7 +275,7 @@ export class AdminUsersPage {
       next: () => {
         this.busy.set(false);
         this.close();
-        this.toast.success(action === 'delete' ? 'Hesap silindi.' : 'Değişiklik kaydedildi.');
+        this.toast.success(action === 'delete' ? t().adminUsers.deleted : t().adminUsers.savedChange);
         this.load(this.search(), this.filter(), this.pageNumber());
       },
       error: (err: unknown) => {

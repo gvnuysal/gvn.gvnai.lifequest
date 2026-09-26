@@ -1,3 +1,4 @@
+using LifeQuest.Domain.Localization;
 using Gvn.GvnFramework.Application.Abstractions;
 using Gvn.GvnFramework.Core.Results;
 using LifeQuest.Application.Abstractions;
@@ -16,8 +17,8 @@ internal sealed class GetInterestCatalogQueryHandler(IQuestCatalog catalog)
     {
         var interests = await catalog.GetInterestsAsync(cancellationToken);
         return Result<IReadOnlyList<InterestDto>>.Ok(interests
-            .OrderBy(i => i.Category).ThenBy(i => i.Name, StringComparer.Create(new("tr-TR"), false))
-            .Select(i => new InterestDto(i.Id, i.Code, i.Name, i.Category))
+            .Select(i => new InterestDto(i.Id, i.Code, i.DisplayName(), i.Category))
+            .OrderBy(i => i.Category).ThenBy(i => i.Name, StringComparer.Create(Language.CurrentCulture, false))
             .ToList());
     }
 }

@@ -25,7 +25,9 @@ public sealed record QuestCandidate(
     int CooldownDays,
     IReadOnlyList<Guid> InterestIds,
     bool IsOutdoor = false,
-    PhysicalEffort Effort = PhysicalEffort.Light);
+    PhysicalEffort Effort = PhysicalEffort.Light,
+    string? TitleEn = null,
+    string? DescriptionEn = null);
 
 public sealed record RecommendationProfile(
     DiscoveryRadius Radius,
@@ -87,14 +89,14 @@ public enum ReasonCode
     GoodWeather
 }
 
-public sealed record RecommendationReason(ReasonCode Code, string Text);
+public sealed record RecommendationReason(ReasonCode Code, Localization.LocalizedText Text);
 
 public sealed record RecommendedQuest(
     QuestCandidate Candidate,
     ScoreBreakdown Score,
     bool IsExploration,
     IReadOnlyList<RecommendationReason> Reasons,
-    string Explanation);
+    Localization.LocalizedText Explanation);
 
 public sealed record RecommendationResult(
     IReadOnlyList<RecommendedQuest> Items,

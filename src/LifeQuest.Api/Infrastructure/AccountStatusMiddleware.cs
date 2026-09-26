@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using LifeQuest.Application.Abstractions;
+using LifeQuest.Domain.Localization;
 
 namespace LifeQuest.Api.Infrastructure;
 
@@ -21,14 +22,14 @@ internal sealed class AccountStatusMiddleware(RequestDelegate next)
         var state = await accountState.GetAsync(user.UserId, context.RequestAborted);
         if (state is null || state.IsSuspended(clock.GetUtcNow().UtcDateTime))
         {
-            await RejectAsync(context, "ACCOUNT_SUSPENDED", "Hesabın askıya alındı veya artık mevcut değil.");
+            await RejectAsync(context, "ACCOUNT_SUSPENDED", Text.Of("Hesabın askıya alındı veya artık mevcut değil.", "Your account has been suspended or no longer exists."));
             return;
         }
 
         var tokenRole = context.User.FindFirstValue(ClaimTypes.Role) ?? context.User.FindFirstValue("role");
         if (!string.Equals(tokenRole, state.Role, StringComparison.Ordinal))
         {
-            await RejectAsync(context, "TOKEN_STALE", "Hesap yetkilerin değişti; oturum yenileniyor.");
+            await RejectAsync(context, "TOKEN_STALE", Text.Of("Hesap yetkilerin değişti; oturum yenileniyor.", "Your account permissions changed; refreshing the session."));
             return;
         }
 

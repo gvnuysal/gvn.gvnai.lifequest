@@ -15,6 +15,10 @@ internal sealed class UserAccountRepository(LifeQuestDbContext context)
 
     public Task<int> CountByRoleAsync(string role, CancellationToken cancellationToken = default)
         => DbSet.CountAsync(x => x.Role == role, cancellationToken);
+
+    public async Task<string> GetLanguageAsync(Guid userId, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking().Where(x => x.Id == userId).Select(x => x.Language).FirstOrDefaultAsync(cancellationToken)
+           ?? Domain.Localization.Language.Default;
 }
 
 internal sealed class RefreshTokenRepository(LifeQuestDbContext context)

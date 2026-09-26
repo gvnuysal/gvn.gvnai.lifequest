@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { PartiesApi } from '../../core/api/api-clients';
 import { Party, Quest } from '../../core/api/models';
@@ -17,34 +18,34 @@ import { Icon } from '../../ui/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="party surface" aria-labelledby="party-title">
-      <h2 id="party-title" class="party__title"><lq-icon name="users" [size]="18" /> Birlikte yap</h2>
+      <h2 id="party-title" class="party__title"><lq-icon name="users" [size]="18" /> {{ t().party.together }}</h2>
 
       @if (party(); as p) {
         @if (p.status === 'Completed') {
-          <p class="done">Parti tamamlandı! Tamamlayan herkes "birlikte" XP'si kazandı.</p>
+          <p class="done">{{ t().party.completed }}</p>
         }
         <ul class="members">
           @for (m of p.members; track $index) {
             <li [class.dropped]="m.dropped">
-              <span>{{ m.displayName }}@if (m.isYou) { <span class="muted"> (sen)</span> }@if (m.isHost) { <span class="muted"> · kurucu</span> }</span>
+              <span>{{ m.displayName }}@if (m.isYou) { <span class="muted"> {{ t().party.you }}</span> }@if (m.isHost) { <span class="muted"> {{ t().party.host }}</span> }</span>
               <span class="state">
-                @if (m.completed) { <lq-icon name="check" [size]="16" /> tamamladı@if (m.bonusXp) { · +{{ m.bonusXp }} XP } }
-                @else if (m.dropped) { bıraktı }
-                @else { görevde }
+                @if (m.completed) { <lq-icon name="check" [size]="16" /> {{ t().party.done }}@if (m.bonusXp) { · +{{ m.bonusXp }} XP } }
+                @else if (m.dropped) { {{ t().party.dropped }} }
+                @else { {{ t().party.inProgress }} }
               </span>
             </li>
           }
         </ul>
         @if (p.isJoinable) {
-          <p class="muted small">Bağlantıyı paylaş: {{ p.members.length }}/{{ p.maxMembers }} kişi. Herkes kendi görevini yapar; partide kalan herkes tamamlayınca bonus gelir.</p>
+          <p class="muted small">{{ t().party.shareHint(p.members.length, p.maxMembers) }}</p>
           <div class="share">
-            <input class="input" readonly [value]="link()" aria-label="Davet bağlantısı" (focus)="$any($event.target).select()" />
-            <button lq-button size="sm" (click)="share()">{{ canShare ? 'Paylaş' : 'Kopyala' }}</button>
+            <input class="input" readonly [value]="link()" [attr.aria-label]="t().party.inviteLink" (focus)="$any($event.target).select()" />
+            <button lq-button size="sm" (click)="share()">{{ canShare ? t().party.share : t().party.copy }}</button>
           </div>
         }
       } @else if (quest().status === 'Accepted') {
-        <p class="muted">Bir arkadaşını davet et: ikiniz de görevi tamamlayınca ekstra "birlikte" XP'si kazanırsınız.</p>
-        <button lq-button variant="secondary" [loading]="busy()" (click)="create()">Davet bağlantısı oluştur</button>
+        <p class="muted">{{ t().party.inviteHint }}</p>
+        <button lq-button variant="secondary" [loading]="busy()" (click)="create()">{{ t().party.createLink }}</button>
       }
     </section>
   `,
@@ -62,6 +63,7 @@ import { Icon } from '../../ui/icon';
   `,
 })
 export class PartyCard {
+  protected readonly t = t;
   readonly quest = input.required<Quest>();
   readonly party = input<Party | null>(null);
   readonly created = output<Party>();
@@ -93,13 +95,13 @@ export class PartyCard {
   protected async share(): Promise<void> {
     const p = this.party();
     if (!p) return;
-    const text = `"${p.questTitle}" görevini birlikte yapalım mı? LifeQuest'te partime katıl:`;
+    const text = t().party.shareText(p.questTitle);
     try {
       if (this.canShare) {
         await navigator.share({ title: 'Quest Party', text, url: this.link() });
       } else {
         await navigator.clipboard.writeText(this.link());
-        this.toast.success('Bağlantı kopyalandı.');
+        this.toast.success(t().party.copied);
       }
     } catch {
       // Paylaşım iptal edildi.

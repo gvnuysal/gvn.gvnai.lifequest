@@ -1,3 +1,6 @@
+import { SAFETY_LABELS } from './admin-labels';
+import { SafetyLevel } from '../../core/api/models';
+import { option, t } from '../../core/i18n/i18n';
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { AdminApi } from '../../core/api/api-clients';
 import { AdminAction, AuditEntry, PagedResult } from '../../core/api/models';
@@ -21,19 +24,19 @@ interface DetailLine {
   template: `
     <section class="section">
       <header class="stack">
-        <h1>Denetim kaydı</h1>
-        <p class="muted">Her admin işlemi gerekçesi ve önce/sonra farkıyla burada kalır. Silinen hesapların e-postası maskelenir.</p>
+        <h1>{{ t().adminAudit.title }}</h1>
+        <p class="muted">{{ t().adminAudit.lead }}</p>
       </header>
 
-      <div class="chips" role="group" aria-label="İşlem türü">
-        <button lq-chip [selected]="action() === null" (click)="setAction(null)">Tümü</button>
+      <div class="chips" role="group" [attr.aria-label]="t().adminAudit.actionAria">
+        <button lq-chip [selected]="action() === null" (click)="setAction(null)">{{ t().adminAudit.all }}</button>
         @for (a of actions; track a) {
           <button lq-chip [selected]="action() === a" (click)="setAction(a)">{{ labels[a] }}</button>
         }
       </div>
 
       @if (error()) {
-        <lq-empty-state icon="info" title="Kayıtlar yüklenemedi" [message]="error()" />
+        <lq-empty-state icon="info" [title]="t().adminAudit.loadFailed" [message]="error()" />
       } @else if (page(); as p) {
         <ol class="timeline">
           @for (e of p.items; track e.id) {
@@ -53,14 +56,14 @@ interface DetailLine {
               }
             </li>
           } @empty {
-            <lq-empty-state icon="list" title="Kayıt yok" message="Bu türde bir admin işlemi henüz yapılmadı." />
+            <lq-empty-state icon="list" [title]="t().adminAudit.noneTitle" [message]="t().adminAudit.noneHint" />
           }
         </ol>
         @if (p.totalPages > 1) {
-          <nav class="pager" aria-label="Sayfalar">
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">Daha yeni</button>
+          <nav class="pager" [attr.aria-label]="t().adminUsers.pages">
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasPreviousPage" (click)="pageNumber.set(p.pageNumber - 1)">{{ t().adminAudit.newer }}</button>
             <span class="muted small">{{ p.pageNumber }} / {{ p.totalPages }}</span>
-            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">Daha eski</button>
+            <button lq-button variant="soft" size="sm" [disabled]="!p.hasNextPage" (click)="pageNumber.set(p.pageNumber + 1)">{{ t().adminAudit.older }}</button>
           </nav>
         }
       } @else {
@@ -87,6 +90,7 @@ interface DetailLine {
   `,
 })
 export class AdminAuditPage {
+  protected readonly t = t;
   private readonly api = inject(AdminApi);
 
   protected readonly labels = AUDIT_ACTION_LABELS;
@@ -130,11 +134,11 @@ export class AdminAuditPage {
       if (data && typeof data === 'object') {
         const d = data as Record<string, unknown>;
         const lines: DetailLine[] = [];
-        if ('before' in d && 'after' in d && typeof d['before'] !== 'object') lines.push({ label: 'Değişim', value: `${d['before']} → ${d['after']}` });
-        if (typeof d['until'] === 'string') lines.push({ label: 'Bitiş', value: this.date(d['until']) });
-        if ('until' in d && d['until'] === null) lines.push({ label: 'Süre', value: 'Süresiz' });
-        if (typeof d['safety'] === 'string') lines.push({ label: 'Durum', value: d['safety'] });
-        if (Array.isArray(d['violations']) && d['violations'].length) lines.push({ label: 'Kural ihlali', value: d['violations'].join(' · ') });
+        if ('before' in d && 'after' in d && typeof d['before'] !== 'object') lines.push({ label: t().adminAudit.change, value: `${d['before']} → ${d['after']}` });
+        if (typeof d['until'] === 'string') lines.push({ label: t().adminAudit.until, value: this.date(d['until']) });
+        if ('until' in d && d['until'] === null) lines.push({ label: t().adminAudit.duration, value: t().adminAudit.forever });
+        if (typeof d['safety'] === 'string') lines.push({ label: t().adminAudit.status, value: SAFETY_LABELS[d['safety'] as SafetyLevel]?.label ?? d['safety'] });
+        if (Array.isArray(d['violations']) && d['violations'].length) lines.push({ label: t().adminAudit.violations, value: d['violations'].join(' · ') });
         return lines;
       }
     } catch {

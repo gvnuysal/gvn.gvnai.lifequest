@@ -18,6 +18,7 @@ public sealed class DailyReminderService(
     IUserProfileRepository profiles,
     IPushSubscriptionRepository subscriptions,
     IUserQuestRepository quests,
+    Domain.Identity.IUserAccountRepository accounts,
     PushNotifier notifier,
     IUnitOfWork unitOfWork,
     IOptions<QuestOptions> questOptions,
@@ -75,6 +76,8 @@ public sealed class DailyReminderService(
             var active = await quests.CountAcceptedAsync(userId, cancellationToken);
             var offers = (await quests.GetOffersAsync(userId, questDay, QuestSource.Daily, cancellationToken))
                 .Count(q => q.Status == QuestStatus.Offered);
+            // Arka plan işi: metin kullanıcının hesap dilinde.
+            using var _ = Domain.Localization.Language.Use(await accounts.GetLanguageAsync(userId, cancellationToken));
             var (title, body) = DailyReminder.Compose(active, offers);
             await notifier.SendToUserAsync(userId, new PushNotification(title, body, "/today", "daily-reminder"), cancellationToken);
         }

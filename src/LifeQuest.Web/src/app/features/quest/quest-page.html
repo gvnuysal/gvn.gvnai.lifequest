@@ -1,12 +1,12 @@
 <div class="page" [style.--c]="accent()">
-  <button type="button" class="back" (click)="back()"><lq-icon name="arrow-left" [size]="18" /> Geri</button>
+  <button type="button" class="back" (click)="back()"><lq-icon name="arrow-left" [size]="18" /> {{ t().common.back }}</button>
 
   @if (loading() && !detail()) {
     <lq-skeleton [height]="220" />
     <lq-skeleton [height]="120" />
   } @else if (notFound()) {
-    <lq-empty-state icon="compass" title="Quest bulunamadı" message="Bu quest artık mevcut değil ya da sana ait değil.">
-      <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">Bugüne dön</a>
+    <lq-empty-state icon="compass" [title]="t().quest.notFound" [message]="t().quest.notFoundHint">
+      <a lq-button variant="secondary" size="sm" [routerLink]="paths.today">{{ t().quest.backToToday }}</a>
     </lq-empty-state>
   } @else if (quest(); as q) {
     <article class="hero">
@@ -18,7 +18,7 @@
             <lq-category-badge [category]="q.secondaryCategory" [compact]="true" />
           }
           @if (q.isExploration) {
-            <span class="tag tag--explore"><lq-icon name="sparkles" [size]="12" [strokeWidth]="2.6" /> Keşif önerisi</span>
+            <span class="tag tag--explore"><lq-icon name="sparkles" [size]="12" [strokeWidth]="2.6" /> {{ t().quest.exploration }}</span>
           }
         </div>
       </div>
@@ -34,7 +34,7 @@
       </dl>
     </article>
 
-    <section class="reward surface" aria-label="Ödül">
+    <section class="reward surface" [attr.aria-label]="t().quest.reward">
       <div class="reward__main"><lq-icon name="zap" [size]="22" [strokeWidth]="2.4" /> +{{ q.reward.lifeXp }} <span>Life XP</span></div>
       <div class="reward__split">
         <span>+{{ q.reward.primaryCategoryXp }} {{ category()!.label }}</span>
@@ -46,12 +46,12 @@
 
     <section class="why surface">
       <button type="button" class="why__toggle" (click)="whyOpen.set(!whyOpen())" [attr.aria-expanded]="whyOpen()">
-        <span class="why__title"><lq-icon name="sparkles" [size]="18" /> Neden bunu önerdik?</span>
+        <span class="why__title"><lq-icon name="sparkles" [size]="18" /> {{ t().quest.why }}</span>
         <lq-icon name="chevron-right" [size]="18" [class.rotated]="whyOpen()" />
       </button>
       <p class="why__text">{{ q.explanation }}</p>
       @if (whyOpen() && detail(); as d) {
-        <ul class="bars" aria-label="Öneri skoru bileşenleri">
+        <ul class="bars" [attr.aria-label]="t().quest.scoreAria">
           @for (component of scoreComponents; track component.key) {
             <li [class.penalty]="component.penalty">
               <span class="bars__label">{{ component.label }}</span>
@@ -60,7 +60,7 @@
             </li>
           }
         </ul>
-        <p class="why__foot">Skorlar 0–100 arasıdır. Kırmızı çubuklar öneriyi aşağı çeken etkenlerdir.</p>
+        <p class="why__foot">{{ t().quest.scoreFoot }}</p>
       }
     </section>
 
@@ -70,7 +70,7 @@
 
     @if (detail()?.nearbyPlaces?.length) {
       <section class="nearby surface" aria-labelledby="nearby-title">
-        <h2 id="nearby-title" class="nearby__title"><lq-icon name="map-pin" [size]="18" /> Şehrinde</h2>
+        <h2 id="nearby-title" class="nearby__title"><lq-icon name="map-pin" [size]="18" /> {{ t().quest.nearby }}</h2>
         <ul class="nearby__list">
           @for (place of detail()!.nearbyPlaces; track place.id) {
             <li>
@@ -80,7 +80,7 @@
               }
               @if (place.address) { <span class="muted">{{ place.address }}</span> }
               @if (place.note) { <span>{{ place.note }}</span> }
-              @if (place.url) { <a [href]="place.url" target="_blank" rel="noopener noreferrer">Ayrıntılar</a> }
+              @if (place.url) { <a [href]="place.url" target="_blank" rel="noopener noreferrer">{{ t().quest.details }}</a> }
             </li>
           }
         </ul>
@@ -90,20 +90,20 @@
     <section class="status-card" [attr.data-status]="q.status">
       @switch (q.status) {
         @case ('Offered') {
-          <p><lq-icon name="info" [size]="18" /> Kabul ettiğinde tamamlamak için sana zaman tanınır; kaçırmanın bir cezası yok.</p>
+          <p><lq-icon name="info" [size]="18" /> {{ t().quest.offeredHint }}</p>
         }
         @case ('Accepted') {
-          <p><lq-icon name="hourglass" [size]="18" /> Devam ediyor · {{ remaining() }}</p>
+          <p><lq-icon name="hourglass" [size]="18" /> {{ t().quest.inProgress(remaining()) }}</p>
         }
         @case ('Completed') {
-          <p><lq-icon name="check" [size]="18" /> {{ completedOn() }} tarihinde tamamladın.</p>
+          <p><lq-icon name="check" [size]="18" /> {{ t().quest.completedOn(completedOn()) }}</p>
           @if (q.rating) {
-            <p class="rated">Puanın: {{ q.rating }} / 5</p>
+            <p class="rated">{{ t().quest.yourRating(q.rating) }}</p>
           } @else if (!completion()) {
             <div class="rate-later">
-              <span>Deneyim nasıldı?</span>
+              <span>{{ t().quest.howWasIt }}</span>
               <lq-rating [(value)]="rating" />
-              <button lq-button variant="soft" size="sm" [disabled]="!rating() || busy()" (click)="rateLater()">Puanı kaydet</button>
+              <button lq-button variant="soft" size="sm" [disabled]="!rating() || busy()" (click)="rateLater()">{{ t().quest.saveRating }}</button>
             </div>
           }
         }
@@ -117,61 +117,61 @@
       <div class="secondary-actions">
         @if (q.status === 'Offered') {
           <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="saveForLater()">
-            <lq-icon name="heart" [size]="16" /> Sonra yaparım
+            <lq-icon name="heart" [size]="16" /> {{ t().quest.later }}
           </button>
         } @else {
           <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="openPlan()">
-            <lq-icon name="clock" [size]="16" /> {{ q.plannedAt ? 'Planı değiştir' : 'Planla' }}
+            <lq-icon name="clock" [size]="16" /> {{ q.plannedAt ? t().quest.changePlan : t().quest.plan }}
           </button>
           @if (q.plannedAt) {
             <button lq-button variant="ghost" size="sm" [disabled]="busy()" (click)="downloadCalendar()">
-              <lq-icon name="plus" [size]="16" /> Takvime ekle
+              <lq-icon name="plus" [size]="16" /> {{ t().quest.addToCalendar }}
             </button>
           }
         }
       </div>
       @if (q.plannedAt) {
-        <p class="planned muted"><lq-icon name="clock" [size]="16" /> {{ plannedLabel() }} için planladın</p>
+        <p class="planned muted"><lq-icon name="clock" [size]="16" /> {{ t().quest.plannedFor(plannedLabel()) }}</p>
       }
       <div class="actions">
         <button lq-button variant="secondary" [disabled]="busy()" (click)="skipReason.set(null); skipOpen.set(true)">
-          {{ q.status === 'Offered' ? 'Geç' : 'Bırak' }}
+          {{ q.status === 'Offered' ? t().quest.skip : t().quest.drop }}
         </button>
         @if (q.status === 'Offered') {
           <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="accept()">
-            <lq-icon name="check" [size]="18" /> Kabul et
+            <lq-icon name="check" [size]="18" /> {{ t().quest.accept }}
           </button>
         } @else {
           <button lq-button [block]="true" [loading]="busy()" [disabled]="busy()" (click)="complete()">
-            <lq-icon name="trophy" [size]="18" /> Tamamladım
+            <lq-icon name="trophy" [size]="18" /> {{ t().quest.done }}
           </button>
         }
       </div>
     }
 
-    <lq-sheet title="Ne zaman yapacaksın?" [(open)]="planOpen">
+    <lq-sheet [title]="t().quest.planTitle" [(open)]="planOpen">
       <div class="stack">
-        <p class="muted">Kendi takvimine eklemen için bir zaman seç. Hatırlatma göndermeyiz; dosyayı takvimine eklersen takvimin hatırlatır.</p>
+        <p class="muted">{{ t().quest.planHint }}</p>
         <div class="field">
-          <label for="plan-at">Tarih ve saat</label>
+          <label for="plan-at">{{ t().quest.dateTime }}</label>
           <input id="plan-at" class="input" type="datetime-local" [min]="planMin()" [max]="planMax()"
                  [value]="planValue()" (input)="planValue.set($any($event.target).value)" />
         </div>
-        <button lq-button [block]="true" [disabled]="!planValue() || busy()" [loading]="busy()" (click)="savePlan()">Planı kaydet</button>
+        <button lq-button [block]="true" [disabled]="!planValue() || busy()" [loading]="busy()" (click)="savePlan()">{{ t().quest.savePlan }}</button>
         @if (quest()?.plannedAt) {
-          <button lq-button variant="ghost" [block]="true" [disabled]="busy()" (click)="clearPlan()">Planı kaldır</button>
+          <button lq-button variant="ghost" [block]="true" [disabled]="busy()" (click)="clearPlan()">{{ t().quest.removePlan }}</button>
         }
       </div>
     </lq-sheet>
 
-    <lq-sheet title="Neden geçiyorsun?" [(open)]="skipOpen">
+    <lq-sheet [title]="t().quest.skipTitle" [(open)]="skipOpen">
       <div class="stack">
-        <p class="muted">Cevabın önerileri iyileştirir. "Pahalı" veya "zamanım yok" ilgi alanlarını etkilemez.</p>
+        <p class="muted">{{ t().quest.skipHint }}</p>
         @for (reason of skipReasons; track reason.value) {
           <button lq-option [heading]="reason.label" [description]="reason.hint || null"
             [selected]="skipReason() === reason.value" (click)="skipReason.set(reason.value)"></button>
         }
-        <button lq-button [block]="true" [disabled]="!skipReason() || busy()" [loading]="busy()" (click)="confirmSkip()">Onayla</button>
+        <button lq-button [block]="true" [disabled]="!skipReason() || busy()" [loading]="busy()" (click)="confirmSkip()">{{ t().quest.confirm }}</button>
       </div>
     </lq-sheet>
 

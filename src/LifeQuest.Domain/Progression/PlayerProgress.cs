@@ -67,7 +67,7 @@ public sealed class PlayerProgress : AggregateRoot
         }
 
         var transaction = new XpTransaction(
-            UserId, XpSourceType.Quest, quest.Id, quest.Title,
+            UserId, XpSourceType.Quest, quest.Id, quest.LocalizedTitle,
             reward.LifeXp, quest.Category, reward.PrimaryCategoryXp,
             quest.SecondaryCategory, reward.SecondaryCategoryXp, nowUtc);
 
@@ -75,7 +75,7 @@ public sealed class PlayerProgress : AggregateRoot
     }
 
     /// <summary>Quest Party bonusu: Life XP ve görevin kategorisine eklenir, tamamlama sayısını artırmaz.</summary>
-    public XpTransaction ApplyPartyBonus(Guid userQuestId, string questTitle, LifeCategory category, int xp, DateTime nowUtc)
+    public XpTransaction ApplyPartyBonus(Guid userQuestId, Localization.LocalizedText questTitle, LifeCategory category, int xp, DateTime nowUtc)
     {
         LifeXp += xp;
         var previousLevel = LifeLevel;
@@ -87,7 +87,8 @@ public sealed class PlayerProgress : AggregateRoot
         if (primary.AddXp(xp, countsAsCompletion: false))
             AddDomainEvent(new CategoryLevelUpEvent(UserId, primary.Category, primary.Level));
 
-        return new XpTransaction(UserId, XpSourceType.PartyBonus, userQuestId, $"Birlikte: {questTitle}",
+        return new XpTransaction(UserId, XpSourceType.PartyBonus, userQuestId,
+            new Localization.LocalizedText($"Birlikte: {questTitle.Tr}", $"Together: {questTitle.En}"),
             xp, category, xp, null, 0, nowUtc);
     }
 

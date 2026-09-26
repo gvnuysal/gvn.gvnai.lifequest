@@ -12,7 +12,7 @@ namespace LifeQuest.Infrastructure.Catalog;
 /// </summary>
 internal sealed class CachedQuestCatalog(LifeQuestDbContext db, ICacheService cache) : IQuestCatalog
 {
-    private const string CacheKey = "lifequest:catalog:v2";
+    private const string CacheKey = "lifequest:catalog:v3";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
     public async Task<IReadOnlyList<QuestCandidate>> GetOfferableCandidatesAsync(CancellationToken cancellationToken = default)
@@ -21,7 +21,7 @@ internal sealed class CachedQuestCatalog(LifeQuestDbContext db, ICacheService ca
     public async Task<TasteGraph> GetTasteGraphAsync(CancellationToken cancellationToken = default)
     {
         var snapshot = await GetSnapshotAsync(cancellationToken);
-        return new TasteGraph(snapshot.Edges, snapshot.Interests.Select(i => new InterestInfo(i.Id, i.Code, i.Name)));
+        return new TasteGraph(snapshot.Edges, snapshot.Interests.Select(i => new InterestInfo(i.Id, i.Code, i.Name, i.NameEn)));
     }
 
     public async Task<IReadOnlyList<InterestCatalogItem>> GetInterestsAsync(CancellationToken cancellationToken = default)
@@ -46,18 +46,19 @@ internal sealed class CachedQuestCatalog(LifeQuestDbContext db, ICacheService ca
             .Select(t => new QuestCandidate(
                 t.Id, t.Code, t.Version, t.Title, t.Description, t.Type, t.Difficulty, t.Category, t.SecondaryCategory,
                 t.MinMinutes, t.MaxMinutes, t.Cost, t.DayParts, t.RequiresCity, t.RiskScore, t.CooldownDays,
-                t.InterestIds, t.IsOutdoor, t.Effort))
+                t.InterestIds, t.IsOutdoor, t.Effort, t.TitleEn, t.DescriptionEn))
             .ToList();
 
         var starters = templates
             .Where(t => t.IsOfferable && t.IsStarter)
             .Select(t => new StarterCard(
-                t.Id, t.Code, t.Title, t.Description, t.Category, t.Cost, t.MinMinutes, t.MaxMinutes, t.InterestIds))
+                t.Id, t.Code, t.Title, t.Description, t.Category, t.Cost, t.MinMinutes, t.MaxMinutes, t.InterestIds,
+                t.TitleEn, t.DescriptionEn))
             .ToList();
 
         var interests = await db.Interests.AsNoTracking()
             .Where(i => i.IsActive)
-            .Select(i => new InterestCatalogItem(i.Id, i.Code, i.Name, i.Category))
+            .Select(i => new InterestCatalogItem(i.Id, i.Code, i.Name, i.Category, i.NameEn))
             .ToListAsync(cancellationToken);
 
         var edges = await db.InterestRelations.AsNoTracking()

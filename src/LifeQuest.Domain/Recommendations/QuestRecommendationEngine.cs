@@ -2,6 +2,7 @@ using LifeQuest.Domain.Catalog;
 using LifeQuest.Domain.Common;
 using LifeQuest.Domain.Profiles;
 using LifeQuest.Domain.Quests;
+using LifeQuest.Domain.Localization;
 using LifeQuest.Domain.RealWorld;
 
 namespace LifeQuest.Domain.Recommendations;
@@ -372,42 +373,59 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
         Selection s, RecommendationProfile profile, TasteGraph graph, RecommendationContext context, LifeCategory? dominant)
     {
         var c = s.Scored.Candidate;
+        var category = c.Category.LocalizedName();
         var reasons = new List<RecommendationReason>();
 
         if (dominant is { } d && d != c.Category)
-            reasons.Add(new(ReasonCode.Diversification, $"son aktivitelerinde {d.DisplayName()} ağırlığı olduğu"));
+        {
+            var name = d.LocalizedName();
+            reasons.Add(new(ReasonCode.Diversification, new($"son aktivitelerinde {name.Tr} ağırlığı olduğu",
+                $"your recent activity leaned towards {name.En}")));
+        }
 
         if (s.IsExploration)
-            reasons.Add(new(ReasonCode.ExplorationPick, $"{profile.Radius.DisplayName()} modunu seçtiğin"));
+        {
+            var radius = profile.Radius.LocalizedName();
+            reasons.Add(new(ReasonCode.ExplorationPick, new($"{radius.Tr} modunu seçtiğin", $"you chose {radius.En} mode")));
+        }
 
         if (s.Scored.LovedBefore)
-            reasons.Add(new(ReasonCode.LovedBefore, "daha önce çok sevdiğin bir deneyim olduğu"));
+            reasons.Add(new(ReasonCode.LovedBefore, new("daha önce çok sevdiğin bir deneyim olduğu", "you loved this experience before")));
 
         var interest = s.Scored.Interest;
         if (interest.ViaInterestId is { } via && interest.MatchedInterestId is { } target)
-            reasons.Add(new(ReasonCode.AdjacentInterest,
-                $"{graph.NameOf(via)} ilgin {graph.NameOf(target)} alanına kapı açtığı"));
+        {
+            LocalizedText from = graph.NameOf(via), to = graph.NameOf(target);
+            reasons.Add(new(ReasonCode.AdjacentInterest, new($"{from.Tr} ilgin {to.Tr} alanına kapı açtığı",
+                $"your {from.En} interest opens a door to {to.En}")));
+        }
 
         if (s.Scored.Novelty >= 1.0)
-            reasons.Add(new(ReasonCode.NewCategory, $"{c.Category.DisplayName()} alanında henüz quest tamamlamadığın"));
+            reasons.Add(new(ReasonCode.NewCategory, new($"{category.Tr} alanında henüz quest tamamlamadığın",
+                $"you haven't completed a {category.En} quest yet")));
 
         if (interest.ViaInterestId is null && interest.MatchedInterestId is { } matched && interest.Score >= 0.6)
-            reasons.Add(new(ReasonCode.InterestMatch, $"{graph.NameOf(matched)} ilginle örtüştüğü"));
+        {
+            var name = graph.NameOf(matched);
+            reasons.Add(new(ReasonCode.InterestMatch, new($"{name.Tr} ilginle örtüştüğü", $"it matches your {name.En} interest")));
+        }
 
         if (s.Scored.GoalFit >= 1.0)
-            reasons.Add(new(ReasonCode.GoalFit, $"{c.Category.DisplayName()} hedeflerin arasında olduğu"));
+            reasons.Add(new(ReasonCode.GoalFit, new($"{category.Tr} hedeflerin arasında olduğu", $"{category.En} is one of your goals")));
 
         if (context.AvailableMinutes is { } available && c.MaxMinutes <= available)
-            reasons.Add(new(ReasonCode.FitsAvailableTime, $"ayırdığın {available} dakikaya sığdığı"));
+            reasons.Add(new(ReasonCode.FitsAvailableTime, new($"ayırdığın {available} dakikaya sığdığı",
+                $"it fits into the {available} minutes you have")));
 
         if (context.HasLocalEvent(c.TemplateId))
-            reasons.Insert(0, new(ReasonCode.LocalEvent, "şehrinde bu hafta ilgili bir etkinlik olduğu"));
+            reasons.Insert(0, new(ReasonCode.LocalEvent, new("şehrinde bu hafta ilgili bir etkinlik olduğu",
+                "there's a related event in your city this week")));
 
         if (IsGoodWeatherOutdoor(c, context))
-            reasons.Add(new(ReasonCode.GoodWeather, "hava açık hava için çok uygun olduğu"));
+            reasons.Add(new(ReasonCode.GoodWeather, new("hava açık hava için çok uygun olduğu", "the weather is great for being outdoors")));
 
         if (c.Cost == CostBand.Free)
-            reasons.Add(new(ReasonCode.Free, "ücretsiz olduğu"));
+            reasons.Add(new(ReasonCode.Free, new("ücretsiz olduğu", "it's free")));
 
         return reasons;
     }
@@ -434,22 +452,32 @@ public sealed class QuestRecommendationEngine(RecommendationWeights weights)
 }
 
 /// <summary>
-/// Gerekçe cümlecikleri "… olduğu ve … seçtiğin için bu kez bir Kültür quest'i önerdik." kalıbında birleştirilir.
+/// Gerekçe cümlecikleri iki dilde birleştirilir:
+/// TR "… olduğu ve … seçtiğin için bu kez bir Kültür quest'i önerdik." · EN "Suggested because … and …."
 /// </summary>
 internal static class ExplanationBuilder
 {
     private static readonly System.Globalization.CultureInfo Turkish = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
 
-    public static string Build(IReadOnlyList<RecommendationReason> reasons, LifeCategory category)
+    public static LocalizedText Build(IReadOnlyList<RecommendationReason> reasons, LifeCategory category)
     {
         if (reasons.Count == 0)
-            return "Profiline ve bugünkü bağlamına en uygun seçeneklerden biri.";
+            return new("Profiline ve bugünkü bağlamına en uygun seçeneklerden biri.",
+                "One of the best fits for your profile and today's context.");
 
-        var clauses = string.Join(" ve ", reasons.Take(2).Select(r => r.Text));
-        var tail = reasons.Take(2).Any(r => r.Code == ReasonCode.Diversification)
-            ? $" için bu kez bir {category.DisplayName()} quest'i önerdik."
-            : " için önerdik.";
+        var top = reasons.Take(2).ToList();
+        var diversified = top.Any(r => r.Code == ReasonCode.Diversification);
+        var name = category.LocalizedName();
 
-        return char.ToUpper(clauses[0], Turkish) + clauses[1..] + tail;
+        var trClauses = string.Join(" ve ", top.Select(r => r.Text.Tr));
+        var tr = char.ToUpper(trClauses[0], Turkish) + trClauses[1..] +
+                 (diversified ? $" için bu kez bir {name.Tr} quest'i önerdik." : " için önerdik.");
+
+        var enClauses = string.Join(" and ", top.Select(r => r.Text.En));
+        var en = diversified
+            ? $"Since {enClauses}, here's a {name.En} quest for a change."
+            : $"Suggested because {enClauses}.";
+
+        return new LocalizedText(tr, en);
     }
 }

@@ -131,7 +131,8 @@ public sealed class RiskFollowUpTests(LifeQuestApiFactory factory)
             var sp = scope.ServiceProvider;
             var service = new WeeklySummaryService(
                 sp.GetRequiredService<IUserProfileRepository>(), sp.GetRequiredService<IUserQuestRepository>(),
-                sp.GetRequiredService<IWeeklySummaryRepository>(), sp.GetRequiredService<PushNotifier>(),
+                sp.GetRequiredService<IWeeklySummaryRepository>(), sp.GetRequiredService<LifeQuest.Domain.Identity.IUserAccountRepository>(),
+                sp.GetRequiredService<PushNotifier>(),
                 sp.GetRequiredService<IUnitOfWork>(), nextWeek);
             return await service.GenerateForPreviousWeekAsync(userId, CancellationToken.None);
         }

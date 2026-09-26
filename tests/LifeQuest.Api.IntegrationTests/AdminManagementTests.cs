@@ -170,6 +170,12 @@ public sealed class AdminManagementTests(LifeQuestApiFactory factory)
         var cards = await user.GetFromJsonAsync<JsonElement>("/api/v1/onboarding/starter-cards", Json);
         Assert.Contains(cards.EnumerateArray(), c => c.GetProperty("code").GetString() == code);
 
+        // Yöneticinin girdiği İngilizce metin İngilizce istekte görünür.
+        var english = new HttpRequestMessage(HttpMethod.Get, "/api/v1/onboarding/starter-cards");
+        english.Headers.AcceptLanguage.ParseAdd("en");
+        var englishCards = await (await user.SendAsync(english)).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Contains(englishCards.EnumerateArray(), c => c.GetProperty("title").GetString() == "An hour in a second-hand bookshop");
+
         Assert.Equal(HttpStatusCode.Conflict,
             (await admin.PostAsJsonAsync("/api/v1/admin/templates", await TemplateAsync(admin, code), Json)).StatusCode);
     }
@@ -269,6 +275,8 @@ public sealed class AdminManagementTests(LifeQuestApiFactory factory)
             code,
             title = "Sahafta bir saat geçir",
             description = "Yakınındaki bir sahafı ziyaret et ve rastgele seçtiğin bir kitabın ilk sayfasını oku.",
+            titleEn = "An hour in a second-hand bookshop",
+            descriptionEn = "Visit a second-hand bookshop nearby and read the first page of a book you pick at random.",
             type = "Weekly",
             difficulty = "Easy",
             category = "Learning",
